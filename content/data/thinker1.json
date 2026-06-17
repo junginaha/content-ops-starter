@@ -1,0 +1,36 @@
+{
+    "type": "Person",
+    "name": "이서연",
+    "role": "철학자 & 사상가",
+    "image": {
+        "url": "/images/avatar1.svg",
+        "altText": "이서연",
+        "styles": {
+            "self": {
+                "borderRadius": "full",
+                "margin": [
+                    "mb-8"
+                ]
+            }
+        },
+        "type": "ImageBlock"
+    },
+    "colors": "bg-light-fg-dark",
+    "styles": {
+        "self": {
+            "padding": [
+                "pt-6",
+                "pb-6",
+                "pl-6",
+                "pr-6"
+            ],
+            "textAlign": "center",
+            "borderColor": "border-neutral",
+            "borderStyle": "solid",
+            "borderWidth": 0,
+            "borderRadius": "large",
+            "justifyContent": "center"
+        }
+    },
+    "bio": "복잡한 문제를 단순하게 바라보는 힘을 가진 사람. 늘 '왜?'라는 질문을 멈추지 않습니다.\n"
+}

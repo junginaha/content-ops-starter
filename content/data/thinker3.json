@@ -1,0 +1,36 @@
+{
+    "type": "Person",
+    "name": "김지우",
+    "role": "크리에이터 & 탐구자",
+    "image": {
+        "url": "/images/avatar3.svg",
+        "altText": "김지우",
+        "styles": {
+            "self": {
+                "borderRadius": "full",
+                "margin": [
+                    "mb-8"
+                ]
+            }
+        },
+        "type": "ImageBlock"
+    },
+    "colors": "bg-light-fg-dark",
+    "styles": {
+        "self": {
+            "padding": [
+                "pt-6",
+                "pb-6",
+                "pl-6",
+                "pr-6"
+            ],
+            "textAlign": "center",
+            "borderColor": "border-neutral",
+            "borderStyle": "solid",
+            "borderWidth": 0,
+            "borderRadius": "large",
+            "justifyContent": "center"
+        }
+    },
+    "bio": "경계를 허무는 아이디어로 세상을 더 나은 곳으로 만들고자 합니다. 상상이 현실이 되는 순간을 사랑합니다.\n"
+}

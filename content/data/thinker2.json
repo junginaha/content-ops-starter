@@ -1,0 +1,36 @@
+{
+    "type": "Person",
+    "name": "박민준",
+    "role": "전략가 & 혁신가",
+    "image": {
+        "url": "/images/avatar2.svg",
+        "altText": "박민준",
+        "styles": {
+            "self": {
+                "borderRadius": "full",
+                "margin": [
+                    "mb-8"
+                ]
+            }
+        },
+        "type": "ImageBlock"
+    },
+    "colors": "bg-light-fg-dark",
+    "styles": {
+        "self": {
+            "padding": [
+                "pt-6",
+                "pb-6",
+                "pl-6",
+                "pr-6"
+            ],
+            "textAlign": "center",
+            "borderColor": "border-neutral",
+            "borderStyle": "solid",
+            "borderWidth": 0,
+            "borderRadius": "large",
+            "justifyContent": "center"
+        }
+    },
+    "bio": "데이터와 직관 사이에서 최선의 답을 찾습니다. 미래를 설계하는 일이 가장 즐겁습니다.\n"
+}

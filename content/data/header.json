@@ -37,6 +37,15 @@
             "type": "Link"
         },
         {
+            "label": "생각하는 사람들",
+            "altText": "Thinkers",
+            "url": "/thinkers",
+            "icon": "arrowRight",
+            "iconPosition": "right",
+            "style": "secondary",
+            "type": "Link"
+        },
+        {
             "label": "Dropdown",
             "altText": "Dropdown",
             "links": [
