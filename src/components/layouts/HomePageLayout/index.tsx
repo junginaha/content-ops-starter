@@ -13,7 +13,6 @@ import KnowledgeAssetEngineSection from '../../quesapience/KnowledgeAssetEngineS
 import KnowledgeAssetProgressSection from '../../quesapience/KnowledgeAssetProgressSection';
 import TodayQuestionSection from '../../quesapience/TodayQuestionSection';
 import GiantsSection from '../../quesapience/GiantsSection';
-import QuestionAskersSection from '../../quesapience/QuestionAskersSection';
 
 export default function HomePageLayout() {
   return (
@@ -24,7 +23,6 @@ export default function HomePageLayout() {
         <NearbyBookclubsSection />
         <FeaturedBookclubsSection />
         <HowItWorksSection />
-        <QuestionAskersSection />
         <WhyPeopleNeedThisSection />
         <ForWhomSection />
         <ArchiveSection />
