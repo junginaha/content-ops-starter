@@ -20,19 +20,21 @@ export default function HeroSection() {
         <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-stone-900 leading-tight mb-6">
           좋은 질문은
           <br />
-          <span className="text-amber-700">좋은 사람을</span> 데려옵니다
+          좋은 사람을 데려옵니다
         </h1>
 
         {/* Subtitle */}
         <p className="text-xl sm:text-2xl text-stone-600 mb-5 leading-relaxed">
-          내 근처에서 열리는 북클럽에 참여해보세요
+          내 근처에서 열리는
+          <br />
+          북클럽에 참여해보세요
         </p>
 
         {/* Body */}
         <p className="text-stone-500 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-          책을 다 읽지 못해도 괜찮습니다.
+          책을 다 읽지 못해도 괜찮습니다
           <br />
-          한 문장, 하나의 질문이면 충분합니다.
+          한 문장, 하나의 질문이면 충분합니다
         </p>
 
         {/* CTAs */}
