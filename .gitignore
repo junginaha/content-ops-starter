@@ -45,3 +45,6 @@ tmp*
 
 # TypeScript
 *.tsbuildinfo
+
+# Claude Code
+.claude/
