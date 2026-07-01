@@ -57,7 +57,7 @@ export default function HeroSection() {
 
         {/* Wax seal CTA */}
         <div className="flex justify-center mb-10">
-          <WaxSealButton href="#featured-bookclubs" size={164} />
+          <WaxSealButton href="#featured-bookclubs" />
         </div>
 
         {/* Trust signals */}
