@@ -1,4 +1,5 @@
 import React from 'react';
+import WaxSealButton from './WaxSealButton';
 
 export default function HeroSection() {
   return (
@@ -52,6 +53,11 @@ export default function HeroSection() {
           >
             이번 달 모임 참여하기
           </a>
+        </div>
+
+        {/* Wax seal CTA */}
+        <div className="flex justify-center mb-10">
+          <WaxSealButton href="#featured-bookclubs" size={164} />
         </div>
 
         {/* Trust signals */}
