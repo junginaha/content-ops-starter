@@ -1,15 +1,16 @@
-/**
- * @type {import('next').NextConfig}
- */
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-    env: {
-        stackbitPreview: process.env.STACKBIT_PREVIEW
-    },
-    trailingSlash: true,
     reactStrictMode: true,
-    allowedDevOrigins: [
-        '192.168.1.84'
-    ]
+    images: {
+        formats: ['image/avif', 'image/webp'],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: '*.supabase.co',
+                pathname: '/storage/v1/object/**'
+            }
+        ]
+    }
 };
 
 module.exports = nextConfig;
