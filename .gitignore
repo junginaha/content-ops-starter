@@ -5,12 +5,11 @@
 /.pnp
 .pnp.js
 
-# Netlify Visual Editor (formerly Stackbit)
-.stackbit/cache
-.cache
-
 # testing
 /coverage
+
+# typescript
+*.tsbuildinfo
 
 # next.js
 /.next/

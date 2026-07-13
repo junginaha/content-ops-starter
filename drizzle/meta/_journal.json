@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1783931871675,
+      "tag": "0000_conscious_leper_queen",
+      "breakpoints": true
+    }
+  ]
+}

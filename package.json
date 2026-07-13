@@ -1,40 +1,46 @@
 {
-    "name": "content-ops-starter",
-    "version": "0.1.0",
+    "name": "jinjoo",
+    "version": "1.0.0",
+    "private": true,
+    "description": "진주(眞珠) — 진실의 주둥이. 아무에게도 하지 못한 말을 안전하게 다듬어 전하는 프라이버시 우선 서비스.",
     "scripts": {
         "dev": "next dev",
         "build": "next build",
-        "start": "next start"
+        "start": "next start",
+        "lint": "next lint",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "tsx scripts/migrate.ts",
+        "db:seed": "tsx scripts/seed.ts",
+        "db:retention": "tsx scripts/retention.ts"
     },
     "dependencies": {
-        "@algolia/autocomplete-js": "^1.17.1",
-        "@algolia/autocomplete-theme-classic": "^1.17.1",
-        "@types/leaflet": "^1.9.21",
-        "algoliasearch": "^4.24.0",
         "classnames": "^2.5.1",
-        "dayjs": "^1.11.11",
-        "front-matter": "^4.0.2",
-        "glob": "^10.4.2",
-        "leaflet": "^1.9.4",
-        "markdown-to-jsx": "^7.7.3",
-        "marked": "^14.1.2",
+        "drizzle-orm": "^0.36.4",
         "next": "15.5.12",
+        "pg": "^8.13.1",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
-        "react-leaflet": "^5.0.0",
-        "swiper": "^11.1.4",
-        "tailwindcss": "^3.4.3"
+        "zod": "^3.24.1"
     },
     "devDependencies": {
-        "@base2/pretty-print-object": "^1.0.2",
-        "@stackbit/cms-git": "^1.0.32",
-        "@stackbit/types": "^2.1.10",
-        "@types/glob": "^8.1.0",
+        "@types/node": "^22.10.2",
+        "@types/pg": "^8.11.10",
         "@types/react": "^19.1.0",
         "@types/react-dom": "^19.1.1",
         "autoprefixer": "^10.4.19",
+        "dotenv": "^16.4.7",
+        "drizzle-kit": "^0.28.1",
+        "eslint": "^8.57.0",
+        "eslint-config-next": "15.5.12",
+        "postcss": "^8.4.38",
         "prettier": "^3.3.2",
-        "typescript": "^5.6.2"
+        "tailwindcss": "^3.4.3",
+        "tsx": "^4.19.2",
+        "typescript": "^5.6.2",
+        "vitest": "^2.1.8"
     },
     "main": "next.config.js"
 }
