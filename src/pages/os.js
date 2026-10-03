@@ -1,5 +1,11 @@
 import Head from 'next/head';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  analyzeManuscript,
+  buildPrintProofHtml,
+  buildProductionReport,
+  safeAutoFix
+} from '../utils/onedaybooksEngine';
 
 const STAGES = [
   { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
@@ -50,6 +56,10 @@ export default function OneDayBooksOS() {
   const [project, setProject] = useState(EMPTY_PROJECT);
   const [now, setNow] = useState(Date.now());
   const [loaded, setLoaded] = useState(false);
+  const [manuscript, setManuscript] = useState('');
+  const [processedManuscript, setProcessedManuscript] = useState('');
+  const [engineAnalysis, setEngineAnalysis] = useState(null);
+  const [engineRunAt, setEngineRunAt] = useState(null);
 
   useEffect(() => {
     try {
@@ -122,6 +132,67 @@ export default function OneDayBooksOS() {
   function resetProject() {
     if (!window.confirm('현재 프로젝트 기록을 초기화할까요?')) return;
     setProject(EMPTY_PROJECT);
+    setManuscript('');
+    setProcessedManuscript('');
+    setEngineAnalysis(null);
+    setEngineRunAt(null);
+  }
+
+  function downloadText(name, content, type = 'text/plain;charset=utf-8') {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function runProductionEngine() {
+    if (!manuscript) return;
+    const result = safeAutoFix(manuscript);
+    setProcessedManuscript(result.text);
+    setEngineAnalysis(result.analysis);
+    setEngineRunAt(Date.now());
+    setProject((p) => ({
+      ...p,
+      stageIndex: Math.max(p.stageIndex, 3),
+      notes: p.notes
+    }));
+  }
+
+  function exportCleanManuscript() {
+    if (!processedManuscript) return;
+    const safeTitle = (project.title || 'manuscript').replace(/[^0-9a-zA-Z가-힣_-]+/g, '_');
+    downloadText(`${safeTitle}_clean.txt`, processedManuscript);
+  }
+
+  function exportPrintProof() {
+    if (!processedManuscript) return;
+    const safeTitle = (project.title || 'book').replace(/[^0-9a-zA-Z가-힣_-]+/g, '_');
+    const html = buildPrintProofHtml({
+      title: project.title || '제목 없음',
+      author: project.author || '',
+      manuscript: processedManuscript
+    });
+    downloadText(`${safeTitle}_140x210_proof.html`, html, 'text/html;charset=utf-8');
+  }
+
+  function exportProductionReport() {
+    if (!manuscript) return;
+    const report = buildProductionReport({
+      title: project.title,
+      author: project.author,
+      objective: project.objective,
+      originalText: manuscript,
+      processedText: processedManuscript || manuscript
+    });
+    const safeTitle = (project.title || 'project').replace(/[^0-9a-zA-Z가-힣_-]+/g, '_');
+    downloadText(
+      `onedaybooks_${safeTitle}_production_report.json`,
+      JSON.stringify(report, null, 2),
+      'application/json;charset=utf-8'
+    );
   }
 
   function exportJson() {
@@ -151,6 +222,10 @@ export default function OneDayBooksOS() {
   async function readTextFile(file) {
     if (!file) return;
     const text = await file.text();
+    setManuscript(text);
+    setProcessedManuscript('');
+    setEngineAnalysis(analyzeManuscript(text));
+    setEngineRunAt(null);
     setProject((p) => ({
       ...p,
       fileName: file.name,
@@ -248,10 +323,69 @@ export default function OneDayBooksOS() {
           </button>
         </section>
 
+
+        <section className="panel engine-panel">
+          <div className="section-head">
+            <div>
+              <div className="kicker">02 · PRODUCTION ENGINE</div>
+              <h2>원고를 자동으로 정리하고 검사</h2>
+            </div>
+            <span className={`status-pill ${engineRunAt ? 'ready' : ''}`}>
+              {engineRunAt ? 'ENGINE RUN' : '대기'}
+            </span>
+          </div>
+
+          <p className="muted">
+            현재 v0.1은 사람 판단이 필요 없는 안전한 작업만 자동화합니다.
+            줄바꿈·탭·연속 공백·문장부호 앞 공백을 정리하고,
+            구조와 기계적 오류를 검사합니다. 내용·사실·권리는 임의로 바꾸지 않습니다.
+          </p>
+
+          <div className="engine-actions">
+            <button className="primary" onClick={runProductionEngine} disabled={!manuscript}>
+              원고 자동 정리 실행
+            </button>
+            <button className="secondary" onClick={exportCleanManuscript} disabled={!processedManuscript}>
+              정리 원고 받기
+            </button>
+            <button className="secondary" onClick={exportPrintProof} disabled={!processedManuscript}>
+              140×210 내지 프루프
+            </button>
+            <button className="secondary" onClick={exportProductionReport} disabled={!manuscript}>
+              제작 리포트
+            </button>
+          </div>
+
+          {engineAnalysis && (
+            <>
+              <div className="engine-metrics">
+                <MiniMetric label="글자 수" value={engineAnalysis.charCount.toLocaleString()} />
+                <MiniMetric label="문단" value={engineAnalysis.paragraphCount.toLocaleString()} />
+                <MiniMetric label="감지 목차/장" value={engineAnalysis.headingCount.toLocaleString()} />
+                <MiniMetric label="예상 내지 쪽수" value={`약 ${engineAnalysis.estimatedPrintPages}쪽`} />
+              </div>
+
+              <div className="issue-list">
+                {engineAnalysis.issues.map((issue) => (
+                  <div className="issue" key={issue.key}>
+                    <span>{issue.label}</span>
+                    <strong>{issue.count === 0 ? '통과' : `${issue.count}건`}</strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="human-boundary">
+                <strong>사람 승인 유지:</strong>
+                저자 의도 · 사실/인용 · 저작권 · 최종 편집디자인 · 최종 출간 승인
+              </div>
+            </>
+          )}
+        </section>
+
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="kicker">02 · CONTROL PLANE</div>
+              <div className="kicker">03 · CONTROL PLANE</div>
               <h2>7단계 제작 흐름</h2>
             </div>
             <span className="status-pill">{STAGES[project.stageIndex].label}</span>
@@ -299,7 +433,7 @@ export default function OneDayBooksOS() {
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="kicker">03 · HUMAN-IN-THE-LOOP</div>
+              <div className="kicker">04 · HUMAN-IN-THE-LOOP</div>
               <h2>인간 개입을 숨기지 않고 측정</h2>
             </div>
           </div>
@@ -316,7 +450,7 @@ export default function OneDayBooksOS() {
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="kicker">04 · QUALITY GATES</div>
+              <div className="kicker">05 · QUALITY GATES</div>
               <h2>출간 가능 판정</h2>
             </div>
             <span className={`status-pill ${publicationReady ? 'ready' : ''}`}>
@@ -353,7 +487,7 @@ export default function OneDayBooksOS() {
 
         <section className="panel result-panel">
           <div>
-            <div className="kicker">05 · EVIDENCE</div>
+            <div className="kicker">06 · EVIDENCE</div>
             <h2>감이 아니라 실측값으로 남깁니다.</h2>
             <p className="muted">
               이 기록이 쌓이면 ‘빠른 출판 서비스’가 아니라
@@ -526,13 +660,41 @@ export default function OneDayBooksOS() {
         .stage-body strong { font-size: 16px; }
         .stage-body small { margin-top: 3px; color: #6d675e; line-height: 1.4; }
         .stage-state { font-size: 12px; font-weight: 800; }
-        .stage-actions, .button-row {
+        .stage-actions, .button-row, .engine-actions {
           display: flex;
           gap: 9px;
           flex-wrap: wrap;
           margin-top: 14px;
         }
-        .stage-actions .primary { margin-top: 0; }
+        .stage-actions .primary, .engine-actions .primary { margin-top: 0; }
+        .engine-actions { align-items: stretch; }
+        .engine-metrics {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 9px;
+          margin-top: 18px;
+        }
+        .issue-list {
+          display: grid;
+          gap: 7px;
+          margin-top: 14px;
+        }
+        .issue {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          border-bottom: 1px solid #ddd4c7;
+          padding: 9px 2px;
+          font-size: 13px;
+        }
+        .human-boundary {
+          margin-top: 15px;
+          padding: 12px;
+          border-left: 3px solid #7a321f;
+          background: #f6eee5;
+          font-size: 13px;
+          line-height: 1.55;
+        }
         .status-pill {
           flex: 0 0 auto;
           display: inline-flex;
@@ -589,12 +751,14 @@ export default function OneDayBooksOS() {
           .hero { padding-top: 22px; }
           .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .form-grid, .qa-grid, .result-panel { grid-template-columns: 1fr; }
+          .engine-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .panel { padding: 17px; border-radius: 15px; }
           .section-head { align-items: flex-start; }
           .stage { grid-template-columns: 32px minmax(0, 1fr); }
           .stage-state { grid-column: 2; }
           .stage-actions { display: grid; grid-template-columns: 1fr 1fr; }
-          .stage-actions button, .button-row button { width: 100%; }
+          .stage-actions button, .button-row button, .engine-actions button { width: 100%; }
+          .engine-actions { display: grid; grid-template-columns: 1fr 1fr; }
           .button-row { display: grid; grid-template-columns: repeat(3, 1fr); }
           footer { flex-direction: column; }
         }
@@ -629,6 +793,37 @@ function Metric({ label, value, emphasis }) {
           margin-top: 6px;
           font-size: clamp(20px, 3vw, 28px);
           letter-spacing: -.04em;
+          overflow-wrap: anywhere;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
+function MiniMetric({ label, value }) {
+  return (
+    <div className="mini-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <style jsx>{`
+        .mini-metric {
+          min-width: 0;
+          border: 1px solid #d7cdbf;
+          border-radius: 11px;
+          padding: 11px;
+          background: #fffdf7;
+        }
+        span {
+          display: block;
+          font-size: 11px;
+          color: #6d675e;
+          font-weight: 800;
+        }
+        strong {
+          display: block;
+          margin-top: 5px;
+          font-size: 18px;
           overflow-wrap: anywhere;
         }
       `}</style>
