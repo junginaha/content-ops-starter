@@ -32,11 +32,13 @@ export function evaluateReleaseReadiness({
   aiStatus = 'idle',
   aiWarnings = [],
   epubResult = null,
-  releaseResult = null
+  releaseResult = null,
+  printPdfEvaluation = null
 } = {}) {
   const source = String(processedManuscript || manuscript || '');
   const isbn = validateIsbn13(project.isbn || '');
   const electronic = /전자책/.test(project.objective || '');
+  const print = /종이책/.test(project.objective || '');
   const machineIssues = (engineAnalysis?.issues || [])
     .filter((issue) => issue.severity === 'fixable')
     .reduce((sum, issue) => sum + Number(issue.count || 0), 0);
@@ -89,6 +91,16 @@ export function evaluateReleaseReadiness({
       label: '전자책 산출물',
       passed: !electronic || !!(epubResult?.checksPassed || releaseResult?.checksPassed),
       detail: !electronic ? '해당 없음' : (epubResult?.checksPassed || releaseResult?.checksPassed) ? 'EPUB 기술검사 통과' : 'EPUB 생성 필요'
+    },
+    {
+      key: 'print-pdf',
+      label: '종이책 인쇄 PDF',
+      passed: !print || !!printPdfEvaluation?.ready,
+      detail: !print
+        ? '해당 없음'
+        : printPdfEvaluation?.ready
+          ? 'PDF 프리플라이트 통과'
+          : printPdfEvaluation?.blockers?.[0] || '인쇄 PDF 검사 필요'
     }
   ];
 
