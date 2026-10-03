@@ -14,6 +14,7 @@ import {
   listSnapshots,
   saveSnapshot
 } from '../utils/projectStore';
+import { evaluateReleaseReadiness } from '../utils/preflight';
 
 const STAGES = [
   { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
@@ -211,7 +212,29 @@ export default function OneDayBooksOS() {
   }, [project.startedAt, project.internalCompletedAt, now]);
 
   const qaCount = Object.values(project.qa).filter(Boolean).length;
-  const publicationReady = project.stageIndex >= 4 && qaCount === QA_GATES.length;
+  const releaseReadiness = useMemo(() => evaluateReleaseReadiness({
+    project,
+    manuscript,
+    processedManuscript,
+    engineAnalysis,
+    aiStatus,
+    aiWarnings,
+    epubResult,
+    releaseResult
+  }), [
+    project,
+    manuscript,
+    processedManuscript,
+    engineAnalysis,
+    aiStatus,
+    aiWarnings,
+    epubResult,
+    releaseResult
+  ]);
+  const publicationReady =
+    project.stageIndex >= 4 &&
+    qaCount === QA_GATES.length &&
+    releaseReadiness.ready;
   const withinTarget = internalElapsed > 0 && internalElapsed <= 60 * 60 * 1000;
 
   function updateField(key, value) {
@@ -1019,6 +1042,37 @@ export default function OneDayBooksOS() {
             </span>
           </div>
 
+          <div className="auto-preflight">
+            <div className="preflight-head">
+              <strong>자동 프리플라이트</strong>
+              <span className={`status-pill ${releaseReadiness.ready ? 'ready' : ''}`}>
+                {releaseReadiness.ready ? '자동검사 통과' : `${releaseReadiness.blockers.length}개 확인`}
+              </span>
+            </div>
+
+            <div className="preflight-grid">
+              {releaseReadiness.checks.map((check) => (
+                <div className={`preflight-check ${check.passed ? 'passed' : 'blocked'}`} key={check.key}>
+                  <span className="preflight-icon">{check.passed ? '✓' : '!'}</span>
+                  <span className="preflight-body">
+                    <strong>{check.label}</strong>
+                    <small>{check.detail}</small>
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {releaseReadiness.warnings.length > 0 && (
+              <div className="warning-list">
+                {releaseReadiness.warnings.map((warning, index) => (
+                  <div key={`${index}-${warning}`}>참고 · {warning}</div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="manual-qa-label">사람 승인 게이트</div>
+
           <div className="qa-grid">
             {QA_GATES.map((gate) => (
               <button
@@ -1419,6 +1473,66 @@ export default function OneDayBooksOS() {
           letter-spacing: .04em;
         }
         .status-pill.ready { background: #dce8d7; color: #244a2d; }
+        .auto-preflight {
+          margin-bottom: 20px;
+          padding: 14px;
+          border: 1px solid #d7cdbf;
+          border-radius: 13px;
+          background: #fffaf2;
+        }
+        .preflight-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+        .preflight-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .preflight-check {
+          display: grid;
+          grid-template-columns: 24px minmax(0, 1fr);
+          gap: 8px;
+          align-items: start;
+          padding: 10px;
+          border-radius: 9px;
+          background: rgba(255,255,255,.65);
+          border: 1px solid #ded5c8;
+        }
+        .preflight-check.passed {
+          border-color: #a9c1a9;
+          background: #f2f7ef;
+        }
+        .preflight-check.blocked {
+          border-color: #d9a497;
+          background: #fff3ef;
+        }
+        .preflight-icon {
+          font-weight: 900;
+          line-height: 1.25;
+        }
+        .preflight-body strong, .preflight-body small {
+          display: block;
+        }
+        .preflight-body strong {
+          font-size: 13px;
+        }
+        .preflight-body small {
+          margin-top: 3px;
+          color: #6d675e;
+          font-size: 11px;
+          line-height: 1.4;
+        }
+        .manual-qa-label {
+          margin: 4px 0 10px;
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: .06em;
+          color: #7a321f;
+        }
         .qa-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1461,7 +1575,7 @@ export default function OneDayBooksOS() {
           .os-shell { width: min(100% - 22px, 980px); padding-top: 14px; }
           .hero { padding-top: 22px; }
           .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .form-grid, .qa-grid, .result-panel, .ai-settings { grid-template-columns: 1fr; }
+          .form-grid, .qa-grid, .preflight-grid, .result-panel, .ai-settings { grid-template-columns: 1fr; }
           .engine-metrics, .review-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .panel { padding: 17px; border-radius: 15px; }
           .section-head { align-items: flex-start; }
