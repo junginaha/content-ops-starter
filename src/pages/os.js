@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   analyzeManuscript,
   buildPrintProofHtml,
@@ -9,6 +9,11 @@ import {
 import { extractDocx } from '../utils/docxReader';
 import { buildEpub } from '../utils/epubBuilder';
 import { buildReleaseBundle } from '../utils/releaseBuilder';
+import {
+  deleteSnapshot,
+  listSnapshots,
+  saveSnapshot
+} from '../utils/projectStore';
 
 const STAGES = [
   { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
@@ -28,6 +33,7 @@ const QA_GATES = [
 ];
 
 const EMPTY_PROJECT = {
+  projectId: '',
   title: '',
   author: '',
   objective: '전자책',
@@ -47,6 +53,21 @@ const EMPTY_PROJECT = {
   fileName: '',
   charCount: 0
 };
+
+function createProjectId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return `project-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function fmtSnapshotTime(value) {
+  if (!value) return '';
+  return new Date(value).toLocaleString('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 
 function fmtDuration(ms) {
   if (!ms || ms < 0) return '0분';
@@ -113,14 +134,26 @@ export default function OneDayBooksOS() {
   const [releaseResult, setReleaseResult] = useState(null);
   const [releaseError, setReleaseError] = useState('');
   const [releaseBuilding, setReleaseBuilding] = useState(false);
+  const [snapshots, setSnapshots] = useState([]);
+  const [snapshotError, setSnapshotError] = useState('');
+  const [snapshotSaving, setSnapshotSaving] = useState(false);
+  const autoRestoreRef = useRef(false);
 
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem('onedaybooks-os-project');
-      if (saved) setProject({ ...EMPTY_PROJECT, ...JSON.parse(saved) });
+      if (saved) {
+        const parsed = { ...EMPTY_PROJECT, ...JSON.parse(saved) };
+        if (!parsed.projectId) parsed.projectId = createProjectId();
+        setProject(parsed);
+      } else {
+        setProject({ ...EMPTY_PROJECT, projectId: createProjectId() });
+      }
       const sessionKey = window.sessionStorage.getItem('onedaybooks-os-access-key');
       if (sessionKey) setAiAccessKey(sessionKey);
-    } catch (_) {}
+    } catch (_) {
+      setProject({ ...EMPTY_PROJECT, projectId: createProjectId() });
+    }
     setLoaded(true);
   }, []);
 
@@ -141,6 +174,35 @@ export default function OneDayBooksOS() {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!loaded || !project.projectId || autoRestoreRef.current) return;
+
+    let cancelled = false;
+    listSnapshots(project.projectId, 12)
+      .then((rows) => {
+        if (cancelled) return;
+        setSnapshots(rows);
+        const latest = rows[0];
+        if (latest && !manuscript) {
+          setProject({ ...EMPTY_PROJECT, ...(latest.project || {}), projectId: latest.projectId });
+          setManuscript(latest.manuscript || '');
+          setProcessedManuscript(latest.processedManuscript || '');
+          setAiDraft('');
+          setEngineAnalysis(latest.engineAnalysis || analyzeManuscript(latest.processedManuscript || latest.manuscript || ''));
+          setEngineRunAt(latest.processedManuscript ? latest.createdAt : null);
+        }
+        autoRestoreRef.current = true;
+      })
+      .catch((error) => {
+        if (!cancelled) setSnapshotError(error?.message || '버전 기록을 불러오지 못했습니다.');
+        autoRestoreRef.current = true;
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded, project.projectId]);
 
   const internalElapsed = useMemo(() => {
     if (!project.startedAt) return 0;
@@ -194,7 +256,8 @@ export default function OneDayBooksOS() {
 
   function resetProject() {
     if (!window.confirm('현재 프로젝트 기록을 초기화할까요?')) return;
-    setProject(EMPTY_PROJECT);
+    const newProject = { ...EMPTY_PROJECT, projectId: createProjectId() };
+    setProject(newProject);
     setManuscript('');
     setProcessedManuscript('');
     setEngineAnalysis(null);
@@ -211,6 +274,65 @@ export default function OneDayBooksOS() {
     setReleaseResult(null);
     setReleaseError('');
     setReleaseBuilding(false);
+    setSnapshots([]);
+    setSnapshotError('');
+    setSnapshotSaving(false);
+    autoRestoreRef.current = true;
+  }
+
+  async function persistVersion(label = '수동 저장', overrides = {}) {
+    setSnapshotSaving(true);
+    setSnapshotError('');
+
+    try {
+      const nextProject = {
+        ...(overrides.project || project),
+        projectId: (overrides.project || project).projectId || createProjectId()
+      };
+
+      if (!project.projectId) setProject(nextProject);
+
+      await saveSnapshot({
+        projectId: nextProject.projectId,
+        label,
+        project: nextProject,
+        manuscript: overrides.manuscript ?? manuscript,
+        processedManuscript: overrides.processedManuscript ?? processedManuscript,
+        aiDraft: overrides.aiDraft ?? aiDraft,
+        engineAnalysis: overrides.engineAnalysis ?? engineAnalysis
+      });
+
+      const rows = await listSnapshots(nextProject.projectId, 12);
+      setSnapshots(rows);
+    } catch (error) {
+      setSnapshotError(error?.message || '버전 저장에 실패했습니다.');
+    } finally {
+      setSnapshotSaving(false);
+    }
+  }
+
+  function restoreVersion(snapshot) {
+    if (!snapshot) return;
+    setProject({ ...EMPTY_PROJECT, ...(snapshot.project || {}), projectId: snapshot.projectId });
+    setManuscript(snapshot.manuscript || '');
+    setProcessedManuscript(snapshot.processedManuscript || '');
+    setAiDraft('');
+    setAiChanges([]);
+    setAiWarnings([]);
+    setAiError('');
+    setEngineAnalysis(snapshot.engineAnalysis || analyzeManuscript(snapshot.processedManuscript || snapshot.manuscript || ''));
+    setEngineRunAt(snapshot.processedManuscript ? snapshot.createdAt : null);
+    setReleaseResult(null);
+    setEpubResult(null);
+  }
+
+  async function removeVersion(snapshotId) {
+    try {
+      await deleteSnapshot(snapshotId);
+      setSnapshots((rows) => rows.filter((row) => row.id !== snapshotId));
+    } catch (error) {
+      setSnapshotError(error?.message || '버전 삭제에 실패했습니다.');
+    }
   }
 
   function downloadBlob(name, blob) {
@@ -393,14 +515,23 @@ export default function OneDayBooksOS() {
       setProcessedManuscript('');
       setEngineAnalysis(analyzeManuscript(text));
       setEngineRunAt(null);
-      setProject((p) => ({
-        ...p,
-        title: p.title || metadata.title || '',
-        author: p.author || metadata.creator || '',
+      const nextProject = {
+        ...project,
+        projectId: project.projectId || createProjectId(),
+        title: project.title || metadata.title || '',
+        author: project.author || metadata.creator || '',
         fileName: file.name,
         charCount: text.length,
-        startedAt: p.startedAt || Date.now()
-      }));
+        startedAt: project.startedAt || Date.now()
+      };
+      setProject(nextProject);
+      await persistVersion('원고 접수', {
+        project: nextProject,
+        manuscript: text,
+        processedManuscript: '',
+        aiDraft: '',
+        engineAnalysis: analyzeManuscript(text)
+      });
     } catch (error) {
       setFileError(error?.message || '원고 파일을 읽지 못했습니다.');
     }
@@ -468,17 +599,28 @@ export default function OneDayBooksOS() {
     }
   }
 
-  function applyAiDraft() {
+  async function applyAiDraft() {
     if (!aiDraft) return;
+    const analysis = analyzeManuscript(aiDraft);
+    const nextProject = {
+      ...project,
+      projectId: project.projectId || createProjectId(),
+      stageIndex: Math.max(project.stageIndex, 3),
+      interventionCount: project.interventionCount + 1
+    };
+
     setProcessedManuscript(aiDraft);
-    setEngineAnalysis(analyzeManuscript(aiDraft));
+    setEngineAnalysis(analysis);
     setEngineRunAt(Date.now());
-    setProject((p) => ({
-      ...p,
-      stageIndex: Math.max(p.stageIndex, 3),
-      interventionCount: p.interventionCount + 1
-    }));
+    setProject(nextProject);
     setAiStatus('applied');
+
+    await persistVersion('AI 교정 적용', {
+      project: nextProject,
+      processedManuscript: aiDraft,
+      aiDraft: '',
+      engineAnalysis: analysis
+    });
   }
 
   function discardAiDraft() {
@@ -904,9 +1046,55 @@ export default function OneDayBooksOS() {
           </label>
         </section>
 
+        <section className="panel version-panel">
+          <div className="section-head">
+            <div>
+              <div className="kicker">07 · VERSION HISTORY</div>
+              <h2>원고와 작업본을 버전으로 보존</h2>
+            </div>
+            <span className="status-pill">{snapshots.length} versions</span>
+          </div>
+
+          <p className="muted">
+            원고 접수와 AI 교정 적용 시 브라우저의 IndexedDB에 자동 저장합니다.
+            서버 업로드 없이 이 기기에서 이전 작업본을 복구할 수 있습니다.
+          </p>
+
+          <div className="engine-actions">
+            <button
+              className="primary"
+              onClick={() => persistVersion('수동 저장')}
+              disabled={!manuscript || snapshotSaving}
+            >
+              {snapshotSaving ? '버전 저장 중…' : '현재 버전 저장'}
+            </button>
+          </div>
+
+          {snapshotError && <div className="error-box">{snapshotError}</div>}
+
+          {snapshots.length > 0 && (
+            <div className="version-list">
+              {snapshots.slice(0, 8).map((snapshot) => (
+                <div className="version-row" key={snapshot.id}>
+                  <div className="version-main">
+                    <strong>{snapshot.label || '버전'}</strong>
+                    <small>
+                      {fmtSnapshotTime(snapshot.createdAt)} · {(snapshot.processedManuscript || snapshot.manuscript || '').length.toLocaleString()}자
+                    </small>
+                  </div>
+                  <div className="version-actions">
+                    <button className="secondary compact" onClick={() => restoreVersion(snapshot)}>복구</button>
+                    <button className="ghost compact" onClick={() => removeVersion(snapshot.id)}>삭제</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <section className="panel result-panel">
           <div>
-            <div className="kicker">07 · EVIDENCE</div>
+            <div className="kicker">08 · EVIDENCE</div>
             <h2>감이 아니라 실측값으로 남깁니다.</h2>
             <p className="muted">
               이 기록이 쌓이면 ‘빠른 출판 서비스’가 아니라
@@ -1184,6 +1372,40 @@ export default function OneDayBooksOS() {
           color: #6d675e;
           font-size: 12px;
         }
+        .version-list {
+          display: grid;
+          gap: 8px;
+          margin-top: 16px;
+        }
+        .version-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 11px 0;
+          border-bottom: 1px solid #ddd4c7;
+        }
+        .version-main {
+          min-width: 0;
+        }
+        .version-main strong, .version-main small {
+          display: block;
+        }
+        .version-main small {
+          margin-top: 3px;
+          color: #6d675e;
+          font-size: 12px;
+        }
+        .version-actions {
+          display: flex;
+          gap: 7px;
+          flex: 0 0 auto;
+        }
+        .compact {
+          min-height: 36px;
+          padding: 7px 10px;
+          font-size: 12px;
+        }
         .status-pill {
           flex: 0 0 auto;
           display: inline-flex;
@@ -1249,6 +1471,8 @@ export default function OneDayBooksOS() {
           .stage-actions button, .button-row button, .engine-actions button { width: 100%; }
           .engine-actions { display: grid; grid-template-columns: 1fr 1fr; }
           .button-row { display: grid; grid-template-columns: repeat(3, 1fr); }
+          .version-row { align-items: flex-start; }
+          .version-actions { flex-direction: column; }
           footer { flex-direction: column; }
         }
       `}</style>
