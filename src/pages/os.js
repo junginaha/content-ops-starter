@@ -8,6 +8,7 @@ import {
 } from '../utils/onedaybooksEngine';
 import { extractDocx } from '../utils/docxReader';
 import { buildEpub } from '../utils/epubBuilder';
+import { buildReleaseBundle } from '../utils/releaseBuilder';
 
 const STAGES = [
   { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
@@ -109,6 +110,9 @@ export default function OneDayBooksOS() {
   const [aiError, setAiError] = useState('');
   const [epubResult, setEpubResult] = useState(null);
   const [epubError, setEpubError] = useState('');
+  const [releaseResult, setReleaseResult] = useState(null);
+  const [releaseError, setReleaseError] = useState('');
+  const [releaseBuilding, setReleaseBuilding] = useState(false);
 
   useEffect(() => {
     try {
@@ -204,6 +208,9 @@ export default function OneDayBooksOS() {
     setAiError('');
     setEpubResult(null);
     setEpubError('');
+    setReleaseResult(null);
+    setReleaseError('');
+    setReleaseBuilding(false);
   }
 
   function downloadBlob(name, blob) {
@@ -281,6 +288,41 @@ export default function OneDayBooksOS() {
       }));
     } catch (error) {
       setEpubError(error?.message || 'EPUB 생성 중 오류가 발생했습니다.');
+    }
+  }
+
+  async function exportReleaseBundle() {
+    if (!processedManuscript) return;
+
+    setReleaseBuilding(true);
+    setReleaseError('');
+
+    try {
+      const result = await buildReleaseBundle({
+        title: project.title,
+        author: project.author,
+        objective: project.objective,
+        isbn: project.isbn,
+        originalText: manuscript,
+        processedText: processedManuscript
+      });
+
+      downloadBlob(result.fileName, result.blob);
+      setReleaseResult({
+        generatedAt: result.generatedAt,
+        files: result.files,
+        epubIdentifier: result.epubIdentifier,
+        checksPassed: Object.values(result.technicalChecks).every(Boolean)
+      });
+
+      setProject((p) => ({
+        ...p,
+        stageIndex: Math.max(p.stageIndex, 3)
+      }));
+    } catch (error) {
+      setReleaseError(error?.message || '출간 패키지 생성 중 오류가 발생했습니다.');
+    } finally {
+      setReleaseBuilding(false);
     }
   }
 
@@ -580,6 +622,13 @@ export default function OneDayBooksOS() {
             <button className="secondary" onClick={exportProductionReport} disabled={!manuscript}>
               제작 리포트
             </button>
+            <button
+              className="secondary"
+              onClick={exportReleaseBundle}
+              disabled={!processedManuscript || releaseBuilding}
+            >
+              {releaseBuilding ? '출간 패키지 생성 중…' : '출간 패키지 ZIP'}
+            </button>
           </div>
 
           {engineAnalysis && (
@@ -618,6 +667,21 @@ export default function OneDayBooksOS() {
               </div>
               <div className="file-info">
                 EPUB 3 패키지 생성 완료 · {epubResult.identifier}
+              </div>
+            </div>
+          )}
+
+          {releaseError && <div className="error-box">{releaseError}</div>}
+
+          {releaseResult && (
+            <div className="release-result">
+              <div className="review-summary">
+                <MiniMetric label="출간 묶음" value={`${releaseResult.files.length}개 파일`} />
+                <MiniMetric label="EPUB 검사" value={releaseResult.checksPassed ? '통과' : '확인 필요'} />
+                <MiniMetric label="상태" value="QA 대기" />
+              </div>
+              <div className="file-info">
+                출간 패키지 ZIP 생성 완료 · 원고 + EPUB + 140×210 프루프 + 제작리포트 + 메타데이터
               </div>
             </div>
           )}
@@ -1079,7 +1143,7 @@ export default function OneDayBooksOS() {
           background: #171714;
           transition: width .2s ease;
         }
-        .ai-review, .epub-result { margin-top: 18px; }
+        .ai-review, .epub-result, .release-result { margin-top: 18px; }
         .review-summary {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
