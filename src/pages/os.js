@@ -6,6 +6,7 @@ import {
   buildProductionReport,
   safeAutoFix
 } from '../utils/onedaybooksEngine';
+import { extractDocx } from '../utils/docxReader';
 
 const STAGES = [
   { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
@@ -52,6 +53,41 @@ function fmtDuration(ms) {
   return `${min}분 ${sec}초`;
 }
 
+function splitTextIntoChunks(text, maxChars = 8500) {
+  const paragraphs = String(text || '').split(/\n\s*\n/);
+  const chunks = [];
+  let current = '';
+
+  const pushCurrent = () => {
+    if (current.trim()) chunks.push(current.trim());
+    current = '';
+  };
+
+  paragraphs.forEach((paragraph) => {
+    const value = paragraph.trim();
+    if (!value) return;
+
+    if (value.length > maxChars) {
+      pushCurrent();
+      for (let offset = 0; offset < value.length; offset += maxChars) {
+        chunks.push(value.slice(offset, offset + maxChars));
+      }
+      return;
+    }
+
+    const candidate = current ? `${current}\n\n${value}` : value;
+    if (candidate.length > maxChars) {
+      pushCurrent();
+      current = value;
+    } else {
+      current = candidate;
+    }
+  });
+
+  pushCurrent();
+  return chunks;
+}
+
 export default function OneDayBooksOS() {
   const [project, setProject] = useState(EMPTY_PROJECT);
   const [now, setNow] = useState(Date.now());
@@ -60,11 +96,22 @@ export default function OneDayBooksOS() {
   const [processedManuscript, setProcessedManuscript] = useState('');
   const [engineAnalysis, setEngineAnalysis] = useState(null);
   const [engineRunAt, setEngineRunAt] = useState(null);
+  const [fileError, setFileError] = useState('');
+  const [aiAccessKey, setAiAccessKey] = useState('');
+  const [aiMode, setAiMode] = useState('proofread');
+  const [aiStatus, setAiStatus] = useState('idle');
+  const [aiProgress, setAiProgress] = useState({ current: 0, total: 0 });
+  const [aiDraft, setAiDraft] = useState('');
+  const [aiChanges, setAiChanges] = useState([]);
+  const [aiWarnings, setAiWarnings] = useState([]);
+  const [aiError, setAiError] = useState('');
 
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem('onedaybooks-os-project');
       if (saved) setProject({ ...EMPTY_PROJECT, ...JSON.parse(saved) });
+      const sessionKey = window.sessionStorage.getItem('onedaybooks-os-access-key');
+      if (sessionKey) setAiAccessKey(sessionKey);
     } catch (_) {}
     setLoaded(true);
   }, []);
@@ -73,6 +120,14 @@ export default function OneDayBooksOS() {
     if (!loaded) return;
     window.localStorage.setItem('onedaybooks-os-project', JSON.stringify(project));
   }, [project, loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      if (aiAccessKey) window.sessionStorage.setItem('onedaybooks-os-access-key', aiAccessKey);
+      else window.sessionStorage.removeItem('onedaybooks-os-access-key');
+    } catch (_) {}
+  }, [aiAccessKey, loaded]);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
@@ -136,6 +191,13 @@ export default function OneDayBooksOS() {
     setProcessedManuscript('');
     setEngineAnalysis(null);
     setEngineRunAt(null);
+    setFileError('');
+    setAiStatus('idle');
+    setAiProgress({ current: 0, total: 0 });
+    setAiDraft('');
+    setAiChanges([]);
+    setAiWarnings([]);
+    setAiError('');
   }
 
   function downloadText(name, content, type = 'text/plain;charset=utf-8') {
@@ -219,19 +281,127 @@ export default function OneDayBooksOS() {
     URL.revokeObjectURL(url);
   }
 
-  async function readTextFile(file) {
+  async function readManuscriptFile(file) {
     if (!file) return;
-    const text = await file.text();
-    setManuscript(text);
-    setProcessedManuscript('');
-    setEngineAnalysis(analyzeManuscript(text));
-    setEngineRunAt(null);
+    setFileError('');
+    setAiDraft('');
+    setAiChanges([]);
+    setAiWarnings([]);
+    setAiError('');
+
+    try {
+      let text = '';
+      let metadata = {};
+
+      if (/\.docx$/i.test(file.name || '')) {
+        const extracted = await extractDocx(file);
+        text = extracted.text;
+        metadata = extracted.metadata || {};
+      } else if (/\.(txt|md)$/i.test(file.name || '') || /^text\//i.test(file.type || '')) {
+        text = await file.text();
+      } else {
+        throw new Error('현재는 DOCX, TXT, MD 원고를 지원합니다. PDF 원고 입력은 다음 단계에서 추가합니다.');
+      }
+
+      setManuscript(text);
+      setProcessedManuscript('');
+      setEngineAnalysis(analyzeManuscript(text));
+      setEngineRunAt(null);
+      setProject((p) => ({
+        ...p,
+        title: p.title || metadata.title || '',
+        author: p.author || metadata.creator || '',
+        fileName: file.name,
+        charCount: text.length,
+        startedAt: p.startedAt || Date.now()
+      }));
+    } catch (error) {
+      setFileError(error?.message || '원고 파일을 읽지 못했습니다.');
+    }
+  }
+
+  async function runAiEditorial() {
+    const baseText = processedManuscript || manuscript;
+    if (!baseText) return;
+
+    if (!aiAccessKey.trim()) {
+      setAiError('AI 교정을 사용하려면 OneDayBooks OS 접근키를 입력해 주세요.');
+      return;
+    }
+
+    const chunks = splitTextIntoChunks(baseText);
+    if (!chunks.length) return;
+    if (chunks.length > 24) {
+      setAiError('현재 AI 교정 MVP는 약 20만 자 이하 원고를 권장합니다. 원고를 분권하거나 나눠 처리해 주세요.');
+      return;
+    }
+
+    setAiStatus('running');
+    setAiError('');
+    setAiDraft('');
+    setAiChanges([]);
+    setAiWarnings([]);
+    setAiProgress({ current: 0, total: chunks.length });
+
+    const revisedChunks = [];
+    const changes = [];
+    const warnings = [];
+
+    try {
+      for (let index = 0; index < chunks.length; index += 1) {
+        const response = await fetch('/api/editorial-ai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-onedaybooks-key': aiAccessKey.trim()
+          },
+          body: JSON.stringify({
+            text: chunks[index],
+            mode: aiMode
+          })
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || `AI 교정 ${index + 1}/${chunks.length} 처리에 실패했습니다.`);
+        }
+
+        revisedChunks.push(payload.revised_text || chunks[index]);
+        if (Array.isArray(payload.changes)) changes.push(...payload.changes);
+        if (Array.isArray(payload.warnings)) warnings.push(...payload.warnings);
+        setAiProgress({ current: index + 1, total: chunks.length });
+      }
+
+      setAiDraft(revisedChunks.join('\n\n'));
+      setAiChanges(changes);
+      setAiWarnings(warnings);
+      setAiStatus('review');
+    } catch (error) {
+      setAiStatus('error');
+      setAiError(error?.message || 'AI 교정 중 오류가 발생했습니다.');
+    }
+  }
+
+  function applyAiDraft() {
+    if (!aiDraft) return;
+    setProcessedManuscript(aiDraft);
+    setEngineAnalysis(analyzeManuscript(aiDraft));
+    setEngineRunAt(Date.now());
     setProject((p) => ({
       ...p,
-      fileName: file.name,
-      charCount: text.length,
-      startedAt: p.startedAt || Date.now()
+      stageIndex: Math.max(p.stageIndex, 3),
+      interventionCount: p.interventionCount + 1
     }));
+    setAiStatus('applied');
+  }
+
+  function discardAiDraft() {
+    setAiDraft('');
+    setAiChanges([]);
+    setAiWarnings([]);
+    setAiError('');
+    setAiStatus('idle');
+    setAiProgress({ current: 0, total: 0 });
   }
 
   return (
@@ -306,17 +476,18 @@ export default function OneDayBooksOS() {
               <input
                 className="file"
                 type="file"
-                accept=".txt,.md,text/plain,text/markdown"
-                onChange={(e) => readTextFile(e.target.files?.[0])}
+                accept=".docx,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+                onChange={(e) => readManuscriptFile(e.target.files?.[0])}
               />
             </label>
           </div>
 
           {project.fileName && (
             <div className="file-info">
-              {project.fileName} · 약 {project.charCount.toLocaleString()}자 · 브라우저에서만 읽음
+              {project.fileName} · 약 {project.charCount.toLocaleString()}자 · DOCX/TXT/MD 입력 지원
             </div>
           )}
+          {fileError && <div className="error-box">{fileError}</div>}
 
           <button className="primary" onClick={startProject} disabled={!!project.startedAt}>
             {project.startedAt ? '측정 중' : '제작 타이머 시작'}
@@ -382,10 +553,124 @@ export default function OneDayBooksOS() {
           )}
         </section>
 
+        <section className="panel ai-panel">
+          <div className="section-head">
+            <div>
+              <div className="kicker">03 · AI EDITORIAL</div>
+              <h2>AI 교정은 초안을 만들고 사람이 승인</h2>
+            </div>
+            <span className={`status-pill ${aiStatus === 'review' || aiStatus === 'applied' ? 'ready' : ''}`}>
+              {aiStatus === 'running'
+                ? `${aiProgress.current}/${aiProgress.total}`
+                : aiStatus === 'review'
+                  ? '검토 대기'
+                  : aiStatus === 'applied'
+                    ? '반영 완료'
+                    : '대기'}
+            </span>
+          </div>
+
+          <p className="muted">
+            AI는 맞춤법·띄어쓰기·문법·문장부호 교정 초안만 만듭니다.
+            원문은 자동 덮어쓰기하지 않습니다. 실행 시 해당 원고 조각이 Vercel AI Gateway를 통해 AI 모델로 전송됩니다.
+          </p>
+
+          <div className="ai-settings">
+            <label>
+              <span>OS 접근키</span>
+              <input
+                type="password"
+                value={aiAccessKey}
+                onChange={(e) => setAiAccessKey(e.target.value)}
+                placeholder="이 브라우저 세션에만 저장"
+                autoComplete="off"
+              />
+            </label>
+            <label>
+              <span>교정 수준</span>
+              <select value={aiMode} onChange={(e) => setAiMode(e.target.value)}>
+                <option value="proofread">보수적 교정</option>
+                <option value="copyedit">문장 다듬기</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="engine-actions">
+            <button
+              className="primary"
+              onClick={runAiEditorial}
+              disabled={!manuscript || aiStatus === 'running'}
+            >
+              {aiStatus === 'running' ? 'AI 교정 중…' : 'AI 교정 초안 만들기'}
+            </button>
+            <button
+              className="secondary"
+              onClick={applyAiDraft}
+              disabled={!aiDraft || aiStatus === 'running'}
+            >
+              검토 후 작업본에 반영
+            </button>
+            <button
+              className="secondary"
+              onClick={discardAiDraft}
+              disabled={!aiDraft && !aiError}
+            >
+              AI 초안 버리기
+            </button>
+          </div>
+
+          {aiStatus === 'running' && (
+            <div className="progress-track" aria-label="AI 교정 진행률">
+              <span
+                style={{
+                  width: aiProgress.total
+                    ? `${Math.round((aiProgress.current / aiProgress.total) * 100)}%`
+                    : '0%'
+                }}
+              />
+            </div>
+          )}
+
+          {aiError && <div className="error-box">{aiError}</div>}
+
+          {aiDraft && (
+            <div className="ai-review">
+              <div className="review-summary">
+                <MiniMetric label="제안 변경" value={aiChanges.length.toLocaleString()} />
+                <MiniMetric label="사람 확인 경고" value={aiWarnings.length.toLocaleString()} />
+                <MiniMetric label="AI 초안 글자 수" value={aiDraft.length.toLocaleString()} />
+              </div>
+
+              {aiChanges.length > 0 && (
+                <div className="change-list">
+                  {aiChanges.slice(0, 8).map((change, index) => (
+                    <div className="change-card" key={`${index}-${change.before}`}>
+                      <div><strong>전</strong> {change.before}</div>
+                      <div><strong>후</strong> {change.after}</div>
+                      <small>{change.reason}</small>
+                    </div>
+                  ))}
+                  {aiChanges.length > 8 && (
+                    <div className="more-note">외 {aiChanges.length - 8}건 · 제작 리포트 단계에서 전체 기록 가능</div>
+                  )}
+                </div>
+              )}
+
+              {aiWarnings.length > 0 && (
+                <div className="warning-list">
+                  {aiWarnings.slice(0, 8).map((warning, index) => (
+                    <div key={`${index}-${warning}`}>확인 · {warning}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="kicker">03 · CONTROL PLANE</div>
+              <div className="kicker">04 · CONTROL PLANE</div>
               <h2>7단계 제작 흐름</h2>
             </div>
             <span className="status-pill">{STAGES[project.stageIndex].label}</span>
@@ -433,7 +718,7 @@ export default function OneDayBooksOS() {
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="kicker">04 · HUMAN-IN-THE-LOOP</div>
+              <div className="kicker">05 · HUMAN-IN-THE-LOOP</div>
               <h2>인간 개입을 숨기지 않고 측정</h2>
             </div>
           </div>
@@ -450,7 +735,7 @@ export default function OneDayBooksOS() {
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="kicker">05 · QUALITY GATES</div>
+              <div className="kicker">06 · QUALITY GATES</div>
               <h2>출간 가능 판정</h2>
             </div>
             <span className={`status-pill ${publicationReady ? 'ready' : ''}`}>
@@ -487,7 +772,7 @@ export default function OneDayBooksOS() {
 
         <section className="panel result-panel">
           <div>
-            <div className="kicker">06 · EVIDENCE</div>
+            <div className="kicker">07 · EVIDENCE</div>
             <h2>감이 아니라 실측값으로 남깁니다.</h2>
             <p className="muted">
               이 기록이 쌓이면 ‘빠른 출판 서비스’가 아니라
@@ -612,6 +897,16 @@ export default function OneDayBooksOS() {
           background: #eee8dd;
           font-size: 13px;
         }
+        .error-box {
+          margin-top: 12px;
+          padding: 11px 12px;
+          border: 1px solid #bb7567;
+          border-radius: 10px;
+          background: #fff0eb;
+          color: #762f24;
+          font-size: 13px;
+          line-height: 1.5;
+        }
         .primary, .secondary, .ghost {
           min-height: 44px;
           border-radius: 10px;
@@ -695,6 +990,66 @@ export default function OneDayBooksOS() {
           font-size: 13px;
           line-height: 1.55;
         }
+        .ai-settings {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(170px, .45fr);
+          gap: 12px;
+          margin-top: 16px;
+        }
+        .progress-track {
+          height: 8px;
+          overflow: hidden;
+          margin-top: 14px;
+          border-radius: 999px;
+          background: #dfd6c8;
+        }
+        .progress-track span {
+          display: block;
+          height: 100%;
+          background: #171714;
+          transition: width .2s ease;
+        }
+        .ai-review { margin-top: 18px; }
+        .review-summary {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 9px;
+        }
+        .change-list, .warning-list {
+          display: grid;
+          gap: 8px;
+          margin-top: 14px;
+        }
+        .change-card {
+          padding: 12px;
+          border: 1px solid #d7cdbf;
+          border-radius: 10px;
+          background: #fffdf7;
+          font-size: 13px;
+          line-height: 1.55;
+          overflow-wrap: anywhere;
+        }
+        .change-card strong {
+          display: inline-block;
+          min-width: 26px;
+          color: #7a321f;
+        }
+        .change-card small {
+          display: block;
+          margin-top: 6px;
+          color: #6d675e;
+        }
+        .warning-list > div {
+          padding: 9px 11px;
+          border-left: 3px solid #a87421;
+          background: #fff7df;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .more-note {
+          color: #6d675e;
+          font-size: 12px;
+        }
         .status-pill {
           flex: 0 0 auto;
           display: inline-flex;
@@ -750,8 +1105,8 @@ export default function OneDayBooksOS() {
           .os-shell { width: min(100% - 22px, 980px); padding-top: 14px; }
           .hero { padding-top: 22px; }
           .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .form-grid, .qa-grid, .result-panel { grid-template-columns: 1fr; }
-          .engine-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .form-grid, .qa-grid, .result-panel, .ai-settings { grid-template-columns: 1fr; }
+          .engine-metrics, .review-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .panel { padding: 17px; border-radius: 15px; }
           .section-head { align-items: flex-start; }
           .stage { grid-template-columns: 32px minmax(0, 1fr); }
