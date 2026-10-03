@@ -509,6 +509,7 @@ export default function OneDayBooksOS() {
         generatedAt: result.generatedAt,
         files: result.files,
         epubIdentifier: result.epubIdentifier,
+        manifest: result.manifest,
         checksPassed: Object.values(result.technicalChecks).every(Boolean)
       });
 
@@ -995,11 +996,11 @@ export default function OneDayBooksOS() {
             <div className="release-result">
               <div className="review-summary">
                 <MiniMetric label="출간 묶음" value={`${releaseResult.files.length}개 파일`} />
+                <MiniMetric label="SHA-256" value={releaseResult.manifest ? `${releaseResult.manifest.files.length}개 고정` : '확인 필요'} />
                 <MiniMetric label="EPUB 검사" value={releaseResult.checksPassed ? '통과' : '확인 필요'} />
-                <MiniMetric label="상태" value="QA 대기" />
               </div>
               <div className="file-info">
-                출간 패키지 ZIP 생성 완료 · 원고 + EPUB + 140×210 프루프 + 제작리포트 + 메타데이터
+                출간 패키지 ZIP 생성 완료 · 원고 + EPUB + 140×210 프루프 + 제작리포트 + 메타데이터 + SHA-256 매니페스트
               </div>
             </div>
           )}
