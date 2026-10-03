@@ -7,6 +7,7 @@ import {
   safeAutoFix
 } from '../utils/onedaybooksEngine';
 import { extractDocx } from '../utils/docxReader';
+import { buildEpub } from '../utils/epubBuilder';
 
 const STAGES = [
   { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
@@ -29,6 +30,7 @@ const EMPTY_PROJECT = {
   title: '',
   author: '',
   objective: '전자책',
+  isbn: '',
   stageIndex: 0,
   startedAt: null,
   internalCompletedAt: null,
@@ -105,6 +107,8 @@ export default function OneDayBooksOS() {
   const [aiChanges, setAiChanges] = useState([]);
   const [aiWarnings, setAiWarnings] = useState([]);
   const [aiError, setAiError] = useState('');
+  const [epubResult, setEpubResult] = useState(null);
+  const [epubError, setEpubError] = useState('');
 
   useEffect(() => {
     try {
@@ -198,16 +202,21 @@ export default function OneDayBooksOS() {
     setAiChanges([]);
     setAiWarnings([]);
     setAiError('');
+    setEpubResult(null);
+    setEpubError('');
   }
 
-  function downloadText(name, content, type = 'text/plain;charset=utf-8') {
-    const blob = new Blob([content], { type });
+  function downloadBlob(name, blob) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = name;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function downloadText(name, content, type = 'text/plain;charset=utf-8') {
+    downloadBlob(name, new Blob([content], { type }));
   }
 
   function runProductionEngine() {
@@ -238,6 +247,41 @@ export default function OneDayBooksOS() {
       manuscript: processedManuscript
     });
     downloadText(`${safeTitle}_140x210_proof.html`, html, 'text/html;charset=utf-8');
+  }
+
+  function exportEpub() {
+    const source = processedManuscript || manuscript;
+    if (!source) return;
+    setEpubError('');
+
+    try {
+      const result = buildEpub({
+        title: project.title,
+        author: project.author,
+        manuscript: source,
+        isbn: project.isbn,
+        publisher: 'OneDayBooks'
+      });
+
+      const safeTitle = (project.title || 'book').replace(/[^0-9a-zA-Z가-힣_-]+/g, '_');
+      downloadBlob(`${safeTitle}.epub`, result.blob);
+
+      const checksPassed = Object.values(result.technicalChecks).every(Boolean);
+      setEpubResult({
+        identifier: result.identifier,
+        metadata: result.metadata,
+        technicalChecks: result.technicalChecks,
+        checksPassed,
+        generatedAt: Date.now()
+      });
+
+      setProject((p) => ({
+        ...p,
+        stageIndex: Math.max(p.stageIndex, 3)
+      }));
+    } catch (error) {
+      setEpubError(error?.message || 'EPUB 생성 중 오류가 발생했습니다.');
+    }
   }
 
   function exportProductionReport() {
@@ -472,6 +516,14 @@ export default function OneDayBooksOS() {
               </select>
             </label>
             <label>
+              <span>ISBN (선택)</span>
+              <input
+                value={project.isbn || ''}
+                onChange={(e) => updateField('isbn', e.target.value)}
+                placeholder="예: 979-11-..."
+              />
+            </label>
+            <label>
               <span>원고 파일</span>
               <input
                 className="file"
@@ -522,6 +574,9 @@ export default function OneDayBooksOS() {
             <button className="secondary" onClick={exportPrintProof} disabled={!processedManuscript}>
               140×210 내지 프루프
             </button>
+            <button className="secondary" onClick={exportEpub} disabled={!manuscript}>
+              전자책 EPUB 생성
+            </button>
             <button className="secondary" onClick={exportProductionReport} disabled={!manuscript}>
               제작 리포트
             </button>
@@ -550,6 +605,21 @@ export default function OneDayBooksOS() {
                 저자 의도 · 사실/인용 · 저작권 · 최종 편집디자인 · 최종 출간 승인
               </div>
             </>
+          )}
+
+          {epubError && <div className="error-box">{epubError}</div>}
+
+          {epubResult && (
+            <div className="epub-result">
+              <div className="review-summary">
+                <MiniMetric label="EPUB 기술검사" value={epubResult.checksPassed ? '6/6 통과' : '확인 필요'} />
+                <MiniMetric label="식별자" value={epubResult.metadata?.isbn ? 'ISBN 적용' : 'UUID 생성'} />
+                <MiniMetric label="언어" value={epubResult.metadata?.language || 'ko'} />
+              </div>
+              <div className="file-info">
+                EPUB 3 패키지 생성 완료 · {epubResult.identifier}
+              </div>
+            </div>
           )}
         </section>
 
@@ -1009,7 +1079,7 @@ export default function OneDayBooksOS() {
           background: #171714;
           transition: width .2s ease;
         }
-        .ai-review { margin-top: 18px; }
+        .ai-review, .epub-result { margin-top: 18px; }
         .review-summary {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
