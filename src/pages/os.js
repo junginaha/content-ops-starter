@@ -15,6 +15,7 @@ import {
   saveSnapshot
 } from '../utils/projectStore';
 import { evaluateReleaseReadiness } from '../utils/preflight';
+import { evaluatePrintPdf, inspectPdfFile } from '../utils/pdfPreflight';
 
 const STAGES = [
   { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
@@ -39,6 +40,12 @@ const EMPTY_PROJECT = {
   author: '',
   objective: '전자책',
   isbn: '',
+  printSpec: {
+    expectedPages: '',
+    trimWidthMm: 140,
+    trimHeightMm: 210,
+    bleedMm: 3
+  },
   stageIndex: 0,
   startedAt: null,
   internalCompletedAt: null,
@@ -131,6 +138,8 @@ export default function OneDayBooksOS() {
   const [aiWarnings, setAiWarnings] = useState([]);
   const [aiError, setAiError] = useState('');
   const [aiHealth, setAiHealth] = useState({ status: 'checking', gatewayAuthAvailable: null, model: '' });
+  const [printPdfReport, setPrintPdfReport] = useState(null);
+  const [printPdfError, setPrintPdfError] = useState('');
   const [epubResult, setEpubResult] = useState(null);
   const [epubError, setEpubError] = useState('');
   const [releaseResult, setReleaseResult] = useState(null);
@@ -237,6 +246,10 @@ export default function OneDayBooksOS() {
   }, [project.startedAt, project.internalCompletedAt, now]);
 
   const qaCount = Object.values(project.qa).filter(Boolean).length;
+  const printPdfEvaluation = useMemo(
+    () => evaluatePrintPdf(printPdfReport, project.printSpec || EMPTY_PROJECT.printSpec),
+    [printPdfReport, project.printSpec]
+  );
   const releaseReadiness = useMemo(() => evaluateReleaseReadiness({
     project,
     manuscript,
@@ -245,7 +258,8 @@ export default function OneDayBooksOS() {
     aiStatus,
     aiWarnings,
     epubResult,
-    releaseResult
+    releaseResult,
+    printPdfEvaluation
   }), [
     project,
     manuscript,
@@ -254,7 +268,8 @@ export default function OneDayBooksOS() {
     aiStatus,
     aiWarnings,
     epubResult,
-    releaseResult
+    releaseResult,
+    printPdfEvaluation
   ]);
   const publicationReady =
     project.stageIndex >= 4 &&
@@ -264,6 +279,16 @@ export default function OneDayBooksOS() {
 
   function updateField(key, value) {
     setProject((p) => ({ ...p, [key]: value }));
+  }
+
+  function updatePrintSpec(key, value) {
+    setProject((p) => ({
+      ...p,
+      printSpec: {
+        ...(p.printSpec || EMPTY_PROJECT.printSpec),
+        [key]: value
+      }
+    }));
   }
 
   function startProject() {
@@ -313,6 +338,8 @@ export default function OneDayBooksOS() {
     setFileError('');
     setAiStatus('idle');
     setAiProgress({ current: 0, total: 0 });
+    setPrintPdfReport(null);
+    setPrintPdfError('');
     setAiDraft('');
     setAiChanges([]);
     setAiWarnings([]);
@@ -535,6 +562,19 @@ export default function OneDayBooksOS() {
     a.download = `onedaybooks_${safeTitle}_metrics.json`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function readPrintPdf(file) {
+    if (!file) return;
+    setPrintPdfError('');
+
+    try {
+      const report = await inspectPdfFile(file);
+      setPrintPdfReport(report);
+    } catch (error) {
+      setPrintPdfReport(null);
+      setPrintPdfError(error?.message || '인쇄 PDF를 검사하지 못했습니다.');
+    }
   }
 
   async function readManuscriptFile(file) {
@@ -820,6 +860,94 @@ export default function OneDayBooksOS() {
               {releaseBuilding ? '출간 패키지 생성 중…' : '출간 패키지 ZIP'}
             </button>
           </div>
+
+          {/종이책/.test(project.objective || '') && (
+            <div className="print-preflight-card">
+              <div className="print-preflight-head">
+                <div>
+                  <strong>종이책 인쇄 PDF 프리플라이트</strong>
+                  <small>쪽수 · 짝수 제본 · 판면/도련 · 암호화 여부를 자동 검사합니다.</small>
+                </div>
+                <span className={`status-pill ${printPdfEvaluation.ready ? 'ready' : ''}`}>
+                  {printPdfEvaluation.ready ? 'PRINT PASS' : '검사 필요'}
+                </span>
+              </div>
+
+              <div className="print-spec-grid">
+                <label>
+                  <span>기준 쪽수</span>
+                  <input
+                    inputMode="numeric"
+                    value={project.printSpec?.expectedPages ?? ''}
+                    onChange={(e) => updatePrintSpec('expectedPages', e.target.value)}
+                    placeholder="예: 168"
+                  />
+                </label>
+                <label>
+                  <span>재단 가로 mm</span>
+                  <input
+                    inputMode="decimal"
+                    value={project.printSpec?.trimWidthMm ?? 140}
+                    onChange={(e) => updatePrintSpec('trimWidthMm', e.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>재단 세로 mm</span>
+                  <input
+                    inputMode="decimal"
+                    value={project.printSpec?.trimHeightMm ?? 210}
+                    onChange={(e) => updatePrintSpec('trimHeightMm', e.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>도련 mm</span>
+                  <input
+                    inputMode="decimal"
+                    value={project.printSpec?.bleedMm ?? 3}
+                    onChange={(e) => updatePrintSpec('bleedMm', e.target.value)}
+                  />
+                </label>
+              </div>
+
+              <label className="print-pdf-input">
+                <span>최종 인쇄용 PDF</span>
+                <input
+                  className="file"
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => readPrintPdf(e.target.files?.[0])}
+                />
+              </label>
+
+              {printPdfError && <div className="error-box">{printPdfError}</div>}
+
+              {printPdfReport && (
+                <>
+                  <div className="engine-metrics">
+                    <MiniMetric label="실제 PDF 쪽수" value={printPdfReport.pageCount ? `${printPdfReport.pageCount}쪽` : '확인 필요'} />
+                    <MiniMetric
+                      label="PDF 판면"
+                      value={printPdfReport.mediaBox ? `${printPdfReport.mediaBox.widthMm}×${printPdfReport.mediaBox.heightMm}mm` : '확인 필요'}
+                    />
+                    <MiniMetric label="PDF 버전" value={printPdfReport.pdfVersion || '확인 필요'} />
+                    <MiniMetric label="암호화" value={printPdfReport.encrypted ? '있음' : '없음'} />
+                  </div>
+
+                  <div className="preflight-grid print-check-grid">
+                    {printPdfEvaluation.checks.map((check) => (
+                      <div className={`preflight-check ${check.passed ? 'passed' : 'blocked'}`} key={check.key}>
+                        <span className="preflight-icon">{check.passed ? '✓' : '!'}</span>
+                        <span className="preflight-body">
+                          <strong>{check.label}</strong>
+                          <small>{check.detail}</small>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {engineAnalysis && (
             <>
@@ -1375,6 +1503,42 @@ export default function OneDayBooksOS() {
         }
         .stage-actions .primary, .engine-actions .primary { margin-top: 0; }
         .engine-actions { align-items: stretch; }
+        .print-preflight-card {
+          margin-top: 18px;
+          padding: 15px;
+          border: 1px solid #cfc5b6;
+          border-radius: 13px;
+          background: #fffaf2;
+        }
+        .print-preflight-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .print-preflight-head strong,
+        .print-preflight-head small {
+          display: block;
+        }
+        .print-preflight-head small {
+          margin-top: 4px;
+          color: #6d675e;
+          font-size: 12px;
+          line-height: 1.45;
+        }
+        .print-spec-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 9px;
+          margin-top: 14px;
+        }
+        .print-pdf-input {
+          display: block;
+          margin-top: 12px;
+        }
+        .print-check-grid {
+          margin-top: 14px;
+        }
         .engine-metrics {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1630,6 +1794,7 @@ export default function OneDayBooksOS() {
           .hero { padding-top: 22px; }
           .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .form-grid, .qa-grid, .preflight-grid, .result-panel, .ai-settings { grid-template-columns: 1fr; }
+          .print-spec-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .engine-metrics, .review-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .panel { padding: 17px; border-radius: 15px; }
           .section-head { align-items: flex-start; }
@@ -1639,6 +1804,7 @@ export default function OneDayBooksOS() {
           .stage-actions button, .button-row button, .engine-actions button { width: 100%; }
           .engine-actions { display: grid; grid-template-columns: 1fr 1fr; }
           .button-row { display: grid; grid-template-columns: repeat(3, 1fr); }
+          .print-preflight-head { flex-direction: column; }
           .version-row { align-items: flex-start; }
           .version-actions { flex-direction: column; }
           footer { flex-direction: column; }
