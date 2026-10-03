@@ -1,6 +1,22 @@
 import { buildEpub, createStoredZip } from './epubBuilder';
 import { buildPrintProofHtml, buildProductionReport } from './onedaybooksEngine';
 
+const encoder = new TextEncoder();
+
+async function toBytes(data) {
+  if (data instanceof Uint8Array) return data;
+  if (data instanceof Blob) return new Uint8Array(await data.arrayBuffer());
+  return encoder.encode(String(data ?? ''));
+}
+
+async function sha256Hex(data) {
+  const bytes = await toBytes(data);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 function safeName(value = 'book') {
   return String(value || 'book')
     .trim()
@@ -81,7 +97,7 @@ export async function buildReleaseBundle({
     technicalChecks: epub.technicalChecks
   };
 
-  const files = [
+  const payloadFiles = [
     {
       name: 'README.txt',
       data: readmeText({ title, author, objective, generatedAt })
@@ -108,11 +124,37 @@ export async function buildReleaseBundle({
     }
   ];
 
+  const manifestEntries = [];
+  for (const file of payloadFiles) {
+    const bytes = await toBytes(file.data);
+    manifestEntries.push({
+      path: file.name,
+      bytes: bytes.length,
+      sha256: await sha256Hex(bytes)
+    });
+  }
+
+  const manifest = {
+    schema: 'onedaybooks.release-manifest.v1',
+    generatedAt,
+    algorithm: 'SHA-256',
+    files: manifestEntries
+  };
+
+  const files = [
+    ...payloadFiles,
+    {
+      name: 'manifest/sha256.json',
+      data: JSON.stringify(manifest, null, 2)
+    }
+  ];
+
   return {
     blob: createStoredZip(files, 'application/zip'),
     fileName: `${bookName}_release_bundle.zip`,
     generatedAt,
     files: files.map((file) => file.name),
+    manifest,
     technicalChecks: epub.technicalChecks,
     epubIdentifier: epub.identifier
   };
