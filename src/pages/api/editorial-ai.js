@@ -24,9 +24,21 @@ function extractJson(text = '') {
 }
 
 export default async function handler(req, res) {
+  const authToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      ok: true,
+      service: 'OneDayBooks AI Editorial',
+      gatewayAuthAvailable: !!authToken,
+      model: MODEL,
+      maxChars: MAX_CHARS
+    });
+  }
+
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'POST만 지원합니다.' });
+    res.setHeader('Allow', 'GET, POST');
+    return res.status(405).json({ error: 'GET 또는 POST만 지원합니다.' });
   }
 
   if (!verifyAccessKey(req.headers['x-onedaybooks-key'])) {
@@ -46,7 +58,6 @@ export default async function handler(req, res) {
     });
   }
 
-  const authToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
   if (!authToken) {
     return res.status(503).json({
       error: 'AI Gateway 인증이 아직 활성화되지 않았습니다.',

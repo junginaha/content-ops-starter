@@ -130,6 +130,7 @@ export default function OneDayBooksOS() {
   const [aiChanges, setAiChanges] = useState([]);
   const [aiWarnings, setAiWarnings] = useState([]);
   const [aiError, setAiError] = useState('');
+  const [aiHealth, setAiHealth] = useState({ status: 'checking', gatewayAuthAvailable: null, model: '' });
   const [epubResult, setEpubResult] = useState(null);
   const [epubError, setEpubError] = useState('');
   const [releaseResult, setReleaseResult] = useState(null);
@@ -170,6 +171,30 @@ export default function OneDayBooksOS() {
       else window.sessionStorage.removeItem('onedaybooks-os-access-key');
     } catch (_) {}
   }, [aiAccessKey, loaded]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/editorial-ai')
+      .then((response) => response.json())
+      .then((payload) => {
+        if (cancelled) return;
+        setAiHealth({
+          status: payload?.ok ? 'ready' : 'error',
+          gatewayAuthAvailable: !!payload?.gatewayAuthAvailable,
+          model: payload?.model || ''
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAiHealth({ status: 'error', gatewayAuthAvailable: null, model: '' });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
@@ -874,6 +899,17 @@ export default function OneDayBooksOS() {
             원문은 자동 덮어쓰기하지 않습니다. 실행 시 해당 원고 조각이 Vercel AI Gateway를 통해 AI 모델로 전송됩니다.
           </p>
 
+          <div className="ai-health">
+            <span className={`health-dot ${aiHealth.gatewayAuthAvailable ? 'ready' : aiHealth.status === 'checking' ? 'checking' : 'blocked'}`} />
+            <span>
+              {aiHealth.status === 'checking'
+                ? 'AI Gateway 연결 확인 중'
+                : aiHealth.gatewayAuthAvailable
+                  ? `AI Gateway 준비됨 · ${aiHealth.model || 'model ready'}`
+                  : 'AI Gateway 인증 확인 필요'}
+            </span>
+          </div>
+
           <div className="ai-settings">
             <label>
               <span>OS 접근키</span>
@@ -1366,6 +1402,24 @@ export default function OneDayBooksOS() {
           font-size: 13px;
           line-height: 1.55;
         }
+        .ai-health {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 12px;
+          font-size: 12px;
+          color: #6d675e;
+        }
+        .health-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #a99f90;
+          flex: 0 0 auto;
+        }
+        .health-dot.ready { background: #4f7b56; }
+        .health-dot.blocked { background: #a14d3f; }
+        .health-dot.checking { background: #a87421; }
         .ai-settings {
           display: grid;
           grid-template-columns: minmax(0, 1fr) minmax(170px, .45fr);
