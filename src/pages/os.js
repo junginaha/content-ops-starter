@@ -543,7 +543,7 @@ export default function OneDayBooksOS() {
 
   function exportJson() {
     const payload = {
-      product: 'OneDayBooks AI Publishing OS',
+      product: 'ooOS Publishing OS',
       measurement_scope: 'internal-production-only',
       external_exclusions: ['ISBN 발급', '서점 검수·등록', '인쇄', '배송'],
       exported_at: new Date().toISOString(),
@@ -631,14 +631,14 @@ export default function OneDayBooksOS() {
     if (!baseText) return;
 
     if (!aiAccessKey.trim()) {
-      setAiError('AI 교정을 사용하려면 OneDayBooks OS 접근키를 입력해 주세요.');
+      setAiError('교정을 시작하려면 ooOS 접근키를 입력하세요.');
       return;
     }
 
     const chunks = splitTextIntoChunks(baseText);
     if (!chunks.length) return;
     if (chunks.length > 24) {
-      setAiError('현재 AI 교정 MVP는 약 20만 자 이하 원고를 권장합니다. 원고를 분권하거나 나눠 처리해 주세요.');
+      setAiError('현재 교정 기능은 약 20만 자 이하 원고를 권장합니다. 원고를 분권하거나 나눠 처리해 주세요.');
       return;
     }
 
@@ -669,7 +669,7 @@ export default function OneDayBooksOS() {
 
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(payload?.error || `AI 교정 ${index + 1}/${chunks.length} 처리에 실패했습니다.`);
+          throw new Error(payload?.error || `교정 ${index + 1}/${chunks.length} 처리에 실패했습니다.`);
         }
 
         revisedChunks.push(payload.revised_text || chunks[index]);
@@ -684,7 +684,7 @@ export default function OneDayBooksOS() {
       setAiStatus('review');
     } catch (error) {
       setAiStatus('error');
-      setAiError(error?.message || 'AI 교정 중 오류가 발생했습니다.');
+      setAiError(error?.message || '교정 중 오류가 발생했습니다.');
     }
   }
 
@@ -704,7 +704,7 @@ export default function OneDayBooksOS() {
     setProject(nextProject);
     setAiStatus('applied');
 
-    await persistVersion('AI 교정 적용', {
+    await persistVersion('교정 적용', {
       project: nextProject,
       processedManuscript: aiDraft,
       aiDraft: '',
@@ -727,14 +727,14 @@ export default function OneDayBooksOS() {
         <title>OneDayBooks OS | 원고에서 출간 가능한 책까지</title>
         <meta
           name="description"
-          content="원고 접수부터 편집·디자인·QA·승인·출간 연결까지 통제하고 실측하는 OneDayBooks AI Publishing OS MVP."
+          content="원고 접수부터 편집·디자인·QA·승인·출간 연결까지 통제하고 실측하는 ooOS Publishing OS MVP."
         />
         <meta name="robots" content="noindex,nofollow" />
       </Head>
 
       <main className="os-shell">
         <header className="hero">
-          <div className="eyebrow">ONEDAYBOOKS · AI PUBLISHING OS / MVP</div>
+          <div className="eyebrow">ooOS · PUBLISHING OS</div>
           <h1>원고 하나가 들어오면<br />출간 가능한 책으로 나온다.</h1>
           <p className="hero-copy">
             지금은 딱 하나에 집중합니다. 최소한의 인간 개입으로
@@ -1009,8 +1009,8 @@ export default function OneDayBooksOS() {
         <section className="panel ai-panel">
           <div className="section-head">
             <div>
-              <div className="kicker">03 · AI EDITORIAL</div>
-              <h2>AI 교정은 초안을 만들고 사람이 승인</h2>
+              <div className="kicker">03 · EDITORIAL</div>
+              <h2>교정 · 검토 · 승인</h2>
             </div>
             <span className={`status-pill ${aiStatus === 'review' || aiStatus === 'applied' ? 'ready' : ''}`}>
               {aiStatus === 'running'
@@ -1032,10 +1032,10 @@ export default function OneDayBooksOS() {
             <span className={`health-dot ${aiHealth.gatewayAuthAvailable ? 'ready' : aiHealth.status === 'checking' ? 'checking' : 'blocked'}`} />
             <span>
               {aiHealth.status === 'checking'
-                ? 'AI Gateway 연결 확인 중'
+                ? '편집 엔진 연결 확인 중'
                 : aiHealth.gatewayAuthAvailable
-                  ? `AI Gateway 준비됨 · ${aiHealth.model || 'model ready'}`
-                  : 'AI Gateway 인증 확인 필요'}
+                  ? `편집 엔진 준비됨 · ${aiHealth.model || '연결됨'}`
+                  : '편집 엔진 연결 확인 필요'}
             </span>
           </div>
 
@@ -1065,7 +1065,7 @@ export default function OneDayBooksOS() {
               onClick={runAiEditorial}
               disabled={!manuscript || aiStatus === 'running'}
             >
-              {aiStatus === 'running' ? 'AI 교정 중…' : 'AI 교정'}
+              {aiStatus === 'running' ? '교정 중…' : '교정 시작'}
             </button>
             <button
               className="secondary"
@@ -1084,7 +1084,7 @@ export default function OneDayBooksOS() {
           </div>
 
           {aiStatus === 'running' && (
-            <div className="progress-track" aria-label="AI 교정 진행률">
+            <div className="progress-track" aria-label="교정 진행률">
               <span
                 style={{
                   width: aiProgress.total
