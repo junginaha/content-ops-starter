@@ -18,13 +18,13 @@ import { evaluateReleaseReadiness } from '../utils/preflight';
 import { evaluatePrintPdf, inspectPdfFile } from '../utils/pdfPreflight';
 
 const STAGES = [
-  { key: 'intake', label: '접수', note: '원고·저자·목적 확인' },
-  { key: 'scope', label: '범위확정', note: '작업 범위·권리·산출물 확정' },
-  { key: 'production', label: '제작', note: '편집·교정·디자인·파일 제작' },
-  { key: 'qa', label: 'QA', note: '편집·권리·프리플라이트·버전 검수' },
-  { key: 'approval', label: '승인', note: '저자 최종 승인' },
-  { key: 'release', label: '출간', note: 'ISBN·서점·인쇄 등 외부 절차 연결' },
-  { key: 'measure', label: '실측', note: '시간·개입·오류·재작업 기록' }
+  { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
+  { key: 'scope', label: '출판 설정', note: '제작 범위와 권리' },
+  { key: 'production', label: '제작', note: '교정과 디자인' },
+  { key: 'qa', label: '품질 검수', note: '출력과 권리 확인' },
+  { key: 'approval', label: '최종 승인', note: '저자 확인' },
+  { key: 'release', label: '출간', note: '인쇄와 유통' },
+  { key: 'measure', label: '성과 분석', note: '시간과 비용' }
 ];
 
 const QA_GATES = [
@@ -518,7 +518,7 @@ export default function OneDayBooksOS() {
         stageIndex: Math.max(p.stageIndex, 3)
       }));
     } catch (error) {
-      setReleaseError(error?.message || '출간 패키지 생성 중 오류가 발생했습니다.');
+      setReleaseError(error?.message || '출판 파일 생성 중 오류가 발생했습니다.');
     } finally {
       setReleaseBuilding(false);
     }
@@ -858,7 +858,7 @@ export default function OneDayBooksOS() {
               onClick={exportReleaseBundle}
               disabled={!processedManuscript || releaseBuilding}
             >
-              {releaseBuilding ? '출간 패키지 생성 중…' : '출간 패키지 ZIP'}
+              {releaseBuilding ? '출판 파일 생성 중…' : '출간 패키지 ZIP'}
             </button>
           </div>
 
@@ -1053,7 +1053,7 @@ export default function OneDayBooksOS() {
             <label>
               <span>교정 수준</span>
               <select value={aiMode} onChange={(e) => setAiMode(e.target.value)}>
-                <option value="proofread">보수적 교정</option>
+                <option value="proofread">기본 교정</option>
                 <option value="copyedit">문장 다듬기</option>
               </select>
             </label>
@@ -1065,7 +1065,7 @@ export default function OneDayBooksOS() {
               onClick={runAiEditorial}
               disabled={!manuscript || aiStatus === 'running'}
             >
-              {aiStatus === 'running' ? 'AI 교정 중…' : 'AI 교정 초안 만들기'}
+              {aiStatus === 'running' ? 'AI 교정 중…' : 'AI 교정'}
             </button>
             <button
               className="secondary"
@@ -1079,7 +1079,7 @@ export default function OneDayBooksOS() {
               onClick={discardAiDraft}
               disabled={!aiDraft && !aiError}
             >
-              AI 초안 버리기
+              초안 취소
             </button>
           </div>
 
@@ -1100,9 +1100,9 @@ export default function OneDayBooksOS() {
           {aiDraft && (
             <div className="ai-review">
               <div className="review-summary">
-                <MiniMetric label="제안 변경" value={aiChanges.length.toLocaleString()} />
-                <MiniMetric label="사람 확인 경고" value={aiWarnings.length.toLocaleString()} />
-                <MiniMetric label="AI 초안 글자 수" value={aiDraft.length.toLocaleString()} />
+                <MiniMetric label="수정 사항" value={aiChanges.length.toLocaleString()} />
+                <MiniMetric label="검토 필요" value={aiWarnings.length.toLocaleString()} />
+                <MiniMetric label="글자 수" value={aiDraft.length.toLocaleString()} />
               </div>
 
               {aiChanges.length > 0 && (
