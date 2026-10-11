@@ -1025,7 +1025,7 @@ export default function OneDayBooksOS() {
 
           <p className="muted">
             AI는 맞춤법·띄어쓰기·문법·문장부호 교정 초안만 만듭니다.
-            원문은 자동 덮어쓰기하지 않습니다. 실행 시 해당 원고 조각이 Vercel AI Gateway를 통해 AI 모델로 전송됩니다.
+            원본은 유지됩니다. 교정 실행 시 원고 일부가 외부 처리 서비스로 전송됩니다.
           </p>
 
           <div className="ai-health">
@@ -1275,7 +1275,7 @@ export default function OneDayBooksOS() {
           </div>
 
           <p className="muted">
-            원고 접수와 AI 교정 적용 시 브라우저의 IndexedDB에 자동 저장합니다.
+            원고 접수와 교정 적용 시 브라우저에 자동 저장됩니다.
             서버 업로드 없이 이 기기에서 이전 작업본을 복구할 수 있습니다.
           </p>
 
