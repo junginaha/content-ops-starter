@@ -36,13 +36,15 @@ function readmeText({ title, author, objective, generatedAt }) {
     'Included:',
     '- manuscript/clean.txt',
     '- ebook/book.epub',
-    '- print/book_140x210.html',
+    '- print/book_140x210.html (교정용 HTML, 인쇄 PDF 아님)',
+    '- reports/release_readiness.json (출력 파일 누락 차단 보고서)',
     '- reports/production_report.json',
     '- metadata/book.json',
     '',
     'Important:',
     '- ISBN issuance, bookstore review/registration, printing and shipping are external steps.',
     '- EPUB technical generation does not replace retailer validation.',
+    '- This archive does not include print-ready PDF or full-cover spread. PRINT APPROVAL: HOLD.',
     '- Final editorial, rights, layout and release approval remain human gates.'
   ].join('\n');
 }
@@ -93,8 +95,19 @@ export async function buildReleaseBundle({
     isbn: String(isbn || ''),
     epubIdentifier: epub.identifier,
     internalProductionOnly: true,
+    printApproval: 'HOLD',
+    printApprovalReason: '인쇄용 PDF, 표지 펼침면 및 인쇄소 사양 검증이 포함되지 않음',
     externalSteps: ['ISBN 발급', '서점 검수·등록', '인쇄', '배송'],
     technicalChecks: epub.technicalChecks
+  };
+
+  const readiness = {
+    schema: 'onedaybooks.print-readiness.v1',
+    printApproval: 'HOLD',
+    generatedAt,
+    present: ['원고 TXT', 'EPUB (내부 기본 구조 검사)', '140×210 교정용 HTML'],
+    missing: ['인쇄용 내지 PDF', '인쇄용 표지 펼침면 PDF', '글꼴 포함 검증', '페이지별 조판 넘침 검사', 'ICC·도련·재단선 확인', 'EPUBCheck 검증'],
+    instruction: '이 ZIP을 그대로 인쇄소에 최종 발주하지 마세요.'
   };
 
   const payloadFiles = [
@@ -113,6 +126,10 @@ export async function buildReleaseBundle({
     {
       name: `print/${bookName}_140x210.html`,
       data: proofHtml
+    },
+    {
+      name: 'reports/release_readiness.json',
+      data: JSON.stringify(readiness, null, 2)
     },
     {
       name: 'reports/production_report.json',
@@ -156,6 +173,8 @@ export async function buildReleaseBundle({
     files: files.map((file) => file.name),
     manifest,
     technicalChecks: epub.technicalChecks,
-    epubIdentifier: epub.identifier
+    epubIdentifier: epub.identifier,
+    printApproval: 'HOLD',
+    readiness
   };
 }
