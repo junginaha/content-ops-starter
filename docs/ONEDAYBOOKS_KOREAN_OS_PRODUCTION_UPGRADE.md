@@ -99,3 +99,33 @@ Input adapters (TXT/MD/DOCX/HWPX) => loss report + immutable originals
 - Pressbooks: single-source multi-format publishing.
 - Leanpub: manuscript in Git/GitHub with API-driven builds.
 - Lulu: print and fulfillment API adapters.
+
+
+## Korean reference: Opkle (verified 2026-10-11)
+Public references:
+- https://opkle.app/
+- https://opkle.app/abstract/epub
+- https://opkle.app/abstract/blog/dev/epub-editor-dev-log-8
+
+Verified product claims (marketing statements are not independently benchmarked):
+- Korean ebook / responsive web-document WYSIWYG editor, EPUB2/EPUB3 + PDF output, editor templates and embedded graphics design.
+- AI may operate the editor using natural-language commands; public product material mentions local-first data, portable projects and Rust/WebAssembly graphics machinery.
+- The public worker engineering log describes a Valkey queue, per-domain execution workers, deterministic gate ahead of LLM invocation, latest-intent-per-path coalescing, exclusive resource locks, cleanup, typed schema/catalog validation, paragraph boundary preservation, retries, candidate completeness comparison, and materialization of temporary external media URLs to durable owned assets.
+- These are statements from Opkle's own publications. No private source, benchmarking, commercial permission or claim of compatibility with OneDayBooks has been verified.
+
+Implementation decisions for OneDayBooks:
+1. Implement a typed, versioned **Command Catalog**, not unrestricted arbitrary AI execution. Candidate actions: setBookTrim, setTypography, applyTemplate, proposeParagraphEdit, rebuildTOC, validateEpub, renderInterior, renderCover, requestAuthorApproval. Each command has JSON schema, scope, permission, idempotency token, dry-run and reversible diff.
+2. Deterministic command parsing first: if a request exactly matches a safe catalog action, run rules without LLM; otherwise use model-assisted parsing and validate against schema, policy and permissions **before** execution.
+3. Canonical BookSpec section/paragraph IDs and source span mapping. Transformations must preserve IDs/count/order unless the user explicitly approves structural changes; unresolved omissions block output.
+4. Worker architecture: persistent job queue; separate light editorial jobs and heavy PDF/graphics jobs; coalesce only superseded *non-release* previews. Never cancel immutable release jobs as "old intent." Lock by book/revision/action, release resources in finally, reclaim orphaned leases after restart. Record retries and immutable audit events.
+5. Generated media must be copied into owner-controlled object storage with checksum, retention and rights provenance. Do not retain expiring provider URLs in published books.
+6. Professional authoring UX: side-by-side EPUB/print views, WYSIWYG editing with linked design tokens and code/structured view for experts, responsive mobile *review* UI; heavy layout tools optimized for desktop.
+7. Local-first authoring is an option, not a production security assumption. Keep encrypted local drafts + consented sync, persist production jobs and approvals server-side with tenant-level access controls.
+8. Focus on automated *press-ready workflow*, not matching every creative graphics feature of Opkle. Compare quality against Korean prose, illustration and footnote-heavy fixture corpus. Custom Rust/WASM graphics engine is deferred unless measured performance demands it.
+
+New acceptance criteria:
+- 100 consecutive natural-language command tests: unauthorized/unknown action executes 0 times; allowed commands produce schema-valid patches with reversible diff.
+- Structure-preserving test corpus: 0 silently dropped paragraphs, captions, tables, footnotes or image references.
+- Worker chaos tests: retries, abrupt exit, network timeout, duplicate events, expired external asset links; no stuck jobs or duplicate release.
+- Author approval required for substantive text changes and external publication.
+- Measurable UX comparison: produce one editorially identical Korean title across Opkle (legally using public tooling), OneDayBooks, and a professional baseline, evaluating layout quality, validation and human minutes. No unverified claim of superior product.
