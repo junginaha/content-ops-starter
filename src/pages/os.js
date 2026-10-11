@@ -16,6 +16,7 @@ import {
 } from '../utils/projectStore';
 import { evaluateReleaseReadiness } from '../utils/preflight';
 import { evaluatePrintPdf, inspectPdfFile } from '../utils/pdfPreflight';
+import { COVER_GENRES, evaluateCover } from '../utils/coverIntelligence';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -115,6 +116,13 @@ function splitTextIntoChunks(text, maxChars = 8500) {
 
 export default function OneDayBooksOS() {
   const [project, setProject] = useState(EMPTY_PROJECT);
+  const [coverGenre, setCoverGenre] = useState('practical');
+  const [coverLayout, setCoverLayout] = useState('타이포 중심');
+  const [coverSubtitle, setCoverSubtitle] = useState('');
+  const [coverColors, setCoverColors] = useState('#F2EEE5, #181818, #CA491F');
+  const [coverThumbnailChecked, setCoverThumbnailChecked] = useState(false);
+  const [coverRightsChecked, setCoverRightsChecked] = useState(false);
+  const [coverPrintChecked, setCoverPrintChecked] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [loaded, setLoaded] = useState(false);
   const [manuscript, setManuscript] = useState('');
@@ -408,8 +416,11 @@ export default function OneDayBooksOS() {
     const a = document.createElement('a');
     a.href = url;
     a.download = name;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    // Safari/iOS may consume the blob after click returns. Do not revoke synchronously.
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   function downloadText(name, content, type = 'text/plain;charset=utf-8') {
@@ -993,6 +1004,34 @@ export default function OneDayBooksOS() {
               </div>
             </div>
           )}
+        </section>
+
+        <section className="panel" aria-label="출간 파일 안내">
+          <h2>출간 파일 사용 안내</h2>
+          <p className="muted">iPhone에서 EPUB을 누르면 파일 미리보기 대신 '도서에서 열기'가 표시될 수 있습니다. 이는 오류가 아닙니다. EPUB은 Apple Books 등 독서 앱으로 열어 확인하세요.</p>
+          <p className="muted">현재 출간 ZIP의 HTML은 내지 교정용입니다. 표지 전체 펼침면과 인쇄 승인용 PDF가 생성되지 않았으므로 인쇄소 발주용 완성본이라고 판단하지 마세요. ISBN·권리·출력 사양도 별도 확인이 필요합니다.</p>
+        </section>
+
+        <section className="panel cover-intelligence-panel" aria-label="표지 인텔리전스">
+          <div className="section-head">
+            <div><div className="kicker">COVER INTELLIGENCE · EDITORIAL QA</div><h2>표지 디자인 검수</h2></div>
+          </div>
+          <p className="muted">장르별 정보 위계 · 제목 · 색상 · 축소 가독성 · 권리 · 인쇄 검수. 판매 순위에 따른 매출 보증 점수가 아닙니다.</p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:12,marginBottom:12}}>
+            <label>장르<br/><select value={coverGenre} onChange={e=>{setCoverGenre(e.target.value);setCoverLayout(COVER_GENRES[e.target.value].layouts[0]);}}>{Object.entries(COVER_GENRES).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
+            <label>구성<br/><select value={coverLayout} onChange={e=>setCoverLayout(e.target.value)}>{['타이포 중심','여백 중심','단일 상징','이미지 중심','그리드 중심'].map(x=><option key={x}>{x}</option>)}</select></label>
+            <label>부제<br/><input value={coverSubtitle} onChange={e=>setCoverSubtitle(e.target.value)} placeholder="표지 부제"/></label>
+            <label>색상 (쉼표 구분)<br/><input value={coverColors} onChange={e=>setCoverColors(e.target.value)} placeholder="#F2EEE5, #181818"/></label>
+          </div>
+          <div style={{display:'grid',gap:9,marginBottom:12}}>
+            <label><input type="checkbox" checked={coverThumbnailChecked} onChange={e=>setCoverThumbnailChecked(e.target.checked)}/> 120px 축소 표지 가독성 직접 확인</label>
+            <label><input type="checkbox" checked={coverRightsChecked} onChange={e=>setCoverRightsChecked(e.target.checked)}/> 글꼴·이미지 권리 증빙 확인</label>
+            <label><input type="checkbox" checked={coverPrintChecked} onChange={e=>setCoverPrintChecked(e.target.checked)}/> 인쇄소 사양·PDF 프리플라이트 확인</label>
+          </div>
+          {(() => {const result=evaluateCover({title:project.title,author:project.author,subtitle:coverSubtitle,genre:coverGenre,layout:coverLayout,colors:coverColors.split(',').map(x=>x.trim()).filter(Boolean),thumbnailChecked:coverThumbnailChecked,rightsChecked:coverRightsChecked,printChecked:coverPrintChecked});return <div style={{border:'1px solid #d7cdbf',borderRadius:12,padding:14}}>
+            <strong>편집 위험검사 {result.score}/100 · {result.approval}</strong><p className="muted">{result.genreFocus}</p>
+            {result.flags.length ? <ul>{result.flags.map(f=><li key={f.code}>{f.severity==='block'?'필수: ':''}{f.message}</li>)}</ul> : <p>규칙 검사를 통과했습니다. 실제 표지 이미지와 인쇄 파일의 시각 검수는 별도로 진행하세요.</p>}
+            <small>{result.note}</small></div>;})()}
         </section>
 
         <section className="panel ai-panel">
