@@ -658,10 +658,10 @@ export default function OneDayBooksOS() {
         const response = await fetch('/api/editorial-ai', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'x-onedaybooks-key': aiAccessKey.trim()
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
+            accessKey: aiAccessKey.trim(),
             text: chunks[index],
             mode: aiMode
           })
