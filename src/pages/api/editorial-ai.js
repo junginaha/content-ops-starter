@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'GET 또는 POST만 지원합니다.' });
   }
 
-  if (!verifyAccessKey(req.headers['x-onedaybooks-key'])) {
+  if (!verifyAccessKey(req.body?.accessKey || req.headers['x-onedaybooks-key'])) {
     return res.status(401).json({ error: 'OneDayBooks OS 접근키가 올바르지 않습니다.' });
   }
 
