@@ -724,10 +724,10 @@ export default function OneDayBooksOS() {
   return (
     <>
       <Head>
-        <title>OneDayBooks OS | 원고에서 출간 가능한 책까지</title>
+        <title>ooOS | Publishing Workspace</title>
         <meta
           name="description"
-          content="원고 접수부터 편집·디자인·QA·승인·출간 연결까지 통제하고 실측하는 ooOS Publishing OS MVP."
+          content="ooOS · 원고 관리, 교정, 조판, 검수, 출판 파일."
         />
         <meta name="robots" content="noindex,nofollow" />
       </Head>
@@ -735,22 +735,18 @@ export default function OneDayBooksOS() {
       <main className="os-shell">
         <header className="hero">
           <div className="eyebrow">ooOS · PUBLISHING OS</div>
-          <h1>원고 하나가 들어오면<br />출간 가능한 책으로 나온다.</h1>
-          <p className="hero-copy">
-            지금은 딱 하나에 집중합니다. 최소한의 인간 개입으로
-            <strong> 원고 → 제작 → QA → 승인</strong> 흐름을 반복 가능하게 만들고,
-            그 시간을 실제 데이터로 남깁니다.
-          </p>
+          <h1>Publishing Workspace</h1>
+          <p className="hero-copy">원고 · 교정 · 디자인 · 검수 · 출간</p>
           <div className="scope-note">
-            내부 제작 목표: 60분 이내 · ISBN 발급, 서점 검수·등록, 인쇄·배송은 외부 일정으로 별도 측정
+            제작 기준 · 60분 | 외부 공정 별도
           </div>
         </header>
 
         <section className="metrics">
-          <Metric label="내부 제작 시간" value={fmtDuration(internalElapsed)} emphasis={withinTarget} />
-          <Metric label="인간 개입 시간" value={`${project.humanMinutes}분`} />
-          <Metric label="인간 개입 횟수" value={`${project.interventionCount}회`} />
-          <Metric label="QA 통과" value={`${qaCount}/${QA_GATES.length}`} emphasis={qaCount === QA_GATES.length} />
+          <Metric label="제작 시간" value={fmtDuration(internalElapsed)} emphasis={withinTarget} />
+          <Metric label="휴먼터치 시간" value={`${project.humanMinutes}분`} />
+          <Metric label="휴먼터치" value={`${project.interventionCount}회`} />
+          <Metric label="검수 통과" value={`${qaCount}/${QA_GATES.length}`} emphasis={qaCount === QA_GATES.length} />
         </section>
 
         <section className="panel">
@@ -824,28 +820,24 @@ export default function OneDayBooksOS() {
           <div className="section-head">
             <div>
               <div className="kicker">02 · PRODUCTION ENGINE</div>
-              <h2>원고를 자동으로 정리하고 검사</h2>
+              <h2>원고 정리 · 구조 검사</h2>
             </div>
             <span className={`status-pill ${engineRunAt ? 'ready' : ''}`}>
               {engineRunAt ? 'ENGINE RUN' : '대기'}
             </span>
           </div>
 
-          <p className="muted">
-            현재 v0.1은 사람 판단이 필요 없는 안전한 작업만 자동화합니다.
-            줄바꿈·탭·연속 공백·문장부호 앞 공백을 정리하고,
-            구조와 기계적 오류를 검사합니다. 내용·사실·권리는 임의로 바꾸지 않습니다.
-          </p>
+          <p className="muted">공백 · 문장부호 · 구조 검사 | 원문 보존</p>
 
           <div className="engine-actions">
             <button className="primary" onClick={runProductionEngine} disabled={!manuscript}>
-              원고 자동 정리 실행
+              원고 정리
             </button>
             <button className="secondary" onClick={exportCleanManuscript} disabled={!processedManuscript}>
-              정리 원고 받기
+              원고 저장
             </button>
             <button className="secondary" onClick={exportPrintProof} disabled={!processedManuscript}>
-              140×210 내지 프루프
+              내지 미리보기
             </button>
             <button className="secondary" onClick={exportEpub} disabled={!manuscript}>
               전자책 EPUB 생성
@@ -969,7 +961,7 @@ export default function OneDayBooksOS() {
               </div>
 
               <div className="human-boundary">
-                <strong>사람 승인 유지:</strong>
+                <strong>최종 승인:</strong>
                 저자 의도 · 사실/인용 · 저작권 · 최종 편집디자인 · 최종 출간 승인
               </div>
             </>
@@ -1135,7 +1127,7 @@ export default function OneDayBooksOS() {
           <div className="section-head">
             <div>
               <div className="kicker">04 · CONTROL PLANE</div>
-              <h2>7단계 제작 흐름</h2>
+              <h2>제작 워크플로</h2>
             </div>
             <span className="status-pill">{STAGES[project.stageIndex].label}</span>
           </div>
@@ -1182,13 +1174,11 @@ export default function OneDayBooksOS() {
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="kicker">05 · HUMAN-IN-THE-LOOP</div>
-              <h2>인간 개입을 숨기지 않고 측정</h2>
+              <div className="kicker">05 · HUMAN TOUCH</div>
+              <h2>휴먼터치</h2>
             </div>
           </div>
-          <p className="muted">
-            수정, 판단, 권리 확인, 예외처리처럼 사람이 실제로 개입한 시간만 누적합니다.
-          </p>
+          <p className="muted">검토 · 수정 · 승인 · 예외 처리</p>
           <div className="button-row">
             <button className="secondary" onClick={() => addHumanMinutes(1)}>+1분</button>
             <button className="secondary" onClick={() => addHumanMinutes(5)}>+5분</button>
@@ -1200,7 +1190,7 @@ export default function OneDayBooksOS() {
           <div className="section-head">
             <div>
               <div className="kicker">06 · QUALITY GATES</div>
-              <h2>출간 가능 판정</h2>
+              <h2>출간 검수</h2>
             </div>
             <span className={`status-pill ${publicationReady ? 'ready' : ''}`}>
               {publicationReady ? 'PUBLICATION-READY' : '검수 필요'}
@@ -1255,11 +1245,11 @@ export default function OneDayBooksOS() {
           </div>
 
           <label className="notes">
-            <span>오류·재작업·예외 메모</span>
+            <span>이슈 · 재작업</span>
             <textarea
               value={project.notes}
               onChange={(e) => updateField('notes', e.target.value)}
-              placeholder="무엇이 멈췄고, 왜 사람이 개입했는지 기록"
+              placeholder="오류 · 재작업 · 조치 이력"
               rows={4}
             />
           </label>
@@ -1269,15 +1259,12 @@ export default function OneDayBooksOS() {
           <div className="section-head">
             <div>
               <div className="kicker">07 · VERSION HISTORY</div>
-              <h2>원고와 작업본을 버전으로 보존</h2>
+              <h2>버전 관리</h2>
             </div>
             <span className="status-pill">{snapshots.length} versions</span>
           </div>
 
-          <p className="muted">
-            원고 접수와 교정 적용 시 브라우저에 자동 저장됩니다.
-            서버 업로드 없이 이 기기에서 이전 작업본을 복구할 수 있습니다.
-          </p>
+          <p className="muted">로컬 저장 · 버전 복구</p>
 
           <div className="engine-actions">
             <button
@@ -1314,20 +1301,17 @@ export default function OneDayBooksOS() {
         <section className="panel result-panel">
           <div>
             <div className="kicker">08 · EVIDENCE</div>
-            <h2>감이 아니라 실측값으로 남깁니다.</h2>
-            <p className="muted">
-              이 기록이 쌓이면 ‘빠른 출판 서비스’가 아니라
-              반복 가능한 Publishing OS라는 것을 증명할 수 있습니다.
-            </p>
+            <h2>성과 지표</h2>
+            <p className="muted">제작 시간 · 휴먼터치 · 검수 · 재작업</p>
           </div>
           <div className="result-actions">
-            <button className="primary" onClick={exportJson}>측정 데이터 내보내기</button>
+            <button className="primary" onClick={exportJson}>데이터 내보내기</button>
           </div>
         </section>
 
         <footer>
           <strong>OneDayBooks</strong>
-          <span>Service → Control Plane → Publishing OS</span>
+          <span>Publishing Operations</span>
         </footer>
       </main>
 
