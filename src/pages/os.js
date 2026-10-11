@@ -86,37 +86,30 @@ function fmtDuration(ms) {
 }
 
 function splitTextIntoChunks(text, maxChars = 8500) {
-  const paragraphs = String(text || '').split(/\n\s*\n/);
+  const input = String(text || '');
+  if (!input) return [];
   const chunks = [];
-  let current = '';
+  let start = 0;
 
-  const pushCurrent = () => {
-    if (current.trim()) chunks.push(current.trim());
-    current = '';
-  };
-
-  paragraphs.forEach((paragraph) => {
-    const value = paragraph.trim();
-    if (!value) return;
-
-    if (value.length > maxChars) {
-      pushCurrent();
-      for (let offset = 0; offset < value.length; offset += maxChars) {
-        chunks.push(value.slice(offset, offset + maxChars));
-      }
-      return;
+  while (start < input.length) {
+    const limit = Math.min(start + maxChars, input.length);
+    if (limit === input.length) {
+      chunks.push(input.slice(start));
+      break;
     }
 
-    const candidate = current ? `${current}\n\n${value}` : value;
-    if (candidate.length > maxChars) {
-      pushCurrent();
-      current = value;
-    } else {
-      current = candidate;
-    }
-  });
+    const slice = input.slice(start, limit);
+    // Preserve every original character, including blank lines and whitespace.
+    const paragraphBoundary = slice.lastIndexOf('\n\n');
+    const lineBoundary = slice.lastIndexOf('\n');
+    const boundary = paragraphBoundary >= Math.floor(maxChars / 3)
+      ? paragraphBoundary + 2
+      : lineBoundary >= Math.floor(maxChars / 3) ? lineBoundary + 1 : maxChars;
 
-  pushCurrent();
+    chunks.push(input.slice(start, start + boundary));
+    start += boundary;
+  }
+
   return chunks;
 }
 
@@ -636,6 +629,10 @@ export default function OneDayBooksOS() {
     }
 
     const chunks = splitTextIntoChunks(baseText);
+    if (chunks.join('') !== baseText) {
+      setAiError('원고 분할 검증에 실패했습니다. 원문은 변경되지 않았습니다.');
+      return;
+    }
     if (!chunks.length) return;
     if (chunks.length > 24) {
       setAiError('현재 교정 기능은 약 20만 자 이하 원고를 권장합니다. 원고를 분권하거나 나눠 처리해 주세요.');
@@ -678,7 +675,7 @@ export default function OneDayBooksOS() {
         setAiProgress({ current: index + 1, total: chunks.length });
       }
 
-      setAiDraft(revisedChunks.join('\n\n'));
+      setAiDraft(revisedChunks.join(''));
       setAiChanges(changes);
       setAiWarnings(warnings);
       setAiStatus('review');
