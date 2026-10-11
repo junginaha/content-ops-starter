@@ -1,0 +1,33 @@
+name: ooOS quality gate
+on:
+  pull_request:
+    paths:
+      - 'src/pages/os.js'
+      - 'src/utils/**'
+      - 'package*.json'
+      - '.github/workflows/ooos-qa.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Check release archive honesty
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const source=fs.readFileSync('src/utils/releaseBuilder.js','utf8');
+          if (!source.includes("printApproval: 'HOLD'")) throw Error('Missing print HOLD');
+          if (!source.includes('cover/cover_proof.svg')) throw Error('Missing cover proof');
+          const page=fs.readFileSync('src/pages/os.js','utf8');
+          if (!page.includes('표지 디자인 검수')) throw Error('Cover QA panel missing');
+          if (!page.includes('60000')) throw Error('iOS Blob download fix missing');
+          console.log('Basic ooOS gate passed.');
+          NODE
