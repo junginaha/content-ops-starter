@@ -416,8 +416,11 @@ export default function OneDayBooksOS() {
     const a = document.createElement('a');
     a.href = url;
     a.download = name;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    // Safari/iOS may consume the blob after click returns. Do not revoke synchronously.
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   function downloadText(name, content, type = 'text/plain;charset=utf-8') {
@@ -1001,6 +1004,12 @@ export default function OneDayBooksOS() {
               </div>
             </div>
           )}
+        </section>
+
+        <section className="panel" aria-label="출간 파일 안내">
+          <h2>출간 파일 사용 안내</h2>
+          <p className="muted">iPhone에서 EPUB을 누르면 파일 미리보기 대신 '도서에서 열기'가 표시될 수 있습니다. 이는 오류가 아닙니다. EPUB은 Apple Books 등 독서 앱으로 열어 확인하세요.</p>
+          <p className="muted">현재 출간 ZIP의 HTML은 내지 교정용입니다. 표지 전체 펼침면과 인쇄 승인용 PDF가 생성되지 않았으므로 인쇄소 발주용 완성본이라고 판단하지 마세요. ISBN·권리·출력 사양도 별도 확인이 필요합니다.</p>
         </section>
 
         <section className="panel cover-intelligence-panel" aria-label="표지 인텔리전스">
