@@ -24,7 +24,7 @@ function extractJson(text = '') {
 }
 
 export default async function handler(req, res) {
-  const authToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+  const authToken = process.env.AI_GATEWAY_API_KEY || req.headers['x-vercel-oidc-token'] || process.env.VERCEL_OIDC_TOKEN;
 
   if (req.method === 'GET') {
     return res.status(200).json({
