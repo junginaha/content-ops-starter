@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-const ACCESS_HASH = '7da2fdbb2fb7c08354a9725f97bcfd3c325327b0eff39ed63c92ca6943fccc6a';
+const ACCESS_HASH = '7096d94af7c6277049c416357e995b6ea256d6928bbcfd36e836538ba3ddb9f2';
 const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 const MODEL = 'openai/gpt-5.6-luna';
 const MAX_CHARS = 9000;
