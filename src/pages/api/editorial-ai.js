@@ -18,7 +18,7 @@ function extractJson(text = '') {
     return JSON.parse(raw);
   } catch (_) {
     const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('AI 응답에서 JSON을 찾지 못했습니다.');
+    if (!match) throw new Error('교정 응답 형식을 확인할 수 없습니다.');
     return JSON.parse(match[0]);
   }
 }
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
 
   if (!authToken) {
     return res.status(503).json({
-      error: 'AI Gateway 인증이 아직 활성화되지 않았습니다.',
+      error: '편집 엔진 연결을 확인해 주세요.',
       code: 'AI_GATEWAY_AUTH_MISSING'
     });
   }
@@ -140,28 +140,28 @@ confidence는 0에서 1 사이 숫자다.
       const billingRequired = /valid credit card|add.credit.card|unlock your free credits|billing|payment method/i.test(upstreamMessage);
       return res.status(billingRequired ? 402 : gatewayResponse.status).json({
         error: billingRequired
-          ? 'Vercel AI Gateway에 결제수단이 등록되지 않아 모델 호출이 차단되었습니다. Vercel 팀의 Billing에서 카드를 등록한 후 다시 시도해 주세요. 접근키 문제는 아닙니다.'
-          : (upstreamMessage || 'AI Gateway 호출에 실패했습니다.'),
+          ? '외부 처리 서비스의 결제수단이 등록되지 않아 교정 요청이 차단되었습니다. Vercel 팀의 Billing에서 카드를 등록한 후 다시 시도해 주세요. 접근키 문제는 아닙니다.'
+          : (upstreamMessage || '교정 서비스 연결에 실패했습니다.'),
         code: billingRequired ? 'GATEWAY_BILLING_REQUIRED' : (payload?.error?.code || 'AI_GATEWAY_ERROR')
       });
     }
 
     const message = payload?.choices?.[0]?.message?.content;
     if (!message) {
-      return res.status(502).json({ error: 'AI 교정 결과가 비어 있습니다.' });
+      return res.status(502).json({ error: '교정 결과가 비어 있습니다.' });
     }
 
     const result = extractJson(message);
     const revisedText = String(result.revised_text || '');
 
     if (!revisedText.trim()) {
-      return res.status(502).json({ error: 'AI가 유효한 교정문을 반환하지 않았습니다.' });
+      return res.status(502).json({ error: '유효한 교정문을 생성하지 못했습니다.' });
     }
 
     const validationIssues = validateEditorialResult(input, revisedText, result.changes);
     if (validationIssues.length) {
       return res.status(422).json({
-        error: 'AI 교정 결과가 원고 보존 검증을 통과하지 못했습니다. 원본은 변경되지 않았습니다.',
+        error: '교정 결과가 원고 보존 검증을 통과하지 못했습니다. 원본은 변경되지 않았습니다.',
         code: 'EDITORIAL_INTEGRITY_FAILED',
         validationIssues
       });
@@ -175,7 +175,7 @@ confidence는 0에서 1 사이 숫자다.
     });
   } catch (error) {
     return res.status(500).json({
-      error: error?.message || 'AI 교정 처리 중 오류가 발생했습니다.'
+      error: error?.message || '교정 처리 중 오류가 발생했습니다.'
     });
   }
 }
