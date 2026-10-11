@@ -1,5 +1,6 @@
 import { buildEpub, createStoredZip } from './epubBuilder';
 import { buildPrintProofHtml, buildProductionReport } from './onedaybooksEngine';
+import { buildCoverProofSvg } from './coverProof';
 
 const encoder = new TextEncoder();
 
@@ -37,6 +38,7 @@ function readmeText({ title, author, objective, generatedAt }) {
     '- manuscript/clean.txt',
     '- ebook/book.epub',
     '- print/book_140x210.html (교정용 HTML, 인쇄 PDF 아님)',
+    '- cover/cover_proof.svg (앞표지 벡터 시안, 인쇄 승인본 아님)',
     '- reports/release_readiness.json (출력 파일 누락 차단 보고서)',
     '- reports/production_report.json',
     '- metadata/book.json',
@@ -105,7 +107,7 @@ export async function buildReleaseBundle({
     schema: 'onedaybooks.print-readiness.v1',
     printApproval: 'HOLD',
     generatedAt,
-    present: ['원고 TXT', 'EPUB (내부 기본 구조 검사)', '140×210 교정용 HTML'],
+    present: ['원고 TXT', 'EPUB (내부 기본 구조 검사)', '140×210 교정용 HTML', '앞표지 SVG 교정 시안'],
     missing: ['인쇄용 내지 PDF', '인쇄용 표지 펼침면 PDF', '글꼴 포함 검증', '페이지별 조판 넘침 검사', 'ICC·도련·재단선 확인', 'EPUBCheck 검증'],
     instruction: '이 ZIP을 그대로 인쇄소에 최종 발주하지 마세요.'
   };
@@ -126,6 +128,10 @@ export async function buildReleaseBundle({
     {
       name: `print/${bookName}_140x210.html`,
       data: proofHtml
+    },
+    {
+      name: 'cover/cover_proof.svg',
+      data: buildCoverProofSvg({ title, author })
     },
     {
       name: 'reports/release_readiness.json',
