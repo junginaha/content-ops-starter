@@ -23,6 +23,25 @@ function extractJson(text = '') {
   }
 }
 
+function protectedTokens(value) {
+  return (String(value).match(/https?:\/\/[^\s<>]+|(?:97[89][-\s]?)?\d[-\d\s]{8,}\d|\b\d+(?:[.,]\d+)?\b/g) || [])
+    .map((v) => v.trim()).sort();
+}
+
+function validateEditorialResult(original, revised, changes) {
+  const issues = [];
+  const oldParagraphs = original.split(/\n\s*\n/).filter((x) => x.trim());
+  const newParagraphs = revised.split(/\n\s*\n/).filter((x) => x.trim());
+  if (oldParagraphs.length !== newParagraphs.length) issues.push('원고 문단 수가 달라졌습니다.');
+  if (protectedTokens(original).join('|') !== protectedTokens(revised).join('|')) {
+    issues.push('숫자, ISBN 또는 URL이 변경되거나 누락된 것으로 감지되었습니다.');
+  }
+  const lengthRatio = revised.length / Math.max(1, original.length);
+  if (lengthRatio < 0.75 || lengthRatio > 1.25) issues.push('원고 분량이 비정상적으로 변했습니다.');
+  if (!Array.isArray(changes)) issues.push('교정 변경 이력 형식이 올바르지 않습니다.');
+  return issues;
+}
+
 export default async function handler(req, res) {
   const authToken = process.env.AI_GATEWAY_API_KEY || req.headers['x-vercel-oidc-token'] || process.env.VERCEL_OIDC_TOKEN;
 
@@ -117,9 +136,13 @@ confidence는 0에서 1 사이 숫자다.
     const payload = await gatewayResponse.json().catch(() => ({}));
 
     if (!gatewayResponse.ok) {
-      return res.status(gatewayResponse.status).json({
-        error: payload?.error?.message || payload?.message || 'AI Gateway 호출에 실패했습니다.',
-        code: payload?.error?.code || 'AI_GATEWAY_ERROR'
+      const upstreamMessage = String(payload?.error?.message || payload?.message || '');
+      const billingRequired = /valid credit card|add.credit.card|unlock your free credits|billing|payment method/i.test(upstreamMessage);
+      return res.status(billingRequired ? 402 : gatewayResponse.status).json({
+        error: billingRequired
+          ? 'Vercel AI Gateway에 결제수단이 등록되지 않아 모델 호출이 차단되었습니다. Vercel 팀의 Billing에서 카드를 등록한 후 다시 시도해 주세요. 접근키 문제는 아닙니다.'
+          : (upstreamMessage || 'AI Gateway 호출에 실패했습니다.'),
+        code: billingRequired ? 'GATEWAY_BILLING_REQUIRED' : (payload?.error?.code || 'AI_GATEWAY_ERROR')
       });
     }
 
@@ -133,6 +156,15 @@ confidence는 0에서 1 사이 숫자다.
 
     if (!revisedText.trim()) {
       return res.status(502).json({ error: 'AI가 유효한 교정문을 반환하지 않았습니다.' });
+    }
+
+    const validationIssues = validateEditorialResult(input, revisedText, result.changes);
+    if (validationIssues.length) {
+      return res.status(422).json({
+        error: 'AI 교정 결과가 원고 보존 검증을 통과하지 못했습니다. 원본은 변경되지 않았습니다.',
+        code: 'EDITORIAL_INTEGRITY_FAILED',
+        validationIssues
+      });
     }
 
     return res.status(200).json({
