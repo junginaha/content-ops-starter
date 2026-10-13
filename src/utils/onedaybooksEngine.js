@@ -157,8 +157,14 @@ function escapeHtml(value = '') {
 export function buildPrintProofHtml({
   title = '제목 없음',
   author = '',
-  manuscript = ''
+  manuscript = '',
+  printSpec = {}
 } = {}) {
+  const trimWidthMm = Number(printSpec.trimWidthMm || 140);
+  const trimHeightMm = Number(printSpec.trimHeightMm || 210);
+  if (![trimWidthMm, trimHeightMm].every((n) => Number.isFinite(n) && n >= 80 && n <= 400)) {
+    throw new Error('판형은 80~400mm 범위에서 설정하세요.');
+  }
   const body = String(manuscript)
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
@@ -181,7 +187,7 @@ export function buildPrintProofHtml({
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>${escapeHtml(title)}</title>
 <style>
-@page { size: 140mm 210mm; margin: 18mm 17mm 20mm; }
+@page { size: ${trimWidthMm}mm ${trimHeightMm}mm; margin: 18mm 17mm 20mm; }
 html, body { margin: 0; padding: 0; background: #fff; color: #111; }
 body {
   font-family: "KoPub Batang", "Noto Serif KR", "AppleMyungjo", serif;
@@ -206,6 +212,7 @@ main p {
   text-indent: 1em;
   orphans: 3;
   widows: 3;
+  overflow-wrap: break-word;
 }
 .chapter {
   margin: 0 0 12mm;
@@ -215,6 +222,7 @@ main p {
   break-before: page;
 }
 .chapter:first-child { break-before: auto; }
+@media print { .chapter { break-after: avoid-page; } }
 @media screen {
   body { max-width: 106mm; margin: 30px auto; box-shadow: 0 0 0 1px #ddd; padding: 18mm 17mm 20mm; }
   .title-page { height: auto; min-height: 150mm; }
