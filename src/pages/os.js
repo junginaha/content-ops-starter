@@ -441,9 +441,10 @@ export default function OneDayBooksOS() {
     const html = buildPrintProofHtml({
       title: project.title || '제목 없음',
       author: project.author || '',
-      manuscript: processedManuscript
+      manuscript: processedManuscript,
+      printSpec: project.printSpec
     });
-    downloadText(`${safeTitle}_140x210_proof.html`, html, 'text/html;charset=utf-8');
+    downloadText(`${safeTitle}_proof.html`, html, 'text/html;charset=utf-8');
   }
 
   function exportEpub() {
@@ -494,7 +495,8 @@ export default function OneDayBooksOS() {
         objective: project.objective,
         isbn: project.isbn,
         originalText: manuscript,
-        processedText: processedManuscript
+        processedText: processedManuscript,
+        printSpec: project.printSpec
       });
 
       downloadBlob(result.fileName, result.blob);
