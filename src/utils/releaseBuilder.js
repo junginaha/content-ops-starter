@@ -24,7 +24,7 @@ function safeName(value = 'book') {
     .replace(/^_+|_+$/g, '') || 'book';
 }
 
-function readmeText({ title, author, objective, generatedAt }) {
+function readmeText({ title, author, objective, generatedAt, printSpec }) {
   return [
     'OneDayBooks Release Bundle',
     '',
@@ -36,13 +36,18 @@ function readmeText({ title, author, objective, generatedAt }) {
     'Included:',
     '- manuscript/clean.txt',
     '- ebook/book.epub',
-    '- print/book_140x210.html',
+    '- print/book_proof.html',
+    '- print/print_spec.json',
     '- reports/production_report.json',
     '- metadata/book.json',
     '',
     'Important:',
     '- ISBN issuance, bookstore review/registration, printing and shipping are external steps.',
     '- EPUB technical generation does not replace retailer validation.',
+    '- Print HTML is a proof, not a certified press-ready PDF.',
+    '- This archive does NOT contain a print-ready PDF.',
+    '- Export PDF with the production print engine and inspect TrimBox, BleedBox, fonts and artwork before delivery.',
+    `- Trim: ${printSpec.trimWidthMm}x${printSpec.trimHeightMm}mm; bleed: ${printSpec.bleedMm}mm.`,
     '- Final editorial, rights, layout and release approval remain human gates.'
   ].join('\n');
 }
@@ -53,11 +58,19 @@ export async function buildReleaseBundle({
   objective = '',
   isbn = '',
   originalText = '',
-  processedText = ''
+  processedText = '',
+  printSpec = {}
 } = {}) {
   const manuscript = String(processedText || originalText || '');
   if (!manuscript.trim()) throw new Error('출간 패키지로 만들 원고가 없습니다.');
 
+  const spec = {
+    trimWidthMm: Number(printSpec.trimWidthMm || 140),
+    trimHeightMm: Number(printSpec.trimHeightMm || 210),
+    bleedMm: Number(printSpec.bleedMm ?? 3),
+    expectedPages: printSpec.expectedPages === '' || printSpec.expectedPages == null ? null : Number(printSpec.expectedPages)
+  };
+  if (![spec.trimWidthMm, spec.trimHeightMm, spec.bleedMm].every(Number.isFinite) || spec.trimWidthMm < 80 || spec.trimHeightMm < 80 || spec.bleedMm < 0) throw new Error('인쇄 규격을 확인하세요.');
   const generatedAt = new Date().toISOString();
   const bookName = safeName(title || 'book');
 
@@ -73,7 +86,8 @@ export async function buildReleaseBundle({
   const proofHtml = buildPrintProofHtml({
     title: title || '제목 없음',
     author,
-    manuscript
+    manuscript,
+    printSpec: spec
   });
 
   const report = buildProductionReport({
@@ -93,6 +107,9 @@ export async function buildReleaseBundle({
     isbn: String(isbn || ''),
     epubIdentifier: epub.identifier,
     internalProductionOnly: true,
+    printSpec: spec,
+    printReadyPdfIncluded: false,
+    pressReady: false,
     externalSteps: ['ISBN 발급', '서점 검수·등록', '인쇄', '배송'],
     technicalChecks: epub.technicalChecks
   };
@@ -100,7 +117,7 @@ export async function buildReleaseBundle({
   const payloadFiles = [
     {
       name: 'README.txt',
-      data: readmeText({ title, author, objective, generatedAt })
+      data: readmeText({ title, author, objective, generatedAt, printSpec: spec })
     },
     {
       name: `manuscript/${bookName}_clean.txt`,
@@ -111,8 +128,12 @@ export async function buildReleaseBundle({
       data: epubBytes
     },
     {
-      name: `print/${bookName}_140x210.html`,
+      name: `print/${bookName}_proof.html`,
       data: proofHtml
+    },
+    {
+      name: 'print/print_spec.json',
+      data: JSON.stringify({ ...spec, printReadyPdfIncluded: false, pressReady: false, status: 'PROOF_ONLY' }, null, 2)
     },
     {
       name: 'reports/production_report.json',
