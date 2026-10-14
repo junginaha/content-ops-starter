@@ -15,7 +15,10 @@ import {
   saveSnapshot
 } from '../utils/projectStore';
 import { evaluateReleaseReadiness } from '../utils/preflight';
-import { evaluatePrintPdf, inspectPdfFile } from '../utils/pdfPreflight';
+import { evaluatePrintPdf, inspectPdfBytes, inspectPdfFile } from '../utils/pdfPreflight';
+import { DEFAULT_PRINT_OPTIONS, PRINT_HUMAN_GATES, TRIM_PRESETS } from '../utils/print/presets';
+import { analyzeForDesign } from '../utils/print/designAnalysis';
+import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -45,6 +48,13 @@ const EMPTY_PROJECT = {
     trimWidthMm: 140,
     trimHeightMm: 210,
     bleedMm: 3
+  },
+  printOptions: { ...DEFAULT_PRINT_OPTIONS },
+  printGates: {
+    printerSpec: false,
+    proofApproved: false,
+    coverApproved: false,
+    colophon: false
   },
   stageIndex: 0,
   startedAt: null,
@@ -138,6 +148,10 @@ export default function OneDayBooksOS() {
   const [releaseResult, setReleaseResult] = useState(null);
   const [releaseError, setReleaseError] = useState('');
   const [releaseBuilding, setReleaseBuilding] = useState(false);
+  const [printPkg, setPrintPkg] = useState(null);
+  const [printPkgError, setPrintPkgError] = useState('');
+  const [printPkgBuilding, setPrintPkgBuilding] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState(null);
   const [snapshots, setSnapshots] = useState([]);
   const [snapshotError, setSnapshotError] = useState('');
   const [snapshotSaving, setSnapshotSaving] = useState(false);
@@ -281,6 +295,48 @@ export default function OneDayBooksOS() {
         ...(p.printSpec || EMPTY_PROJECT.printSpec),
         [key]: value
       }
+    }));
+  }
+
+  const printOptions = { ...DEFAULT_PRINT_OPTIONS, ...(project.printOptions || {}) };
+  const printGates = { ...EMPTY_PROJECT.printGates, ...(project.printGates || {}) };
+  const printGatesPassed = PRINT_HUMAN_GATES.every((gate) => printGates[gate.key]);
+  const designAnalysis = useMemo(
+    () => (processedManuscript ? analyzeForDesign(processedManuscript, { title: project.title }) : null),
+    [processedManuscript, project.title]
+  );
+  const chosenProfile = DESIGN_PROFILES[printOptions.designProfile]
+    ? printOptions.designProfile
+    : designAnalysis?.genre || 'humanities';
+  const trimPresetKey = (TRIM_PRESETS.find((preset) =>
+    Number(project.printSpec?.trimWidthMm) === preset.widthMm &&
+    Number(project.printSpec?.trimHeightMm) === preset.heightMm
+  ) || {}).key || 'custom';
+
+  function updatePrintOption(key, value) {
+    setProject((p) => ({
+      ...p,
+      printOptions: { ...DEFAULT_PRINT_OPTIONS, ...(p.printOptions || {}), [key]: value }
+    }));
+  }
+
+  function applyTrimPreset(key) {
+    const preset = TRIM_PRESETS.find((item) => item.key === key);
+    if (!preset) return;
+    setProject((p) => ({
+      ...p,
+      printSpec: {
+        ...(p.printSpec || EMPTY_PROJECT.printSpec),
+        trimWidthMm: preset.widthMm,
+        trimHeightMm: preset.heightMm
+      }
+    }));
+  }
+
+  function togglePrintGate(key) {
+    setProject((p) => ({
+      ...p,
+      printGates: { ...EMPTY_PROJECT.printGates, ...(p.printGates || {}), [key]: !(p.printGates || {})[key] }
     }));
   }
 
@@ -516,6 +572,54 @@ export default function OneDayBooksOS() {
       setReleaseError(error?.message || '출판 파일 생성 중 오류가 발생했습니다.');
     } finally {
       setReleaseBuilding(false);
+    }
+  }
+
+  async function exportPrintPackage() {
+    if (!processedManuscript) return;
+    setPrintPkgBuilding(true);
+    setPrintPkgError('');
+
+    try {
+      // Loaded on demand: pdf-lib + fonts are only needed when a print package is built.
+      const printModule = await import('../utils/print/printPackage');
+      const fonts = await printModule.loadPrintFonts({
+        includeFallback: printModule.needsFallbackFont(
+          `${processedManuscript}${project.title}${project.author}${printOptions.publisher}${printOptions.subtitle}`
+        ),
+        includeSans: profileUsesSans(chosenProfile)
+      });
+      const frontImage = coverImageFile
+        ? { bytes: new Uint8Array(await coverImageFile.arrayBuffer()) }
+        : null;
+      const result = await printModule.buildPrintPackage({
+        title: project.title,
+        author: project.author,
+        isbn: project.isbn,
+        manuscript: processedManuscript,
+        printSpec: project.printSpec || EMPTY_PROJECT.printSpec,
+        options: printOptions,
+        fonts,
+        frontImage
+      });
+
+      downloadBlob(result.fileName, result.blob);
+      setPrintPkg({
+        report: result.report,
+        files: result.files,
+        fileName: result.fileName
+      });
+      // The generated interior also runs through the existing print PDF preflight.
+      setPrintPdfError('');
+      setPrintPdfReport(inspectPdfBytes(result.interiorBytes, result.interiorFileName));
+      setProject((p) => ({
+        ...p,
+        stageIndex: Math.max(p.stageIndex, 3)
+      }));
+    } catch (error) {
+      setPrintPkgError(error?.message || '인쇄 패키지 생성 중 오류가 발생했습니다.');
+    } finally {
+      setPrintPkgBuilding(false);
     }
   }
 
@@ -899,6 +1003,208 @@ export default function OneDayBooksOS() {
                     onChange={(e) => updatePrintSpec('bleedMm', e.target.value)}
                   />
                 </label>
+              </div>
+
+              <div className="print-package">
+                <div className="print-preflight-head">
+                  <div>
+                    <strong>인쇄 출판 패키지</strong>
+                    <small>내지 PDF · 표지 펼침면 PDF · 표지 가이드 · 인쇄지시서 · 검수 리포트 · SHA-256</small>
+                  </div>
+                  <span className={`status-pill ${printPkg?.report?.status === 'PRINT_CANDIDATE' && printGatesPassed ? 'ready' : ''}`}>
+                    {!printPkg
+                      ? '생성 전'
+                      : printPkg.report.status === 'BLOCKED'
+                        ? '자동검사 실패'
+                        : printGatesPassed ? 'PRINT-READY 후보' : '사람 승인 대기'}
+                  </span>
+                </div>
+
+                {designAnalysis && (
+                  <div className="design-analysis">
+                    <div className="design-analysis-head">
+                      <strong>원고 분석 · 편집디자인</strong>
+                      <small>
+                        추천 {designAnalysis.genreLabel} · 판정 {designAnalysis.certainty === 'high' ? '분명' : designAnalysis.certainty === 'medium' ? '보통' : '약함'}
+                        {' · '}근거: {designAnalysis.reasons.join(' · ')}
+                      </small>
+                    </div>
+                    <div className="print-spec-grid">
+                      <label>
+                        <span>편집디자인</span>
+                        <select
+                          value={DESIGN_PROFILES[printOptions.designProfile] ? printOptions.designProfile : 'auto'}
+                          onChange={(e) => updatePrintOption('designProfile', e.target.value)}
+                        >
+                          <option value="auto">추천 적용 ({designAnalysis.genreLabel})</option>
+                          {Object.values(DESIGN_PROFILES).map((profile) => (
+                            <option key={profile.key} value={profile.key}>{profile.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        <span>판면 밀도</span>
+                        <select value={printOptions.density} onChange={(e) => updatePrintOption('density', e.target.value)}>
+                          {DENSITY_OPTIONS.map((option) => (
+                            <option key={option.key} value={option.key}>{option.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="file-info">{DESIGN_PROFILES[chosenProfile].label} — {DESIGN_PROFILES[chosenProfile].summary}</div>
+                  </div>
+                )}
+
+                <div className="print-spec-grid">
+                  <label>
+                    <span>판형</span>
+                    <select value={trimPresetKey} onChange={(e) => applyTrimPreset(e.target.value)}>
+                      {TRIM_PRESETS.map((preset) => (
+                        <option key={preset.key} value={preset.key}>{preset.label}</option>
+                      ))}
+                      {trimPresetKey === 'custom' && <option value="custom">직접 입력</option>}
+                    </select>
+                  </label>
+                  <label>
+                    <span>출판사</span>
+                    <input
+                      value={printOptions.publisher}
+                      onChange={(e) => updatePrintOption('publisher', e.target.value)}
+                      placeholder="예: 19호실출판사"
+                    />
+                  </label>
+                  <label>
+                    <span>정가 (원)</span>
+                    <input
+                      inputMode="numeric"
+                      value={printOptions.price}
+                      onChange={(e) => updatePrintOption('price', e.target.value)}
+                      placeholder="예: 18,000"
+                    />
+                  </label>
+                  <label>
+                    <span>펴낸날</span>
+                    <input
+                      value={printOptions.firstEdition}
+                      onChange={(e) => updatePrintOption('firstEdition', e.target.value)}
+                      placeholder="예: 2026년 10월 20일"
+                    />
+                  </label>
+                  <label>
+                    <span>출판등록</span>
+                    <input
+                      value={printOptions.registration}
+                      onChange={(e) => updatePrintOption('registration', e.target.value)}
+                      placeholder="등록번호 · 등록일"
+                    />
+                  </label>
+                  <label>
+                    <span>종이 두께 mm/장</span>
+                    <input
+                      inputMode="decimal"
+                      value={printOptions.paperCaliperMm}
+                      onChange={(e) => updatePrintOption('paperCaliperMm', e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>날개 mm</span>
+                    <input
+                      inputMode="decimal"
+                      value={printOptions.flapMm}
+                      onChange={(e) => updatePrintOption('flapMm', e.target.value)}
+                      placeholder="없음 0"
+                    />
+                  </label>
+                  <label>
+                    <span>쪽수 배수</span>
+                    <select
+                      value={String(printOptions.pageMultiple)}
+                      onChange={(e) => updatePrintOption('pageMultiple', Number(e.target.value))}
+                    >
+                      <option value="2">2쪽</option>
+                      <option value="4">4쪽</option>
+                      <option value="8">8쪽</option>
+                      <option value="16">16쪽</option>
+                    </select>
+                  </label>
+                </div>
+
+                <label className="print-pdf-input">
+                  <span>앞표지 이미지 (선택 · JPG/PNG · 300ppi 이상)</span>
+                  <input
+                    className="file"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                    onChange={(e) => setCoverImageFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+
+                <button
+                  className="primary"
+                  onClick={exportPrintPackage}
+                  disabled={!processedManuscript || printPkgBuilding}
+                >
+                  {printPkgBuilding ? '인쇄 패키지 생성 중…' : '인쇄 패키지 생성'}
+                </button>
+
+                {printPkgError && <div className="error-box">{printPkgError}</div>}
+
+                {printPkg && (
+                  <>
+                    <div className="engine-metrics">
+                      <MiniMetric label="내지" value={`${printPkg.report.interior.pageCount}쪽`} />
+                      <MiniMetric label="책등" value={`${printPkg.report.cover.geometry.spineMm}mm`} />
+                      <MiniMetric
+                        label="표지 펼침면"
+                        value={`${printPkg.report.cover.geometry.totalWidthMm}×${printPkg.report.cover.geometry.totalHeightMm}mm`}
+                      />
+                      <MiniMetric label="편집디자인" value={printPkg.report.design.label} />
+                    </div>
+
+                    <div className="preflight-grid print-check-grid">
+                      {printPkg.report.checks.map((check) => (
+                        <div className={`preflight-check ${check.passed ? 'passed' : 'blocked'}`} key={check.key}>
+                          <span className="preflight-icon">{check.passed ? '✓' : '!'}</span>
+                          <span className="preflight-body">
+                            <strong>{check.label}</strong>
+                            <small>{check.detail}</small>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {printPkg.report.warnings.length > 0 && (
+                      <div className="warning-list">
+                        {printPkg.report.warnings.map((warning, index) => (
+                          <div key={`${index}-${warning}`}>참고 · {warning}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="manual-qa-label">인쇄 전 사람 승인</div>
+                    <div className="qa-grid">
+                      {PRINT_HUMAN_GATES.map((gate) => (
+                        <button
+                          key={gate.key}
+                          className={`qa-card ${printGates[gate.key] ? 'passed' : ''}`}
+                          onClick={() => togglePrintGate(gate.key)}
+                        >
+                          <span className="qa-check">{printGates[gate.key] ? '✓' : '○'}</span>
+                          <span>
+                            <strong>{gate.label}</strong>
+                            <small>{gate.note}</small>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="file-info">
+                      {printPkg.fileName} · {printPkg.files.length}개 파일 · 본문 {printPkg.report.interior.layout.bodySizePt}pt / 행간 {printPkg.report.interior.layout.leadingPt}pt / 쪽당 {printPkg.report.interior.layout.linesPerPage}행
+                      {printPkg.report.design.candidates?.length > 1 ? ` · 조판 후보 ${printPkg.report.design.candidates.length}개 비교 후 백지·짧은 쪽이 가장 적은 안 선택` : ''}
+                      {' · '}생성된 내지 PDF는 아래 프리플라이트에도 자동 반영됩니다.
+                    </div>
+                  </>
+                )}
               </div>
 
               <label className="print-pdf-input">
@@ -1519,6 +1825,32 @@ export default function OneDayBooksOS() {
         .print-pdf-input {
           display: block;
           margin-top: 12px;
+        }
+        .print-package {
+          margin-top: 16px;
+          padding-top: 14px;
+          border-top: 1px solid #d7cdbf;
+        }
+        .print-package .primary {
+          margin-top: 12px;
+        }
+        .design-analysis {
+          margin-top: 12px;
+          padding: 12px;
+          border: 1px solid #d7cdbf;
+          border-radius: 12px;
+          background: #fbf8f2;
+        }
+        .design-analysis-head strong,
+        .design-analysis-head small {
+          display: block;
+        }
+        .design-analysis-head small {
+          margin-top: 4px;
+          color: #6d675e;
+          font-size: 12px;
+          line-height: 1.45;
+          overflow-wrap: anywhere;
         }
         .print-check-grid {
           margin-top: 14px;
