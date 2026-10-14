@@ -1,4 +1,5 @@
-// Print interior PDF: paginated Korean book layout with trim/bleed boxes, embedded fonts, K-only text.
+// Print interior PDF: genre-aware Korean book layout with trim/bleed boxes, embedded fonts, K-only ink.
+// Pipeline: font context (once) -> layout candidates (cheap, measured) -> render the chosen layout.
 import {
   PDFDocument,
   beginText,
@@ -7,17 +8,22 @@ import {
   setTextMatrix,
   showText,
   setCharacterSpacing,
-  setFillingCmykColor
+  setFillingCmykColor,
+  rectangle,
+  fill
 } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { breakLine, justifyLine } from './koreanLineBreak';
 import { parseBookStructure, structureCanonicalText, canonicalChars, nfc } from './bookStructure';
+import { resolveDesign } from './designProfiles';
+
+export { TRIM_PRESETS } from './presets';
 
 export const PT_PER_MM = 72 / 25.4;
 const mm = (value) => Number(value) * PT_PER_MM;
 const toMm = (pt) => Math.round((pt / PT_PER_MM) * 100) / 100;
 
-export { TRIM_PRESETS } from './presets';
+const LIST_MARKER_RE = /^(\d{1,2}[.)]|[-•·▪■□○●◦※✓✔]|[①-⑳]|[가-하][.)]|\(\d{1,2}\))(?=\s)/;
 
 // fontkit reads past the end of buffer for a trailing zero-length glyph in some TTFs.
 // Padding the in-memory copy (not the distributed file) avoids that without altering glyph data.
@@ -28,127 +34,55 @@ export function padFontBytes(bytes) {
   return out;
 }
 
+// Kept for compatibility: the humanities profile is the historic default.
 export function defaultInteriorLayout(trimWidthMm, trimHeightMm) {
-  const w = Number(trimWidthMm);
-  const h = Number(trimHeightMm);
-  const bodySize = w <= 130 ? 9.5 : w >= 170 ? 10.5 : 10;
-  return {
-    bodySize,
-    leading: Math.round(bodySize * 1.7 * 100) / 100,
-    indentEm: 1,
-    marginsMm: {
-      top: Math.round(h * 0.088 * 10) / 10,
-      bottom: Math.round(h * 0.1 * 10) / 10,
-      inner: Math.round(w * 0.14 * 10) / 10,
-      outer: Math.round(w * 0.115 * 10) / 10
-    },
-    spaceEm: 0.28,
-    maxLetterSpacingEm: 0.06
-  };
-}
-
-function makeMeasurer(widthFn, size) {
-  const cache = new Map();
-  return (text) => {
-    const key = String(text);
-    if (!key) return 0;
-    let value = cache.get(key);
-    if (value === undefined) {
-      value = widthFn(key, size);
-      cache.set(key, value);
-    }
-    return value;
-  };
+  const d = resolveDesign('humanities', trimWidthMm, trimHeightMm);
+  return { bodySize: d.bodySize, leading: d.leading, indentEm: d.indentEm, marginsMm: d.marginsMm, spaceEm: d.spaceEm, maxLetterSpacingEm: d.maxLetterSpacingEm };
 }
 
 function charCount(text) {
   return Array.from(String(text || '')).length;
 }
 
-/**
- * @param {object} input
- * @param {{regular:Uint8Array, bold:Uint8Array, extraBold:Uint8Array}} input.fonts
- */
-export async function buildInteriorPdf({
-  title = '',
-  author = '',
-  publisher = '',
-  manuscript = '',
-  isbn = '',
-  price = '',
-  firstEdition = '',
-  registration = '',
-  contact = '',
-  trimWidthMm = 140,
-  trimHeightMm = 210,
-  bleedMm = 3,
-  pageMultiple = 4,
-  includeToc = true,
-  includeCopyright = true,
-  layout: layoutOverride = {},
-  fonts,
-  generatedAt = new Date().toISOString()
-} = {}) {
+const ROLE_KEYS = {
+  serif: { regular: 'regular', bold: 'bold', black: 'extraBold' },
+  sans: { regular: 'sansRegular', bold: 'sansBold', black: 'sansExtraBold' }
+};
+
+// ---------------------------------------------------------------- font context
+export async function createFontContext(fonts, { text = '', needSans = false } = {}) {
   if (!fonts?.regular || !fonts?.bold || !fonts?.extraBold) throw new Error('인쇄용 서체 파일을 불러오지 못했습니다.');
-  // fonts.fallback (optional): covers hanja/symbols missing from the primary family; used per character.
-  if (!String(manuscript || '').trim()) throw new Error('조판할 원고가 없습니다.');
-
-  const W = mm(trimWidthMm);
-  const H = mm(trimHeightMm);
-  const B = mm(bleedMm);
-  const L = { ...defaultInteriorLayout(trimWidthMm, trimHeightMm), ...layoutOverride };
-  const margins = { ...defaultInteriorLayout(trimWidthMm, trimHeightMm).marginsMm, ...(layoutOverride.marginsMm || {}) };
-  const top = mm(margins.top);
-  const bottom = mm(margins.bottom);
-  const inner = mm(margins.inner);
-  const outer = mm(margins.outer);
-  const textW = W - inner - outer;
-  const textH = H - top - bottom;
-  const size = L.bodySize;
-  const lead = L.leading;
-  const LPP = Math.floor((textH - size) / lead) + 1;
-  const firstBaseline = H - top - size * 0.86;
-  const baselineAt = (line) => firstBaseline - line * lead;
-
-  const bookTitle = nfc(title || '제목 없음').trim();
-  const structure = parseBookStructure(manuscript, { title: bookTitle });
-
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
-  const padded = {
-    regular: padFontBytes(fonts.regular),
-    bold: padFontBytes(fonts.bold),
-    extraBold: padFontBytes(fonts.extraBold)
+  const pdfFonts = {};
+  const glyphFonts = {};
+  const embed = async (key, bytes) => {
+    const padded = padFontBytes(bytes);
+    // subset:false — pdf-lib's CJK subsetting drops glyphs; full embedding renders reliably.
+    pdfFonts[key] = await doc.embedFont(padded, { subset: false });
+    glyphFonts[key] = fontkit.create(padded);
   };
-  // subset:false — pdf-lib's CJK subsetting drops glyphs; full embedding renders reliably.
-  const pdfFonts = {
-    regular: await doc.embedFont(padded.regular, { subset: false }),
-    bold: await doc.embedFont(padded.bold, { subset: false }),
-    extraBold: await doc.embedFont(padded.extraBold, { subset: false })
-  };
-  const glyphFonts = {
-    regular: fontkit.create(padded.regular),
-    bold: fontkit.create(padded.bold),
-    extraBold: fontkit.create(padded.extraBold)
-  };
-  const needsFallback = Array.from(nfc(`${manuscript}${title}${author}${publisher}`))
-    .some((ch) => !/\s/.test(ch) && !glyphFonts.regular.hasGlyphForCodePoint(ch.codePointAt(0)));
-  if (fonts.fallback && needsFallback) {
-    const paddedFallback = padFontBytes(fonts.fallback);
-    pdfFonts.fallback = await doc.embedFont(paddedFallback, { subset: false });
-    glyphFonts.fallback = fontkit.create(paddedFallback);
+  await embed('regular', fonts.regular);
+  await embed('bold', fonts.bold);
+  await embed('extraBold', fonts.extraBold);
+  const sansAvailable = !!(needSans && fonts.sansRegular && fonts.sansBold && fonts.sansExtraBold);
+  if (sansAvailable) {
+    await embed('sansRegular', fonts.sansRegular);
+    await embed('sansBold', fonts.sansBold);
+    await embed('sansExtraBold', fonts.sansExtraBold);
   }
+  const needsFallback = Array.from(nfc(text)).some((ch) => !/\s/.test(ch) && !glyphFonts.regular.hasGlyphForCodePoint(ch.codePointAt(0)));
+  if (fonts.fallback && needsFallback) await embed('fallback', fonts.fallback);
 
-  // Split text into runs: primary font where it has the glyph, fallback font otherwise.
   const runCache = new Map();
-  const runsFor = (fontKey, text) => {
-    const key = `${fontKey}\u0000${text}`;
+  const runsFor = (fontKey, value) => {
+    const key = `${fontKey}\u0000${value}`;
     let runs = runCache.get(key);
     if (runs) return runs;
     runs = [];
-    Array.from(String(text || '')).forEach((ch) => {
-      const useFallback = glyphFonts.fallback && !glyphFonts[fontKey].hasGlyphForCodePoint(ch.codePointAt(0)) &&
-        glyphFonts.fallback.hasGlyphForCodePoint(ch.codePointAt(0));
+    Array.from(String(value || '')).forEach((ch) => {
+      const cp = ch.codePointAt(0);
+      const useFallback = glyphFonts.fallback && !glyphFonts[fontKey].hasGlyphForCodePoint(cp) && glyphFonts.fallback.hasGlyphForCodePoint(cp);
       const font = useFallback ? 'fallback' : fontKey;
       const last = runs[runs.length - 1];
       if (last && last.font === font) last.text += ch;
@@ -157,63 +91,104 @@ export async function buildInteriorPdf({
     runCache.set(key, runs);
     return runs;
   };
-  const widthOf = (fontKey, text, fontSize) => runsFor(fontKey, text)
-    .reduce((sum, run) => sum + pdfFonts[run.font].widthOfTextAtSize(run.text, fontSize), 0);
+  const widthOf = (fontKey, value, size) => runsFor(fontKey, value)
+    .reduce((sum, run) => sum + pdfFonts[run.font].widthOfTextAtSize(run.text, size), 0);
+  const measurers = new Map();
+  const measureFor = (fontKey, size) => {
+    const key = `${fontKey}@${size}`;
+    let fn = measurers.get(key);
+    if (!fn) {
+      const cache = new Map();
+      fn = (value) => {
+        const k = String(value);
+        if (!k) return 0;
+        let w = cache.get(k);
+        if (w === undefined) { w = widthOf(fontKey, k, size); cache.set(k, w); }
+        return w;
+      };
+      measurers.set(key, fn);
+    }
+    return fn;
+  };
+  const roleKey = (role, weight) => {
+    const family = role === 'sans' && sansAvailable ? 'sans' : 'serif';
+    return ROLE_KEYS[family][weight];
+  };
+  return { doc, pdfFonts, glyphFonts, runsFor, widthOf, measureFor, roleKey, sansAvailable };
+}
 
-  const measureFor = (fontKey, fontSize) => makeMeasurer((text, s) => widthOf(fontKey, text, s), fontSize);
-  const measureBody = measureFor('regular', size);
-  const spaceW = size * L.spaceEm;
-  const indentW = size * L.indentEm;
-  const maxTc = size * L.maxLetterSpacingEm;
+// ---------------------------------------------------------------- layout
+export function layoutInterior(ctx, input, design) {
+  const {
+    title = '', author = '', publisher = '', isbn = '', price = '', firstEdition = '', registration = '', contact = '',
+    trimWidthMm = 140, trimHeightMm = 210, bleedMm = 3, pageMultiple = 4, includeToc = true, includeCopyright = true,
+    structure
+  } = input;
+  const { runsFor, widthOf, measureFor, pdfFonts, roleKey } = ctx;
+  const W = mm(trimWidthMm);
+  const H = mm(trimHeightMm);
+  const margins = design.marginsMm;
+  const top = mm(margins.top);
+  const bottom = mm(margins.bottom);
+  const inner = mm(margins.inner);
+  const outer = mm(margins.outer);
+  const textW = W - inner - outer;
+  const textH = H - top - bottom;
+  const size = design.bodySize;
+  const lead = design.leading;
+  const LPP = Math.floor((textH - size) / lead) + 1;
+  const firstBaseline = H - top - size * 0.86;
+  const baselineAt = (line) => firstBaseline - line * lead;
+  const bookTitle = nfc(title || '제목 없음').trim();
+
+  const F = {
+    body: 'regular',
+    bodyBold: 'bold',
+    head: roleKey(design.headingFont, 'bold'),
+    headBlack: roleKey(design.headingFont, 'black'),
+    run: roleKey(design.runningHead?.font || 'serif', 'regular'),
+    section: roleKey(design.section?.font || 'serif', 'bold')
+  };
+
+  const measureBody = measureFor(F.body, size);
+  const spaceW = size * design.spaceEm;
+  const indentW = size * design.indentEm;
+  const hangW = size * (design.hangEm || 0);
+  const maxTc = size * design.maxLetterSpacingEm;
 
   const stats = {
-    splitWords: 0,
-    letterSpacedLines: 0,
-    maxLetterSpacingEm: 0,
-    orphansAvoided: 0,
-    widowsAvoided: 0,
-    shortPages: 0,
-    overflowLines: 0,
-    blankPagesForRecto: 0,
-    paddingPages: 0
+    splitWords: 0, letterSpacedLines: 0, maxLetterSpacingEm: 0, orphansAvoided: 0, widowsAvoided: 0,
+    shortPages: 0, overflowLines: 0, blankPagesForRecto: 0, paddingPages: 0, listItems: 0
   };
   const placed = [];
-  const usedChars = { regular: new Set(), bold: new Set(), extraBold: new Set(), fallback: new Set() };
-  const noteChars = (fontKey, text) => {
-    Array.from(String(text || '')).forEach((ch) => { if (!/\s/.test(ch)) usedChars[fontKey].add(ch); });
+  const usedChars = {};
+  const noteChars = (fontKey, value) => {
+    if (!usedChars[fontKey]) usedChars[fontKey] = new Set();
+    Array.from(String(value || '')).forEach((ch) => { if (!/\s/.test(ch)) usedChars[fontKey].add(ch); });
   };
 
-  // ---------- logical pages ----------
   const pages = [];
   const newPage = (kind, extra = {}) => {
-    const page = { kind, items: [], runningHead: null, folio: false, chapterTitle: '', ...extra };
-    pages.push(page);
-    return page;
+    const p = { kind, items: [], rules: [], runningHead: false, folio: false, chapterTitle: '', ...extra };
+    pages.push(p);
+    return p;
   };
-  const addItem = (page, item) => {
-    // Expand into per-font runs so hanja/symbols use the fallback face at the right x offsets.
+  const addItem = (pg, item) => {
     let x = item.x;
     runsFor(item.font, item.text).forEach((run) => {
-      page.items.push({ ...item, font: run.font, text: run.text, x });
-      noteChars(run.font === 'fallback' ? 'fallback' : item.font, run.text);
+      pg.items.push({ ...item, font: run.font, text: run.text, x });
+      noteChars(run.font, run.text);
       x += pdfFonts[run.font].widthOfTextAtSize(run.text, item.size) + item.tc * charCount(run.text);
     });
   };
-  const centered = (page, text, fontKey, fontSize, y, { tc = 0 } = {}) => {
-    const width = widthOf(fontKey, text, fontSize) + tc * Math.max(0, charCount(text) - 1);
-    addItem(page, { font: fontKey, size: fontSize, x: (textW - width) / 2, y, text, tc });
+  const textWidth = (fontKey, value, fontSize, tc = 0) => widthOf(fontKey, value, fontSize) + tc * Math.max(0, charCount(value) - 1);
+  const put = (pg, value, fontKey, fontSize, y, align = 'left', { tc = 0, x = 0 } = {}) => {
+    const w = textWidth(fontKey, value, fontSize, tc);
+    const px = align === 'center' ? (textW - w) / 2 : align === 'right' ? textW - w : x;
+    addItem(pg, { font: fontKey, size: fontSize, x: px, y, text: value, tc });
   };
-
-  // Titles: balanced breaking — shrink the measure while the line count stays the same,
-  // so a two-line title never ends with a lone word such as "1".
-  const breakFor = (text, fontKey, fontSize, width) => {
-    const run = (w) => breakLine(text, {
-      width: w,
-      indent: 0,
-      measure: measureFor(fontKey, fontSize),
-      spaceWidth: fontSize * L.spaceEm,
-      looseRatio: 2
-    });
+  const breakFor = (value, fontKey, fontSize, width) => {
+    const run = (w) => breakLine(value, { width: w, indent: 0, measure: measureFor(fontKey, fontSize), spaceWidth: fontSize * design.spaceEm, looseRatio: 2 });
     const base = run(width);
     if (base.length < 2) return base.map((line) => line.words.join(' '));
     let lo = width * 0.4;
@@ -226,67 +201,61 @@ export async function buildInteriorPdf({
   };
 
   // 1) Title page
-  const titlePage = newPage('title');
+  const tp = newPage('title');
   const titleSize = Math.min(22, size * 2.2);
-  const titleLines = breakFor(bookTitle, 'extraBold', titleSize, textW * 0.86);
-  let ty = H * 0.68;
-  titleLines.forEach((line) => {
-    centered(titlePage, line, 'extraBold', titleSize, ty);
+  const tAlign = design.titlePage === 'left' ? 'left' : 'center';
+  const titleFont = design.headingFont === 'sans' ? F.headBlack : 'extraBold';
+  let ty = H * (tAlign === 'left' ? 0.74 : 0.68);
+  breakFor(bookTitle, titleFont, titleSize, textW * 0.86).forEach((line) => {
+    put(tp, line, titleFont, titleSize, ty, tAlign);
     ty -= titleSize * 1.45;
   });
-  if (author) centered(titlePage, nfc(author), 'regular', size * 1.1, ty - size * 1.6);
-  if (publisher) centered(titlePage, nfc(publisher), 'bold', size * 0.95, mm(margins.bottom) + size * 1.5);
+  if (author) put(tp, nfc(author), 'regular', size * 1.1, ty - size * 1.6, tAlign);
+  if (publisher) put(tp, nfc(publisher), F.head, size * 0.95, bottom + size * 1.5, tAlign);
   newPage('blank');
 
-  // 2) TOC (measured now, page numbers filled after body layout)
-  const titled = structure.chapters.filter((chapter) => !chapter.untitled);
+  // 2) TOC
+  const titled = structure.chapters.filter((c) => !c.untitled);
   const useToc = includeToc && titled.length >= 2;
   const tocLayout = [];
   let tocPageCount = 0;
+  const tocGap = design.key === 'poetry' ? 0 : 1;
   if (useToc) {
     const tocSink = Math.max(2, Math.round(LPP * 0.16));
-    const hasLabels = titled.some((chapter) => chapter.label);
-    const labelCol = hasLabels ? mm(15) : 0;
-    const numberCol = mm(10);
-    const titleWidth = textW - labelCol - numberCol;
+    const hasLabels = titled.some((c) => c.label);
+    const labelCol = hasLabels ? Math.min(mm(18), Math.max(...titled.map((c) => widthOf(F.head, c.label || '', size * 0.9))) + mm(4)) : 0;
+    const titleWidth = textW - labelCol - mm(10);
     let line = tocSink + 3;
     let pageIndex = 0;
     titled.forEach((chapter) => {
       const linesForTitle = breakFor(chapter.title || chapter.label, 'regular', size, titleWidth);
-      const need = linesForTitle.length;
-      if (line + need > LPP) {
-        pageIndex += 1;
-        line = 1;
-      }
+      if (line + linesForTitle.length > LPP) { pageIndex += 1; line = 1; }
       tocLayout.push({ chapter, pageIndex, line, lines: linesForTitle, labelCol });
-      line += need + 1;
+      line += linesForTitle.length + tocGap;
     });
     tocPageCount = pageIndex + 1;
     for (let i = 0; i < tocPageCount; i += 1) {
-      const page = newPage('toc', { folio: false });
-      if (i === 0) centered(page, '차례', 'bold', size * 1.3, baselineAt(tocSink));
+      const pg = newPage('toc');
+      if (i === 0) put(pg, '차례', F.head, size * 1.3, baselineAt(tocSink), design.titlePage === 'left' ? 'left' : 'center');
     }
   }
-  if (pages.length % 2 === 1) newPage('blank'); // body starts on a recto (odd) page
+  if (pages.length % 2 === 1) newPage('blank');
 
   // 3) Body
   let page = null;
   let cursor = 0;
   let chapterTitle = '';
-
   const startBodyPage = () => {
-    page = newPage('body', { runningHead: true, folio: true, chapterTitle });
+    page = newPage('body', { runningHead: !!design.runningHead, folio: true, chapterTitle });
     cursor = 0;
-    return page;
   };
 
-  const placeTypesetLine = (line, lineIndex, { fontKey = 'regular', fontSize = size, align = 'justify' } = {}) => {
-    const measure = fontKey === 'regular' && fontSize === size ? measureBody : measureFor(fontKey, fontSize);
-    const gapBase = fontSize * L.spaceEm;
+  const placeTypesetLine = (line, lineIndex, { fontKey = F.body, fontSize = size, align = design.align } = {}) => {
+    const measure = fontKey === F.body && fontSize === size ? measureBody : measureFor(fontKey, fontSize);
+    const gapBase = fontSize * design.spaceEm;
     const y = baselineAt(lineIndex);
     if (align === 'center') {
-      const text = line.words.join(' ');
-      centered(page, text, fontKey, fontSize, y);
+      put(page, line.words.join(' '), fontKey, fontSize, y, 'center');
       placed.push(line.words.join(''));
       return;
     }
@@ -307,7 +276,11 @@ export async function buildInteriorPdf({
     placed.push(line.words.join(''));
   };
 
-  const placeLines = (lines, options) => {
+  const placeLines = (lines, options, { keepTogether = false } = {}) => {
+    if (keepTogether && page && lines.length <= LPP && cursor + lines.length > LPP && cursor > 0) {
+      stats.shortPages += 1;
+      startBodyPage();
+    }
     let i = 0;
     while (i < lines.length) {
       if (!page || cursor >= LPP) startBodyPage();
@@ -335,87 +308,167 @@ export async function buildInteriorPdf({
     }
   };
 
+  const rule = (pg, x, y, w, thicknessPt) => pg.rules.push({ x, y, w, h: thicknessPt });
+
+  const openChapter = (chapter) => {
+    const style = design.opener.style;
+    const sink = Math.max(style === 'poem' ? 1 : 3, Math.round(LPP * design.opener.sink));
+    let li = sink;
+    const label = chapter.label || '';
+    const titleText = chapter.title || '';
+    const record = (value) => placed.push(String(value).replace(/\s+/g, ''));
+
+    if (style === 'numeral') {
+      if (label) {
+        const numeric = /^\d{1,3}$/.test(label);
+        const s = numeric ? size * 3 : size * 1.6;
+        li = sink + (numeric ? 2 : 1);
+        put(page, label, numeric ? 'extraBold' : F.head, s, baselineAt(li), 'center', { tc: numeric ? 0 : size * 0.06 });
+        record(label);
+        li += numeric ? 3 : 2;
+      }
+      breakFor(titleText, F.head, size * 1.35, textW * 0.8).forEach((t) => {
+        if (!t) return;
+        put(page, t, F.head, size * 1.35, baselineAt(li), 'center');
+        record(t);
+        li += 2;
+      });
+      cursor = li + 2;
+      return;
+    }
+    if (style === 'left-title') {
+      if (label) {
+        put(page, label, F.head, size * 0.9, baselineAt(li), 'left', { tc: size * 0.05 });
+        record(label);
+        li += 2;
+      }
+      const hs = size * 1.45;
+      breakFor(titleText, F.head, hs, textW * 0.85).forEach((t) => {
+        if (!t) return;
+        put(page, t, F.head, hs, baselineAt(li), 'left');
+        record(t);
+        li += 2;
+      });
+      rule(page, 0, baselineAt(li - 1) + size * 0.2, mm(18), 0.45);
+      cursor = li + 1;
+      return;
+    }
+    if (style === 'sans-block') {
+      if (label) {
+        li = sink + 1;
+        put(page, label, F.headBlack, size * 2.1, baselineAt(li), 'left');
+        record(label);
+        li += 2;
+      }
+      const hs = size * 1.5;
+      breakFor(titleText, F.head, hs, textW * 0.9).forEach((t) => {
+        if (!t) return;
+        put(page, t, F.head, hs, baselineAt(li), 'left');
+        record(t);
+        li += 2;
+      });
+      rule(page, 0, baselineAt(li - 1) + size * 0.25, textW, 0.6);
+      cursor = li + 1;
+      return;
+    }
+    if (style === 'poem') {
+      const hs = size * 1.15;
+      if (label) { put(page, label, F.head, size * 0.9, baselineAt(li), 'left'); record(label); li += 1; }
+      breakFor(titleText, F.head, hs, textW).forEach((t) => {
+        if (!t) return;
+        put(page, t, F.head, hs, baselineAt(li), 'left');
+        record(t);
+        li += 1;
+      });
+      cursor = li + 2;
+      return;
+    }
+    // 'label-title' (default)
+    if (label) {
+      put(page, label, F.head, size * 0.95, baselineAt(li), 'center', { tc: size * 0.08 });
+      record(label);
+      li += 2;
+    }
+    const hs = Math.min(17, size * 1.6);
+    breakFor(titleText, F.head, hs, textW * 0.82).forEach((t) => {
+      if (!t) return;
+      put(page, t, F.head, hs, baselineAt(li), 'center');
+      record(t);
+      li += 2;
+    });
+    cursor = li + 2;
+  };
+
   const chapterStarts = [];
+  const poem = design.opener.style === 'poem';
 
   structure.chapters.forEach((chapter, chapterIndex) => {
     chapterTitle = chapter.untitled ? bookTitle : (chapter.title || chapter.label);
-    // Every chapter opens on a new recto page.
-    if (pages.length % 2 === 1) {
+    if (design.opener.recto && pages.length % 2 === 1) {
       newPage('blank');
       if (chapterIndex > 0) stats.blankPagesForRecto += 1;
     }
+    const opener = !chapter.untitled;
     page = newPage('body', {
-      runningHead: chapter.untitled,
-      folio: chapter.untitled,
+      runningHead: chapter.untitled && !!design.runningHead,
+      folio: chapter.untitled || poem,
       chapterTitle,
-      chapterOpen: !chapter.untitled
+      chapterOpen: opener && !poem
     });
     cursor = 0;
     chapterStarts.push({ chapter, pageNumber: pages.length });
+    if (opener) openChapter(chapter);
 
-    if (!chapter.untitled) {
-      const sink = Math.max(3, Math.round(LPP * 0.28));
-      let lineIndex = sink;
-      if (chapter.label) {
-        centered(page, chapter.label, 'bold', size * 0.95, baselineAt(lineIndex), { tc: size * 0.08 });
-        placed.push(chapter.label);
-        lineIndex += 2;
-      }
-      const headSize = Math.min(17, size * 1.6);
-      const headLines = breakFor(chapter.title, 'bold', headSize, textW * 0.82);
-      headLines.forEach((text) => {
-        if (!text) return;
-        centered(page, text, 'bold', headSize, baselineAt(lineIndex));
-        placed.push(text.replace(/\s+/g, ''));
-        lineIndex += 2;
-      });
-      cursor = lineIndex + 2;
-    }
-
+    let first = true;
     chapter.blocks.forEach((block) => {
       if (block.type === 'p') {
         const typeset = [];
-        block.lines.forEach((text, idx) => {
-          breakLine(text, {
+        const firstLine = block.lines[0] || '';
+        const marker = firstLine.match(LIST_MARKER_RE);
+        const isList = !poem && !!marker;
+        if (isList) stats.listItems += 1;
+        const hang = isList ? measureBody(marker[1]) + spaceW : hangW;
+        block.lines.forEach((value, idx) => {
+          const subMarker = isList && idx > 0 ? value.match(LIST_MARKER_RE) : null;
+          breakLine(value, {
             width: textW,
-            indent: idx === 0 ? indentW : 0,
+            indent: isList ? (idx === 0 || subMarker ? 0 : hang) : (idx === 0 ? indentW : 0),
+            hangIndent: isList ? (subMarker ? measureBody(subMarker[1]) + spaceW : hang) : (poem ? hangW : 0),
             measure: measureBody,
             spaceWidth: spaceW
           }).forEach((line) => typeset.push(line));
         });
-        placeLines(typeset, { align: 'justify' });
+        if (design.stanzaGapLines && !first && cursor > 0 && cursor < LPP) cursor += design.stanzaGapLines;
+        placeLines(typeset, { align: isList ? 'justify' : design.align }, { keepTogether: poem });
+        first = false;
         return;
       }
-
       if (block.type === 'section') {
-        const secSize = size * 1.05;
-        const lines = breakLine(block.text, {
-          width: textW * 0.9,
-          indent: 0,
-          measure: measureFor('bold', secSize),
-          spaceWidth: secSize * L.spaceEm
-        });
+        const secSize = size * (design.section?.scale || 1.05);
+        const secFont = F.section;
+        const lines = breakLine(block.text, { width: textW * 0.9, indent: 0, measure: measureFor(secFont, secSize), spaceWidth: secSize * design.spaceEm });
         const before = cursor > 0 ? 1 : 0;
         if (!page || cursor + before + lines.length + 1 + 2 > LPP) startBodyPage();
         if (cursor > 0) cursor += 1;
         lines.forEach((line) => {
-          placeTypesetLine({ ...line, last: true }, cursor, { fontKey: 'bold', fontSize: secSize, align: 'left' });
+          placeTypesetLine({ ...line, last: true }, cursor, { fontKey: secFont, fontSize: secSize, align: design.section?.style === 'center' ? 'center' : 'left' });
           cursor += 1;
         });
         cursor += 1;
+        first = false;
         return;
       }
-
-      // scene break
+      // scene break: printed exactly as written, centred
       if (!page || cursor + 2 > LPP) startBodyPage();
       if (cursor > 0) cursor += 1;
-      centered(page, block.text, 'regular', size, baselineAt(cursor));
+      put(page, block.text, F.body, size, baselineAt(cursor), 'center');
       placed.push(block.text.replace(/\s+/g, ''));
       cursor += 2;
+      first = false;
     });
   });
 
-  // 4) Copyright page (last verso) + padding to the printer's page multiple
+  // 4) Colophon + padding
   const copyrightRows = [];
   if (includeCopyright) {
     copyrightRows.push(['', bookTitle]);
@@ -435,59 +488,71 @@ export async function buildInteriorPdf({
   }
   if (includeCopyright) {
     const cp = newPage('copyright');
-    const cpSize = size * 0.82;
+    const cpSize = Math.min(size * 0.82, lead * 0.62);
     let line = LPP - copyrightRows.length - 1;
+    const labelW = Math.max(...copyrightRows.slice(1).map(([k]) => widthOf('regular', k, cpSize)), 0) + mm(5);
     copyrightRows.forEach(([label, value], idx) => {
       const y = baselineAt(line);
       if (idx === 0) {
-        addItem(cp, { font: 'bold', size: size * 0.95, x: 0, y, text: value, tc: 0 });
+        addItem(cp, { font: F.head, size: size * 0.95, x: 0, y, text: value, tc: 0 });
         line += 2;
         return;
       }
       addItem(cp, { font: 'regular', size: cpSize, x: 0, y, text: label, tc: 0 });
-      addItem(cp, { font: 'regular', size: cpSize, x: mm(24), y, text: value, tc: 0 });
+      addItem(cp, { font: 'regular', size: cpSize, x: labelW, y, text: value, tc: 0 });
       line += 1;
     });
   }
 
-  // 5) Fill TOC page numbers
+  // 5) TOC page numbers
   if (useToc) {
     const tocStart = pages.findIndex((p) => p.kind === 'toc');
     tocLayout.forEach((entry) => {
       const tocPage = pages[tocStart + entry.pageIndex];
       const start = chapterStarts.find((s) => s.chapter === entry.chapter);
-      let line = entry.line;
       if (entry.chapter.label) {
-        addItem(tocPage, { font: 'bold', size: size * 0.9, x: 0, y: baselineAt(line), text: entry.chapter.label, tc: 0 });
+        addItem(tocPage, { font: F.head, size: size * 0.9, x: 0, y: baselineAt(entry.line), text: entry.chapter.label, tc: 0 });
       }
-      entry.lines.forEach((text, idx) => {
-        addItem(tocPage, { font: 'regular', size, x: entry.labelCol, y: baselineAt(line + idx), text, tc: 0 });
+      entry.lines.forEach((value, idx) => {
+        addItem(tocPage, { font: 'regular', size, x: entry.labelCol, y: baselineAt(entry.line + idx), text: value, tc: 0 });
       });
       const num = String(start ? start.pageNumber : '');
-      const numW = widthOf('regular', num, size);
-      addItem(tocPage, { font: 'regular', size, x: textW - numW, y: baselineAt(line + entry.lines.length - 1), text: num, tc: 0 });
-      line += entry.lines.length;
+      addItem(tocPage, { font: 'regular', size, x: textW - widthOf('regular', num, size), y: baselineAt(entry.line + entry.lines.length - 1), text: num, tc: 0 });
     });
   }
 
-  // ---------- missing glyph check ----------
-  const missingGlyphs = [];
-  const fallbackChars = [];
-  Object.entries(usedChars).forEach(([fontKey, set]) => {
-    set.forEach((ch) => {
-      const cp = ch.codePointAt(0);
-      if (fontKey === 'fallback') {
-        fallbackChars.push(ch);
-        if (!glyphFonts.fallback?.hasGlyphForCodePoint(cp)) missingGlyphs.push({ font: 'fallback', char: ch, codePoint: `U+${cp.toString(16).toUpperCase().padStart(4, '0')}` });
-        return;
-      }
-      if (!glyphFonts[fontKey].hasGlyphForCodePoint(cp)) {
-        missingGlyphs.push({ font: fontKey, char: ch, codePoint: `U+${cp.toString(16).toUpperCase().padStart(4, '0')}` });
-      }
-    });
+  // 6) Running heads + folios (decided per physical page)
+  const runSize = size * 0.75;
+  const folioSize = size * 0.8;
+  pages.forEach((pg, index) => {
+    const number = index + 1;
+    const recto = number % 2 === 1;
+    if (pg.kind !== 'body' || pg.chapterOpen) return;
+    if (pg.runningHead && design.runningHead) {
+      const mode = recto ? design.runningHead.recto : design.runningHead.verso;
+      const headText = mode === 'author' ? (nfc(author) || bookTitle) : mode === 'chapter' ? pg.chapterTitle : bookTitle;
+      put(pg, headText, F.run, runSize, H - top * 0.55, recto ? 'right' : 'left');
+    }
+    if (pg.folio) {
+      const num = String(number);
+      const align = design.folio === 'center' ? 'center' : recto ? 'right' : 'left';
+      put(pg, num, F.run, folioSize, bottom * 0.5, align);
+    }
   });
 
-  // ---------- render ----------
+  return {
+    pages, stats, placed, usedChars, chapterStarts, tocPageCount, copyrightRows,
+    geometry: { W, H, top, bottom, inner, outer, textW, textH, LPP, size, lead, margins, multiple },
+    fontsUsed: F
+  };
+}
+
+// ---------------------------------------------------------------- render
+export async function renderInterior(ctx, layout, { title = '', author = '', bleedMm = 3, generatedAt = new Date().toISOString() } = {}) {
+  const { doc, pdfFonts } = ctx;
+  const { W, H, inner, outer } = layout.geometry;
+  const B = mm(bleedMm);
+  const bookTitle = nfc(title || '제목 없음').trim();
   doc.setTitle(bookTitle);
   if (author) doc.setAuthor(nfc(author));
   doc.setSubject(`${bookTitle} — 인쇄용 내지`);
@@ -498,115 +563,177 @@ export async function buildInteriorPdf({
   doc.setCreationDate(stamp);
   doc.setModificationDate(stamp);
 
-  const runSize = size * 0.75;
-  const folioSize = size * 0.8;
-
-  pages.forEach((logical, index) => {
-    const number = index + 1;
-    const recto = number % 2 === 1;
+  layout.pages.forEach((logical, index) => {
+    const recto = (index + 1) % 2 === 1;
     const left = recto ? inner : outer;
     const pdfPage = doc.addPage([W + 2 * B, H + 2 * B]);
     pdfPage.setMediaBox(0, 0, W + 2 * B, H + 2 * B);
     pdfPage.setBleedBox(0, 0, W + 2 * B, H + 2 * B);
     pdfPage.setTrimBox(B, B, W, H);
+    if (!logical.items.length && !logical.rules.length) return;
 
-    const items = logical.items.slice();
-    if (logical.kind === 'body' && logical.runningHead && !logical.chapterOpen) {
-      const headText = recto ? logical.chapterTitle : bookTitle;
-      const headW = widthOf('regular', headText, runSize);
-      let hx = recto ? textW - headW : 0;
-      runsFor('regular', headText).forEach((run) => {
-        items.push({ font: run.font, size: runSize, x: hx, y: H - top * 0.55, text: run.text, tc: 0, chrome: true });
-        hx += pdfFonts[run.font].widthOfTextAtSize(run.text, runSize);
+    const ops = [setFillingCmykColor(0, 0, 0, 1)];
+    logical.rules.forEach((r) => ops.push(rectangle(B + left + r.x, B + r.y, r.w, r.h), fill()));
+    if (logical.items.length) {
+      const keys = {};
+      const keyFor = (fontKey) => {
+        if (!keys[fontKey]) keys[fontKey] = pdfPage.node.newFontDictionary(pdfFonts[fontKey].name, pdfFonts[fontKey].ref);
+        return keys[fontKey];
+      };
+      ops.push(beginText());
+      let currentTc = 0;
+      logical.items.forEach((item) => {
+        ops.push(setFontAndSize(keyFor(item.font), item.size));
+        if (item.tc !== currentTc) { ops.push(setCharacterSpacing(item.tc)); currentTc = item.tc; }
+        ops.push(setTextMatrix(1, 0, 0, 1, B + left + item.x, B + item.y));
+        ops.push(showText(pdfFonts[item.font].encodeText(item.text)));
       });
+      if (currentTc !== 0) ops.push(setCharacterSpacing(0));
+      ops.push(endText());
     }
-    if (logical.kind === 'body' && logical.folio && !logical.chapterOpen) {
-      const num = String(number);
-      const numW = pdfFonts.regular.widthOfTextAtSize(num, folioSize);
-      items.push({ font: 'regular', size: folioSize, x: recto ? textW - numW : 0, y: bottom * 0.5, text: num, tc: 0, chrome: true });
-    }
-    if (!items.length) return;
-
-    const keys = {};
-    const keyFor = (fontKey) => {
-      if (!keys[fontKey]) keys[fontKey] = pdfPage.node.newFontDictionary(pdfFonts[fontKey].name, pdfFonts[fontKey].ref);
-      return keys[fontKey];
-    };
-    const ops = [setFillingCmykColor(0, 0, 0, 1), beginText()];
-    let currentTc = 0;
-    items.forEach((item) => {
-      ops.push(setFontAndSize(keyFor(item.font), item.size));
-      if (item.tc !== currentTc) {
-        ops.push(setCharacterSpacing(item.tc));
-        currentTc = item.tc;
-      }
-      ops.push(setTextMatrix(1, 0, 0, 1, B + left + item.x, B + item.y));
-      ops.push(showText(pdfFonts[item.font].encodeText(item.text)));
-    });
-    if (currentTc !== 0) ops.push(setCharacterSpacing(0));
-    ops.push(endText());
     pdfPage.pushOperators(...ops);
   });
+  return doc.save({ useObjectStreams: false });
+}
 
-  const bytes = await doc.save({ useObjectStreams: false });
+function scoreLayout(layout, candidate) {
+  const s = layout.stats;
+  return s.paddingPages * 3 + s.blankPagesForRecto + s.shortPages * 0.5 + s.overflowLines * 10 + (candidate.leadingDelta ? 0.3 : 0);
+}
+
+/**
+ * @param {object} input
+ * @param {string} [input.designProfile] fiction | essay | humanities | practical | poetry
+ * @param {'airy'|'standard'|'compact'} [input.density]
+ * @param {boolean} [input.optimize] compare leading variants and keep the one with the fewest blank/short pages
+ */
+export async function buildInteriorPdf({
+  title = '',
+  author = '',
+  publisher = '',
+  manuscript = '',
+  isbn = '',
+  price = '',
+  firstEdition = '',
+  registration = '',
+  contact = '',
+  trimWidthMm = 140,
+  trimHeightMm = 210,
+  bleedMm = 3,
+  pageMultiple = 4,
+  includeToc = true,
+  includeCopyright = true,
+  designProfile = 'humanities',
+  density = 'standard',
+  optimize = true,
+  fonts,
+  generatedAt = new Date().toISOString()
+} = {}) {
+  if (!String(manuscript || '').trim()) throw new Error('조판할 원고가 없습니다.');
+  const bookTitle = nfc(title || '제목 없음').trim();
+  const structure = parseBookStructure(manuscript, { title: bookTitle });
+  const base = resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density });
+  const needSans = base.headingFont === 'sans' || base.runningHead?.font === 'sans' || base.section?.font === 'sans';
+  const ctx = await createFontContext(fonts, { text: `${manuscript}${title}${author}${publisher}`, needSans });
+
+  const input = { title, author, publisher, isbn, price, firstEdition, registration, contact, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, includeToc, includeCopyright, structure };
+  const deltas = optimize ? [0, -0.04, 0.04] : [0];
+  const candidates = deltas.map((leadingDelta) => {
+    const design = resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density, leadingDelta });
+    const layout = layoutInterior(ctx, input, design);
+    return { leadingDelta, design, layout, score: scoreLayout(layout, { leadingDelta }) };
+  });
+  const best = candidates.slice().sort((a, b) => a.score - b.score)[0];
+  const { layout, design } = best;
+  const bytes = await renderInterior(ctx, layout, { title, author, bleedMm, generatedAt });
+
+  // glyph coverage
+  const missingGlyphs = [];
+  let fallbackChars = 0;
+  Object.entries(layout.usedChars).forEach(([fontKey, set]) => {
+    set.forEach((ch) => {
+      const cp = ch.codePointAt(0);
+      if (fontKey === 'fallback') fallbackChars += 1;
+      if (!ctx.glyphFonts[fontKey].hasGlyphForCodePoint(cp)) {
+        missingGlyphs.push({ font: fontKey, char: ch, codePoint: `U+${cp.toString(16).toUpperCase().padStart(4, '0')}` });
+      }
+    });
+  });
 
   const expected = structureCanonicalText(structure);
-  const actual = canonicalChars(placed.join(''));
+  const actual = canonicalChars(layout.placed.join(''));
   let firstMismatch = -1;
   if (expected !== actual) {
     const max = Math.min(expected.length, actual.length);
-    for (let i = 0; i < max; i += 1) {
-      if (expected[i] !== actual[i]) { firstMismatch = i; break; }
-    }
+    for (let i = 0; i < max; i += 1) if (expected[i] !== actual[i]) { firstMismatch = i; break; }
     if (firstMismatch < 0) firstMismatch = max;
   }
 
-  const bodyPages = pages.filter((p) => p.kind === 'body').length;
-
+  const g = layout.geometry;
+  const B = mm(bleedMm);
+  const fontName = (key) => ctx.pdfFonts[key]?.name || null;
   return {
     bytes,
-    pageCount: pages.length,
+    pageCount: layout.pages.length,
     structure,
+    design: {
+      profile: design.key,
+      label: design.label,
+      summary: design.summary,
+      density: design.density,
+      leadingRatio: design.leadingRatio,
+      opener: design.opener.style,
+      runningHead: design.runningHead ? `${design.runningHead.verso}/${design.runningHead.recto}` : 'none',
+      folio: design.folio,
+      headingFont: ctx.sansAvailable && design.headingFont === 'sans' ? '나눔고딕' : '나눔명조',
+      candidates: candidates.map((c) => ({
+        leadingRatio: c.design.leadingRatio,
+        linesPerPage: c.layout.geometry.LPP,
+        pages: c.layout.pages.length,
+        paddingPages: c.layout.stats.paddingPages,
+        shortPages: c.layout.stats.shortPages,
+        chosen: c === best
+      }))
+    },
     layout: {
       trimWidthMm: Number(trimWidthMm),
       trimHeightMm: Number(trimHeightMm),
       bleedMm: Number(bleedMm),
-      pdfWidthMm: toMm(W + 2 * B),
-      pdfHeightMm: toMm(H + 2 * B),
-      bodySizePt: size,
-      leadingPt: lead,
-      linesPerPage: LPP,
-      textWidthMm: toMm(textW),
-      textHeightMm: toMm(textH),
-      marginsMm: margins,
-      approxCharsPerLine: Math.round(textW / size),
-      pageMultiple: multiple,
+      pdfWidthMm: toMm(g.W + 2 * B),
+      pdfHeightMm: toMm(g.H + 2 * B),
+      bodySizePt: g.size,
+      leadingPt: g.lead,
+      linesPerPage: g.LPP,
+      textWidthMm: toMm(g.textW),
+      textHeightMm: toMm(g.textH),
+      marginsMm: g.margins,
+      approxCharsPerLine: Math.round(g.textW / g.size),
+      pageMultiple: g.multiple,
       fonts: {
-        body: pdfFonts.regular.name,
-        heading: pdfFonts.bold.name,
-        display: pdfFonts.extraBold.name,
-        fallback: pdfFonts.fallback ? pdfFonts.fallback.name : null,
-        fallbackChars: fallbackChars.length,
+        body: fontName('regular'),
+        heading: fontName(layout.fontsUsed.head),
+        display: fontName(layout.fontsUsed.headBlack),
+        fallback: fontName('fallback'),
+        fallbackChars,
         embedding: 'full (CID TrueType, Identity-H)',
-        license: pdfFonts.fallback
-          ? 'SIL Open Font License 1.1 (Nanum Myeongjo; ooOS Fallback Serif from Noto Serif KR)'
-          : 'SIL Open Font License 1.1 (Nanum Myeongjo)'
+        license: [
+          'SIL Open Font License 1.1 (Nanum Myeongjo',
+          ctx.sansAvailable ? '; Nanum Gothic' : '',
+          ctx.pdfFonts.fallback ? '; ooOS Fallback Serif from Noto Serif KR' : '',
+          ')'
+        ].join('')
       },
       color: '1도 (K100), DeviceCMYK'
     },
     pages: {
-      total: pages.length,
-      body: bodyPages,
-      front: pages.findIndex((p) => p.kind === 'body'),
-      toc: tocPageCount,
+      total: layout.pages.length,
+      body: layout.pages.filter((p) => p.kind === 'body').length,
+      front: layout.pages.findIndex((p) => p.kind === 'body'),
+      toc: layout.tocPageCount,
       copyright: includeCopyright
     },
-    chapters: chapterStarts.map((s) => ({
-      label: s.chapter.label,
-      title: s.chapter.untitled ? '' : s.chapter.title,
-      startPage: s.pageNumber
-    })),
-    stats,
+    chapters: layout.chapterStarts.map((s) => ({ label: s.chapter.label, title: s.chapter.untitled ? '' : s.chapter.title, startPage: s.pageNumber })),
+    stats: layout.stats,
     missingGlyphs,
     completeness: {
       expectedChars: expected.length,
@@ -615,6 +742,7 @@ export async function buildInteriorPdf({
       firstMismatchIndex: firstMismatch,
       structureLossless: structure.lossless
     },
-    copyrightFields: Object.fromEntries(copyrightRows.slice(1).map(([k, v]) => [k, v]))
+    copyrightFields: Object.fromEntries(layout.copyrightRows.slice(1).map(([k, v]) => [k, v])),
+    sansUsed: ctx.sansAvailable
   };
 }

@@ -17,6 +17,8 @@ import {
 import { evaluateReleaseReadiness } from '../utils/preflight';
 import { evaluatePrintPdf, inspectPdfBytes, inspectPdfFile } from '../utils/pdfPreflight';
 import { DEFAULT_PRINT_OPTIONS, PRINT_HUMAN_GATES, TRIM_PRESETS } from '../utils/print/presets';
+import { analyzeForDesign } from '../utils/print/designAnalysis';
+import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -299,6 +301,13 @@ export default function OneDayBooksOS() {
   const printOptions = { ...DEFAULT_PRINT_OPTIONS, ...(project.printOptions || {}) };
   const printGates = { ...EMPTY_PROJECT.printGates, ...(project.printGates || {}) };
   const printGatesPassed = PRINT_HUMAN_GATES.every((gate) => printGates[gate.key]);
+  const designAnalysis = useMemo(
+    () => (processedManuscript ? analyzeForDesign(processedManuscript, { title: project.title }) : null),
+    [processedManuscript, project.title]
+  );
+  const chosenProfile = DESIGN_PROFILES[printOptions.designProfile]
+    ? printOptions.designProfile
+    : designAnalysis?.genre || 'humanities';
   const trimPresetKey = (TRIM_PRESETS.find((preset) =>
     Number(project.printSpec?.trimWidthMm) === preset.widthMm &&
     Number(project.printSpec?.trimHeightMm) === preset.heightMm
@@ -577,7 +586,8 @@ export default function OneDayBooksOS() {
       const fonts = await printModule.loadPrintFonts({
         includeFallback: printModule.needsFallbackFont(
           `${processedManuscript}${project.title}${project.author}${printOptions.publisher}${printOptions.subtitle}`
-        )
+        ),
+        includeSans: profileUsesSans(chosenProfile)
       });
       const frontImage = coverImageFile
         ? { bytes: new Uint8Array(await coverImageFile.arrayBuffer()) }
@@ -1010,6 +1020,41 @@ export default function OneDayBooksOS() {
                   </span>
                 </div>
 
+                {designAnalysis && (
+                  <div className="design-analysis">
+                    <div className="design-analysis-head">
+                      <strong>원고 분석 · 편집디자인</strong>
+                      <small>
+                        추천 {designAnalysis.genreLabel} · 판정 {designAnalysis.certainty === 'high' ? '분명' : designAnalysis.certainty === 'medium' ? '보통' : '약함'}
+                        {' · '}근거: {designAnalysis.reasons.join(' · ')}
+                      </small>
+                    </div>
+                    <div className="print-spec-grid">
+                      <label>
+                        <span>편집디자인</span>
+                        <select
+                          value={DESIGN_PROFILES[printOptions.designProfile] ? printOptions.designProfile : 'auto'}
+                          onChange={(e) => updatePrintOption('designProfile', e.target.value)}
+                        >
+                          <option value="auto">추천 적용 ({designAnalysis.genreLabel})</option>
+                          {Object.values(DESIGN_PROFILES).map((profile) => (
+                            <option key={profile.key} value={profile.key}>{profile.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        <span>판면 밀도</span>
+                        <select value={printOptions.density} onChange={(e) => updatePrintOption('density', e.target.value)}>
+                          {DENSITY_OPTIONS.map((option) => (
+                            <option key={option.key} value={option.key}>{option.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="file-info">{DESIGN_PROFILES[chosenProfile].label} — {DESIGN_PROFILES[chosenProfile].summary}</div>
+                  </div>
+                )}
+
                 <div className="print-spec-grid">
                   <label>
                     <span>판형</span>
@@ -1113,7 +1158,7 @@ export default function OneDayBooksOS() {
                         label="표지 펼침면"
                         value={`${printPkg.report.cover.geometry.totalWidthMm}×${printPkg.report.cover.geometry.totalHeightMm}mm`}
                       />
-                      <MiniMetric label="쪽당" value={`${printPkg.report.interior.layout.linesPerPage}행`} />
+                      <MiniMetric label="편집디자인" value={printPkg.report.design.label} />
                     </div>
 
                     <div className="preflight-grid print-check-grid">
@@ -1154,7 +1199,9 @@ export default function OneDayBooksOS() {
                     </div>
 
                     <div className="file-info">
-                      {printPkg.fileName} · {printPkg.files.length}개 파일 · 생성된 내지 PDF는 아래 프리플라이트에도 자동 반영됩니다.
+                      {printPkg.fileName} · {printPkg.files.length}개 파일 · 본문 {printPkg.report.interior.layout.bodySizePt}pt / 행간 {printPkg.report.interior.layout.leadingPt}pt / 쪽당 {printPkg.report.interior.layout.linesPerPage}행
+                      {printPkg.report.design.candidates?.length > 1 ? ` · 조판 후보 ${printPkg.report.design.candidates.length}개 비교 후 백지·짧은 쪽이 가장 적은 안 선택` : ''}
+                      {' · '}생성된 내지 PDF는 아래 프리플라이트에도 자동 반영됩니다.
                     </div>
                   </>
                 )}
@@ -1786,6 +1833,24 @@ export default function OneDayBooksOS() {
         }
         .print-package .primary {
           margin-top: 12px;
+        }
+        .design-analysis {
+          margin-top: 12px;
+          padding: 12px;
+          border: 1px solid #d7cdbf;
+          border-radius: 12px;
+          background: #fbf8f2;
+        }
+        .design-analysis-head strong,
+        .design-analysis-head small {
+          display: block;
+        }
+        .design-analysis-head small {
+          margin-top: 4px;
+          color: #6d675e;
+          font-size: 12px;
+          line-height: 1.45;
+          overflow-wrap: anywhere;
         }
         .print-check-grid {
           margin-top: 14px;

@@ -11,6 +11,10 @@ import { buildReleaseBundle } from '../src/utils/releaseBuilder';
 
 const font = (name) => new Uint8Array(fs.readFileSync(path.join('public/fonts', name)));
 const FONTS = {
+  sansRegular: font('NanumGothic-Regular.ttf'),
+  sansBold: font('NanumGothic-Bold.ttf'),
+  sansExtraBold: font('NanumGothic-ExtraBold.ttf'),
+  sansLicense: font('OFL-NanumGothic.txt'),
   regular: font('NanumMyeongjo-Regular.ttf'),
   bold: font('NanumMyeongjo-Bold.ttf'),
   extraBold: font('NanumMyeongjo-ExtraBold.ttf'),
@@ -130,10 +134,42 @@ test('print package: blocks on missing glyphs (no fallback) and invalid ISBN', a
   assert.ok(result.report.blockers.some((b) => b.includes('ISBN')));
 });
 
-test('existing release bundle is unchanged', async () => {
+test('existing release bundle keeps its file set (incl. print_spec.json from main)', async () => {
   const bundle = await buildReleaseBundle({ title: '기존 기능', author: '저자', objective: '전자책', processedText: sampleManuscript(1, 2) });
   assert.deepEqual(bundle.files.map((f) => f.replace(/기존_기능/, 'X')), [
-    'README.txt', 'manuscript/X_clean.txt', 'ebook/X.epub', 'print/X_140x210.html',
+    'README.txt', 'manuscript/X_clean.txt', 'ebook/X.epub', 'print/X_proof.html', 'print/print_spec.json',
     'reports/production_report.json', 'metadata/book.json', 'manifest/sha256.json'
   ]);
+});
+
+const GENRE_SAMPLES = {
+  fiction: () => ['1', ...Array.from({ length: 24 }, (_, i) => (i % 3 === 0 ? `“어디 가세요?” 그가 물었다. ${i}` : `그날 밤 역 앞에는 비가 내렸다. 민서는 우산을 접고 마지막 열차를 기다렸다. ${i}`)), '2', '＊', '“집에요.” 민서가 대답했다.'].join('\n\n'),
+  essay: () => ['01. 오래된 책방에서', ...Array.from({ length: 20 }, (_, i) => `나는 오래된 책방을 좋아한다. 나는 그 냄새 속에서 조금 느려진다. ${i}`)].join('\n\n'),
+  humanities: () => ['제1장 시간과 도시', ...Array.from({ length: 12 }, (_, i) => `근대 도시의 형성은 단순히 인구의 집중으로 설명되지 않는다. 철도와 전신, 표준시의 도입은 시간에 대한 감각 자체를 바꾸어 놓았다. 그렇다면 출근 시간은 언제부터 당연해졌는가? 이 질문은 공간(空間)의 역사와 이어진다. ${i}`), '## 해석의 경쟁', '여기서 중요한 것은 기술이 아니라 해석이다.', '제2장 광장', '광장은 새로운 질서를 익히게 하는 장치였다.'].join('\n\n'),
+  practical: () => ['제1장 현금 흐름', '## 1-1. 첫 3개월', ...Array.from({ length: 6 }, (_, i) => [`1. 초판 부수는 사전 주문 ${i * 10}건을 기준으로 정합니다.`, '2. 인쇄 견적은 최소 3곳에서 받습니다.', `정가 18,000원 도서를 1,000부 인쇄하면 제작비는 약 350만 원입니다. ${i}`].join('\n\n')), '## 1-2. 반품률', '- 반품률 15~20%를 계산에 넣습니다.'].join('\n\n'),
+  poetry: () => ['# 첫차', '새벽 첫차는\n아무도 기다리지 않는 사람을\n가장 먼저 태운다', '창에 맺힌 숨이\n이름을 쓰다 말고\n흘러내린다', '# 종점', '나는 내리지 않고\n종점까지 간다'].join('\n\n')
+};
+
+test('design analysis recommends the matching genre', async () => {
+  const { analyzeForDesign } = await import('../src/utils/print/designAnalysis');
+  for (const [genre, make] of Object.entries(GENRE_SAMPLES)) {
+    const a = analyzeForDesign(make());
+    assert.equal(a.genre, genre, `${genre} → ${a.genre} (${JSON.stringify(a.scores)})`);
+    assert.ok(a.reasons.length > 0);
+  }
+});
+
+test('each genre profile produces a lossless, print-candidate interior with its own layout', async () => {
+  const seen = new Set();
+  for (const [genre, make] of Object.entries(GENRE_SAMPLES)) {
+    const r = (await buildPrintPackage({
+      title: `${genre} 시험`, author: '저자', manuscript: make(), fonts: FONTS,
+      options: { designProfile: 'auto' }, generatedAt: '2026-10-14T00:00:00.000Z'
+    })).report;
+    assert.equal(r.status, 'PRINT_CANDIDATE', `${genre}: ${r.blockers.join(' / ')}`);
+    assert.equal(r.design.profile, genre);
+    assert.equal(r.interior.completeness.match, true, `${genre} text loss`);
+    seen.add(`${r.design.opener}|${r.interior.layout.leadingPt}|${r.design.folio}|${r.design.headingFont}`);
+  }
+  assert.equal(seen.size, 5, 'five distinct typographic systems');
 });

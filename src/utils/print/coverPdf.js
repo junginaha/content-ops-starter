@@ -149,6 +149,7 @@ export async function buildCoverPdf({
   flapMm = 0,
   frontImage = null,
   fonts,
+  style = 'humanities',
   guide = false,
   generatedAt = new Date().toISOString()
 } = {}) {
@@ -167,6 +168,11 @@ export async function buildCoverPdf({
     bold: await doc.embedFont(padFontBytes(fonts.bold), { subset: false }),
     extraBold: await doc.embedFont(padFontBytes(fonts.extraBold), { subset: false })
   };
+  const useSans = !guide && style === 'practical' && fonts.sansBold && fonts.sansExtraBold;
+  if (useSans) {
+    f.sansBold = await doc.embedFont(padFontBytes(fonts.sansBold), { subset: false });
+    f.sansExtraBold = await doc.embedFont(padFontBytes(fonts.sansExtraBold), { subset: false });
+  }
   const glyph = fontkit.create(padFontBytes(fonts.extraBold));
   const page = doc.addPage([totalW, totalH]);
   page.setMediaBox(0, 0, totalW, totalH);
@@ -175,12 +181,16 @@ export async function buildCoverPdf({
   const keys = {
     regular: page.node.newFontDictionary(f.regular.name, f.regular.ref),
     bold: page.node.newFontDictionary(f.bold.name, f.bold.ref),
-    extraBold: page.node.newFontDictionary(f.extraBold.name, f.extraBold.ref)
+    extraBold: page.node.newFontDictionary(f.extraBold.name, f.extraBold.ref),
+    ...(useSans ? {
+      sansBold: page.node.newFontDictionary(f.sansBold.name, f.sansBold.ref),
+      sansExtraBold: page.node.newFontDictionary(f.sansExtraBold.name, f.sansExtraBold.ref)
+    } : {})
   };
 
   const warnings = [];
   const blockers = [];
-  const report = { image: null, barcode: null, spineText: 'none' };
+  const report = { image: null, barcode: null, spineText: 'none', style };
   const safety = mm(5);
   const ops = [];
   const shapes = [];
@@ -226,43 +236,79 @@ export async function buildCoverPdf({
   if (!guide) {
     ops.push(setFillingCmykColor(0, 0, 0, 1), beginText());
 
-    // Front typography (only when no artwork supplied)
+    // Front typography (only when no artwork supplied) — layout follows the book's design profile.
     if (!frontImage?.bytes) {
-      const titleSize = Math.min(30, frontW / 7.2);
-      const words = safeTitle.split(/\s+/);
-      const maxW = frontW - 2 * safety - mm(8);
-      const lines = [];
-      let cur = '';
-      words.forEach((word) => {
-        const next = cur ? `${cur} ${word}` : word;
-        if (f.extraBold.widthOfTextAtSize(next, titleSize) <= maxW || !cur) cur = next;
-        else { lines.push(cur); cur = word; }
-      });
-      if (cur) lines.push(cur);
-      let y = B + H * 0.72;
-      lines.forEach((line) => {
-        const w = f.extraBold.widthOfTextAtSize(line, titleSize);
-        drawTextOps(ops, keys.extraBold, f.extraBold, titleSize, frontX + (frontW - w) / 2, y, line);
-        y -= titleSize * 1.32;
-      });
-      if (subtitle) {
-        const s = nfc(subtitle);
-        const size = titleSize * 0.42;
-        const w = f.regular.widthOfTextAtSize(s, size);
-        drawTextOps(ops, keys.regular, f.regular, size, frontX + (frontW - w) / 2, y - size * 0.4, s);
-        y -= size * 2.2;
-      }
-      if (author) {
-        const a = nfc(author);
-        const size = Math.min(13, titleSize * 0.45);
-        const w = f.regular.widthOfTextAtSize(a, size);
-        drawTextOps(ops, keys.regular, f.regular, size, frontX + (frontW - w) / 2, y - size * 1.6, a);
-      }
-      if (publisher) {
-        const p = nfc(publisher);
-        const size = 10;
-        const w = f.bold.widthOfTextAtSize(p, size);
-        drawTextOps(ops, keys.bold, f.bold, size, frontX + (frontW - w) / 2, B + safety + mm(6), p);
+      const wrap = (font, text, size, maxW) => {
+        const lines = [];
+        let cur = '';
+        String(text).split(/\s+/).filter(Boolean).forEach((word) => {
+          const next = cur ? `${cur} ${word}` : word;
+          if (font.widthOfTextAtSize(next, size) <= maxW || !cur) cur = next;
+          else { lines.push(cur); cur = word; }
+        });
+        if (cur) lines.push(cur);
+        return lines;
+      };
+      const inset = safety + mm(6);
+      const left = frontX + inset;
+      const maxW = frontW - 2 * inset;
+      const centerX = (font, text, size) => frontX + (frontW - font.widthOfTextAtSize(text, size)) / 2;
+      const a = author ? nfc(author) : '';
+      const p = publisher ? nfc(publisher) : '';
+      const sub = subtitle ? nfc(subtitle) : '';
+
+      if (style === 'essay') {
+        const t = f.bold;
+        const size = Math.min(22, frontW / 9);
+        let y = B + H - inset - mm(16);
+        wrap(t, safeTitle, size, maxW * 0.8).forEach((line) => { drawTextOps(ops, keys.bold, t, size, left, y, line); y -= size * 1.4; });
+        if (sub) { drawTextOps(ops, keys.regular, f.regular, size * 0.45, left, y - size * 0.2, sub); y -= size; }
+        if (a) drawTextOps(ops, keys.regular, f.regular, 10.5, left, y - mm(6), a);
+        if (p) drawTextOps(ops, keys.bold, f.bold, 9, left, B + inset, p);
+      } else if (style === 'practical') {
+        const bandH = H * 0.4;
+        const extendRight = geo.flapMm > 0 ? 0 : B;
+        shapes.push(setFillingCmykColor(0, 0, 0, 1), rectangle(frontX, B + H - bandH, frontW + extendRight, bandH + B), fill());
+        const t = useSans ? f.sansExtraBold : f.extraBold;
+        const tk = useSans ? keys.sansExtraBold : keys.extraBold;
+        const size = Math.min(30, frontW / 6.8);
+        const lines = wrap(t, safeTitle, size, maxW);
+        let y = B + H - bandH + inset + (lines.length - 1) * size * 1.25;
+        ops.push(setFillingCmykColor(0, 0, 0, 0));
+        lines.forEach((line) => { drawTextOps(ops, tk, t, size, left, y, line); y -= size * 1.25; });
+        ops.push(setFillingCmykColor(0, 0, 0, 1));
+        let y2 = B + H - bandH - mm(12);
+        if (sub) { drawTextOps(ops, keys.regular, f.regular, 11, left, y2, sub); y2 -= mm(8); }
+        if (a) drawTextOps(ops, keys.regular, f.regular, 11, left, y2, a);
+        if (p) drawTextOps(ops, useSans ? keys.sansBold : keys.bold, useSans ? f.sansBold : f.bold, 9.5, left, B + inset, p);
+        warnings.push('앞표지 상단 K100 단색 면 — 4도 인쇄라면 리치 블랙 적용 여부를 인쇄소와 확인하세요.');
+      } else if (style === 'poetry') {
+        const t = f.bold;
+        const size = Math.min(17, frontW / 11);
+        let y = B + H * 0.62;
+        wrap(t, safeTitle, size, maxW * 0.8).forEach((line) => { drawTextOps(ops, keys.bold, t, size, centerX(t, line, size), y, line); y -= size * 1.5; });
+        if (a) drawTextOps(ops, keys.regular, f.regular, 10, centerX(f.regular, a, 10), y - mm(5), a);
+        if (p) drawTextOps(ops, keys.regular, f.regular, 8.5, centerX(f.regular, p, 8.5), B + inset, p);
+      } else {
+        // fiction: large centred title at the optical centre; humanities: upper third + rule
+        const fictionStyle = style === 'fiction';
+        const t = f.extraBold;
+        const size = fictionStyle ? Math.min(34, frontW / 6.4) : Math.min(30, frontW / 7.2);
+        const lines = wrap(t, safeTitle, size, maxW);
+        let y = B + H * (fictionStyle ? 0.56 : 0.72) + (fictionStyle ? (lines.length - 1) * size * 0.66 : 0);
+        lines.forEach((line) => { drawTextOps(ops, keys.extraBold, t, size, centerX(t, line, size), y, line); y -= size * 1.32; });
+        if (sub) {
+          const ss = size * 0.42;
+          drawTextOps(ops, keys.regular, f.regular, ss, centerX(f.regular, sub, ss), y - ss * 0.4, sub);
+          y -= ss * 2.2;
+        }
+        if (!fictionStyle) shapes.push(setFillingCmykColor(0, 0, 0, 1), rectangle(frontX + (frontW - mm(16)) / 2, y + size * 0.55, mm(16), 0.6), fill());
+        if (a) {
+          const as = Math.min(13, size * 0.45);
+          const ay = fictionStyle ? B + inset + mm(16) : y - as * 1.6;
+          drawTextOps(ops, keys.regular, f.regular, as, centerX(f.regular, a, as), ay, a);
+        }
+        if (p) drawTextOps(ops, keys.bold, f.bold, 10, centerX(f.bold, p, 10), B + inset, p);
       }
     }
 

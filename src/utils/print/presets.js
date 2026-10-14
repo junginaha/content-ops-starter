@@ -21,7 +21,10 @@ export const DEFAULT_PRINT_OPTIONS = {
   pageMultiple: 4,
   binding: '무선제본',
   interiorPaper: '',
-  coverPaper: ''
+  coverPaper: '',
+  designProfile: 'auto',
+  density: 'standard',
+  optimize: true
 };
 
 export const PRINT_HUMAN_GATES = [

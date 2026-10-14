@@ -94,7 +94,8 @@ export function breakLine(text, {
   indent = 0,
   measure,
   spaceWidth,
-  looseRatio = 0.12
+  looseRatio = 0.12,
+  hangIndent = 0
 }) {
   const words = String(text || '').split(/[ \t　]+/).filter(Boolean);
   const lines = [];
@@ -108,8 +109,9 @@ export function breakLine(text, {
   const pushLine = (split = false) => {
     lines.push({ words: current, indent: lineIndent, last: false, naturalWidth: currentWidth, split });
     current = [];
-    lineIndent = 0;
-    currentWidth = 0;
+    // Continuation lines: hanging indent (poetry wraps, list items); 0 for ordinary prose.
+    lineIndent = hangIndent;
+    currentWidth = hangIndent;
   };
 
   while (queue.length) {

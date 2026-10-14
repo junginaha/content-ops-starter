@@ -5,6 +5,8 @@
 const CHAPTER_RE = /^(제\s*\d+\s*[장부편화]|chapter\s+\d+|part\s+\d+)\s*[.:：\-–—]?\s*(.*)$/i;
 const NAMED_RE = /^(프롤로그|에필로그|들어가며|나오며|들어가는 말|나가는 말|맺음말|머리말|서문|여는 글|닫는 글|작가의 말|저자의 말|감사의 말|추천의 글|부록)(\s*[.:：\-–—]\s*(.*))?$/;
 const NUMBERED_RE = /^(\d{1,2})[.)]\s+(.+)$/;
+// Bare chapter numerals common in fiction: "1", "12", "IV", "Ⅲ".
+const BARE_NUMERAL_RE = /^(\d{1,3}|[IVX]{1,6}|[Ⅰ-Ⅻ])$/;
 const MD_HEADING_RE = /^(#{1,3})\s+(.+)$/;
 const SCENE_BREAK_RE = /^(?:(?:\*\s*){1,5}|(?:＊\s*){1,5}|(?:-\s*){3,}|(?:—\s*){1,3}|[◇◆○●□■※·•∗⁂]+(?:\s*[◇◆○●□■※·•∗⁂]+)*)$/;
 const SENTENCE_END_RE = /[.!?。…”"’'」』)]$/;
@@ -31,6 +33,7 @@ function classifyHeading(line) {
   if (ch) return { level: 'chapter', label: ch[1].replace(/\s+(?=\d)|(?<=\d)\s+/g, ''), title: ch[2].trim() };
   const named = line.match(NAMED_RE);
   if (named) return { level: 'chapter', label: '', title: line.trim() };
+  if (BARE_NUMERAL_RE.test(line)) return { level: 'chapter', label: line, title: '' };
   const num = line.match(NUMBERED_RE);
   if (num && line.length <= 40 && !SENTENCE_END_RE.test(line)) {
     return { level: 'chapter', label: num[1], title: num[2].trim() };

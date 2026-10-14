@@ -5,6 +5,8 @@ import { buildInteriorPdf } from './interiorPdf';
 import { buildCoverPdf, calculateSpineMm } from './coverPdf';
 import { inspectGeneratedPdf, evaluatePrintPackage } from './printPreflight';
 import { DEFAULT_PRINT_OPTIONS } from './presets';
+import { analyzeForDesign } from './designAnalysis';
+import { DESIGN_PROFILES, profileUsesSans } from './designProfiles';
 
 export { DEFAULT_PRINT_OPTIONS };
 
@@ -14,7 +16,11 @@ export const PRINT_FONT_FILES = {
   extraBold: '/fonts/NanumMyeongjo-ExtraBold.ttf',
   license: '/fonts/OFL-NanumMyeongjo.txt',
   fallback: '/fonts/ooOSFallbackSerif-Regular.ttf',
-  fallbackLicense: '/fonts/OFL-ooOSFallbackSerif.txt'
+  fallbackLicense: '/fonts/OFL-ooOSFallbackSerif.txt',
+  sansRegular: '/fonts/NanumGothic-Regular.ttf',
+  sansBold: '/fonts/NanumGothic-Bold.ttf',
+  sansExtraBold: '/fonts/NanumGothic-ExtraBold.ttf',
+  sansLicense: '/fonts/OFL-NanumGothic.txt'
 };
 
 
@@ -26,7 +32,7 @@ export function needsFallbackFont(text) {
   return PRIMARY_RANGE_RE.test(String(text || '').normalize('NFC'));
 }
 
-export async function loadPrintFonts({ includeFallback = false, fetcher = (url) => fetch(url) } = {}) {
+export async function loadPrintFonts({ includeFallback = false, includeSans = false, fetcher = (url) => fetch(url) } = {}) {
   const load = async (url) => {
     const res = await fetcher(url);
     if (!res.ok) throw new Error(`서체 파일을 불러오지 못했습니다: ${url}`);
@@ -40,7 +46,14 @@ export async function loadPrintFonts({ includeFallback = false, fetcher = (url) 
     includeFallback ? load(PRINT_FONT_FILES.fallback) : Promise.resolve(null),
     includeFallback ? load(PRINT_FONT_FILES.fallbackLicense) : Promise.resolve(null)
   ]);
-  return { regular, bold, extraBold, license, ...(fallback ? { fallback, fallbackLicense } : {}) };
+  const sans = includeSans
+    ? await Promise.all([PRINT_FONT_FILES.sansRegular, PRINT_FONT_FILES.sansBold, PRINT_FONT_FILES.sansExtraBold, PRINT_FONT_FILES.sansLicense].map(load))
+    : null;
+  return {
+    regular, bold, extraBold, license,
+    ...(fallback ? { fallback, fallbackLicense } : {}),
+    ...(sans ? { sansRegular: sans[0], sansBold: sans[1], sansExtraBold: sans[2], sansLicense: sans[3] } : {})
+  };
 }
 
 const encoder = new TextEncoder();
@@ -95,7 +108,8 @@ function orderSheet({ title, author, publisher, isbn, interior, cover, options, 
     `총 쪽수        ${interior.pageCount}쪽 (${L.pageMultiple}의 배수)`,
     `내지 도수      ${L.color}`,
     `내지 용지      ${options.interiorPaper || '[인쇄소 협의]'}`,
-    `본문 서체      나눔명조 ${L.bodySizePt}pt / 행간 ${L.leadingPt}pt / 쪽당 ${L.linesPerPage}행`,
+    `편집디자인    ${interior.design.label} (${interior.design.summary})`,
+    `본문 서체      나눔명조 ${L.bodySizePt}pt / 행간 ${L.leadingPt}pt / 쪽당 ${L.linesPerPage}행 / 제목 ${interior.design.headingFont}`,
     '',
     '■ 표지',
     `펼침 크기      ${cover.geometry.totalWidthMm} × ${cover.geometry.totalHeightMm}mm (도련 ${cover.geometry.bleedMm}mm 포함)`,
@@ -142,9 +156,19 @@ export async function buildPrintPackage({
   const isbnCheck = validateIsbn13(isbn);
   const isbnText = isbnCheck.valid ? String(isbn || '').trim() : '';
 
+  const analysis = analyzeForDesign(manuscript, { title });
+  const designProfile = DESIGN_PROFILES[opts.designProfile] ? opts.designProfile : analysis.genre;
+  const designSource = DESIGN_PROFILES[opts.designProfile] ? 'manual' : 'analysis';
+  if (profileUsesSans(designProfile) && !fonts.sansBold) {
+    throw new Error('이 편집디자인은 고딕 제목 서체가 필요합니다. 서체를 다시 불러와 주세요.');
+  }
+
   const interior = await buildInteriorPdf({
     title,
     author,
+    designProfile,
+    density: opts.density || 'standard',
+    optimize: opts.optimize !== false,
     publisher: opts.publisher,
     manuscript,
     isbn: isbnText,
@@ -187,6 +211,7 @@ export async function buildPrintPackage({
     flapMm: Number(opts.flapMm) || 0,
     frontImage: image,
     fonts,
+    style: DESIGN_PROFILES[designProfile].cover,
     generatedAt
   };
   const cover = await buildCoverPdf(coverInput);
@@ -212,6 +237,8 @@ export async function buildPrintPackage({
     status: evaluation.status,
     statusLabel: evaluation.statusLabel,
     book: { title, author, publisher: opts.publisher, isbn: isbnText || null },
+    analysis,
+    design: { ...interior.design, source: designSource },
     interior: {
       file: interiorName,
       pageCount: interior.pageCount,
@@ -247,6 +274,7 @@ export async function buildPrintPackage({
     { name: 'print/인쇄지시서.txt', data: '' },
     { name: 'reports/print_preflight.json', data: JSON.stringify(report, null, 2) },
     { name: 'licenses/OFL-NanumMyeongjo.txt', data: fonts.license || 'SIL Open Font License 1.1 — Nanum Myeongjo' },
+    ...(interior.sansUsed ? [{ name: 'licenses/OFL-NanumGothic.txt', data: fonts.sansLicense || 'SIL Open Font License 1.1 — Nanum Gothic' }] : []),
     ...(interior.layout.fonts.fallback
       ? [{ name: 'licenses/OFL-ooOSFallbackSerif.txt', data: fonts.fallbackLicense || 'SIL Open Font License 1.1 — ooOS Fallback Serif (subset of Noto Serif KR)' }]
       : [])
