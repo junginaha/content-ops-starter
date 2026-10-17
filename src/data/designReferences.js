@@ -190,6 +190,45 @@ export const designReferences = [
     officialUrl: 'https://www.stiftung-buchkunst.de/en/best-book-design-from-all-over-the-world/',
     previewUrl: 'https://img.ltn.com.tw/Upload/art/page/800/2026/05/24/128.jpg',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'dirty-old-river',
+    title: 'Dirty Old River',
+    publisher: 'Park Books',
+    designer: 'John Morgan Studio',
+    year: 2025,
+    module: 'MULTI_TEXT_WIDTH',
+    tags: ['에세이', '여백형', '본문폭변주', '이미지인터루드'],
+    evidence: 'The Most Beautiful Swiss Books 2025',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/dirty-old-river-en',
+    previewUrl: 'https://pub-mediabox-storage.rxweb-prd.com/exhibitor/document/exh-35712cc4-9f72-420a-ba85-8f9698d65902/62f68f72-7202-4e06-8fc9-478ea2b72c81.pdf',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'superior-and-inferior',
+    title: 'Superior and Inferior',
+    publisher: 'Crackers',
+    designer: 'Sabo Day',
+    year: 2025,
+    module: 'ARCHIVE_VS_PRESENT',
+    tags: ['인터뷰', '회고', '여백형', '원자료대조'],
+    evidence: 'The Most Beautiful Swiss Books 2025',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/superior-and-inferior-en',
+    previewUrl: 'https://en.aohatabooks.com/products/superior-and-inferior-carla-accardi',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'house-of-doctor-koolhaas',
+    title: 'The House of Doctor Koolhaas',
+    publisher: 'Park Books',
+    designer: 'John Morgan Studio',
+    year: 2025,
+    module: 'DENSITY_SWITCH',
+    tags: ['문화예술', '그리드형', '이미지인터루드', '소형판형'],
+    evidence: 'The Most Beautiful Swiss Books 2025',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/the-house-of-dr-koolhaas-en',
+    previewUrl: 'https://pub-mediabox-storage.rxweb-prd.com/exhibitor/document/exh-35712cc4-9f72-420a-ba85-8f9698d65902/62f68f72-7202-4e06-8fc9-478ea2b72c81.pdf',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
