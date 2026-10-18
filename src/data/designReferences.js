@@ -301,6 +301,83 @@ export const designReferences = [
     layoutNotes: 'Archival student text per page paired with translation, short introductory essays and multilingual columns; exact leading unpublished',
     editorialIdea: 'Pair source image with transcription or translation on facing page; preserve source attribution',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'the-ginny-suite',
+    title: 'The Ginny Suite',
+    author: 'Stacy Skolnik',
+    publisher: 'Montez Press',
+    designer: 'JMMP / Julian Mader, Max Prediger',
+    year: 2024,
+    dimensionsMm: [117, 180],
+    pageCount: 168,
+    module: 'REPEATABLE_CARD',
+    tags: ['짧은글', '시', '여백형', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/the-ginny-suite/?view=list&year=2026',
+    galleryUrl: 'https://goodpress.co.uk/products/the-ginny-suite-by-stacy-skolnik',
+    publisherUrl: 'https://montezpress.com/catalogue/books/the-ginny-suite/',
+    previewUrl: null,
+    previewStatus: 'Retail gallery publicly listed; direct JPG not confirmed; editable original not available',
+    typefaces: [
+      { name: 'LL Bradford Regular', status: 'CHECK', source: 'https://lineto.com/typefaces/bradford-mono' },
+      { name: 'Salzmann Antiqua', status: 'CHECK' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', source: 'https://notofonts.github.io/noto-docs/website/use/' }
+    ],
+    palette: 'Black/gray interior, holographic/silver-black cover',
+    layoutNotes: 'Large margins and readable line length; mixed prose, poetry, diary, online fragments use consistent body style with periodic type changes; exact body width, leading, grid measurements unpublished',
+    editorialIdea: 'Mixed short-text book: repeat 3–4 types of content pages instead of giving each piece a unique design',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'agnes-von-ungarn',
+    title: 'Agnes von Ungarn, 1280–1364. Die einflussreichste Habsburgerin des Mittelalters',
+    author: 'Bruno Meier',
+    publisher: 'Hier und Jetzt Verlag',
+    designer: 'Naima Schalcher',
+    year: 2025,
+    dimensionsMm: [135, 195],
+    pageCount: 280,
+    module: 'CLASSIC_READING',
+    tags: ['회고', '문화예술', '여백형', '이미지인터루드', '내지'],
+    evidence: 'The Most Beautiful Swiss Books 2025, awarded 2026 — Swiss Federal Office of Culture',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/agnes-von-ungarn-en',
+    galleryUrl: 'https://www.hierundjetzt.ch/fr/catalogue/agnes-von-ungarn-1280-1364_24000048/',
+    previewUrl: 'https://prod-schwzkulturpr-hcms-sdweb.imgix.net/dam/fr/sd-web/Yz7qqpbV6Y13/CL_PBL~3.JPG?auto=format&w=1024',
+    previewStatus: 'Public JPG preview of a real spread; not editable source or reuse permission',
+    typefaces: [
+      { name: 'Original serif/sans families', status: 'CHECK' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', source: 'https://notofonts.github.io/noto-docs/website/use/' }
+    ],
+    palette: 'Dark velvety cover, monochrome body on white, historic picture insert',
+    layoutNotes: 'Compact book with readable serif body, some text blocks shifted up or centered, reserved initial spaces at chapter openings, 24 color images in inserted coated section; exact leading and grid measurements unpublished',
+    editorialIdea: 'Text-led memoir or biography with a single photo insert and generous opening space',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'heatwave-bahrain-pavilion',
+    title: 'HEATWAVE',
+    publisher: 'The National Pavilion of the Kingdom of Bahrain, Venice Biennale',
+    designer: 'Samuel Bänziger, Rosario Florio, Larissa Kasper',
+    editor: 'Andrea Faraguna',
+    year: 2025,
+    dimensionsMm: null,
+    pageCount: null,
+    module: 'SECTION_OPENER',
+    tags: ['문화예술', '글이미지50_50', '이미지인터루드', '그리드형'],
+    evidence: 'The Most Beautiful Swiss Books 2025, awarded 2026 — Swiss Federal Office of Culture',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/heatwave2-en',
+    galleryUrl: 'https://www.schweizerkulturpreise.ch/en/heatwave2-en',
+    previewUrl: null,
+    previewStatus: 'Official jury gallery has multiple photographs; direct JPG and editable source not verified',
+    typefaces: [
+      { name: 'Original fonts not identified', status: 'CHECK' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', source: 'https://notofonts.github.io/noto-docs/website/use/' }
+    ],
+    palette: 'Red uncoated cover, two paper tones, sparing colors',
+    layoutNotes: 'Six nested small-format booklets, seven short scholarly essays, three visual essays, two image sections; English left-to-right and Arabic right-to-left; exact page count, format, leading and grid not published',
+    editorialIdea: 'Group short essays and visual sections into six coherent chapters; adapt only modular organization, not costly or intentionally degrading materials',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
