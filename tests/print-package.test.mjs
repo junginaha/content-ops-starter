@@ -173,3 +173,18 @@ test('each genre profile produces a lossless, print-candidate interior with its 
   }
   assert.equal(seen.size, 5, 'five distinct typographic systems');
 });
+
+test('structure: 나가며 is a heading and a leading title line is not set as body', () => {
+  const ms = ['질문하는 저녁', '들어가며', '첫 문단이다.', '제1장 시작', '본문이다.', '나가며', '맺는 문단이다.'].join('\n\n');
+  const s = parseBookStructure(ms, { title: '질문하는 저녁' });
+  assert.equal(s.lossless, true);
+  assert.equal(s.stats.titleLineDropped, true);
+  assert.deepEqual(s.chapters.map((c) => c.title), ['들어가며', '시작', '나가며']);
+});
+
+test('design analysis: first-person memoir with quoted dialogue reads as essay, not fiction', async () => {
+  const { analyzeForDesign } = await import('../src/utils/print/designAnalysis');
+  const para = '나는 그날 처음으로 내가 대답만 하며 살았다는 것을 알았다. 나는 노트를 샀다.';
+  const ms = ['들어가며', para, '제1장 목요일', ...Array.from({ length: 8 }, (_, i) => (i % 3 === 0 ? '“가장 오래 머문 문장은 어디였나요?”' : para)), '나가며', para].join('\n\n');
+  assert.equal(analyzeForDesign(ms).genre, 'essay');
+});

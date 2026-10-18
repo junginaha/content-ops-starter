@@ -3,7 +3,7 @@
 // Nothing is rewritten: text is only Unicode-normalized (NFC) so Hangul renders as syllables.
 
 const CHAPTER_RE = /^(제\s*\d+\s*[장부편화]|chapter\s+\d+|part\s+\d+)\s*[.:：\-–—]?\s*(.*)$/i;
-const NAMED_RE = /^(프롤로그|에필로그|들어가며|나오며|들어가는 말|나가는 말|맺음말|머리말|서문|여는 글|닫는 글|작가의 말|저자의 말|감사의 말|추천의 글|부록)(\s*[.:：\-–—]\s*(.*))?$/;
+const NAMED_RE = /^(프롤로그|에필로그|들어가며|나가며|나오며|마치며|맺으며|끝내며|들어가는 말|나가는 말|마치는 글|나오는 글|맺음말|머리말|서문|여는 글|닫는 글|작가의 말|저자의 말|감사의 말|추천의 글|부록)(\s*[.:：\-–—]\s*(.*))?$/;
 const NUMBERED_RE = /^(\d{1,2})[.)]\s+(.+)$/;
 // Bare chapter numerals common in fiction: "1", "12", "IV", "Ⅲ".
 const BARE_NUMERAL_RE = /^(\d{1,3}|[IVX]{1,6}|[Ⅰ-Ⅻ])$/;
@@ -57,6 +57,8 @@ export function parseBookStructure(manuscript = '', { title = '' } = {}) {
   let paragraphCount = 0;
   let sectionCount = 0;
   let breakCount = 0;
+  let titleLineDropped = false;
+  const squash = (v) => nfc(v).replace(/\s+/g, '');
 
   const ensureChapter = () => {
     if (!current) {
@@ -70,6 +72,13 @@ export function parseBookStructure(manuscript = '', { title = '' } = {}) {
     const lines = block.split('\n').map((line) => line.replace(/[ \t　]+$/g, ''));
     const single = lines.length === 1 ? lines[0].trim() : null;
     const sourceIndex = index;
+
+    // A manuscript often opens with the book title itself. It is printed on the title page,
+    // so it is not set again as a stray body paragraph.
+    if (index === 0 && single !== null && title && squash(single) === squash(title)) {
+      titleLineDropped = true;
+      return;
+    }
 
     if (single !== null) {
       if (SCENE_BREAK_RE.test(single)) {
@@ -108,7 +117,7 @@ export function parseBookStructure(manuscript = '', { title = '' } = {}) {
   });
 
   const titledChapters = chapters.filter((chapter) => !chapter.untitled);
-  const accounted = paragraphCount + sectionCount + breakCount + titledChapters.length;
+  const accounted = paragraphCount + sectionCount + breakCount + titledChapters.length + (titleLineDropped ? 1 : 0);
 
   return {
     schema: 'onedaybooks.book-structure.v1',
@@ -121,7 +130,8 @@ export function parseBookStructure(manuscript = '', { title = '' } = {}) {
       sections: sectionCount,
       sceneBreaks: breakCount,
       chapters: titledChapters.length,
-      nfcNormalized: nfcChanged
+      nfcNormalized: nfcChanged,
+      titleLineDropped
     },
     lossless: accounted === blocks.length
   };

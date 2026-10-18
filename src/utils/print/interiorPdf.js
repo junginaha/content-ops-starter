@@ -158,7 +158,7 @@ export function layoutInterior(ctx, input, design) {
 
   const stats = {
     splitWords: 0, letterSpacedLines: 0, maxLetterSpacingEm: 0, orphansAvoided: 0, widowsAvoided: 0,
-    shortPages: 0, overflowLines: 0, blankPagesForRecto: 0, paddingPages: 0, listItems: 0
+    shortPages: 0, runtPages: 0, overflowLines: 0, blankPagesForRecto: 0, paddingPages: 0, listItems: 0
   };
   const placed = [];
   const usedChars = {};
@@ -416,6 +416,7 @@ export function layoutInterior(ctx, input, design) {
       chapterOpen: opener && !poem
     });
     cursor = 0;
+    const chapterOpenPage = page;
     chapterStarts.push({ chapter, pageNumber: pages.length });
     if (opener) openChapter(chapter);
 
@@ -466,6 +467,9 @@ export function layoutInterior(ctx, input, design) {
       cursor += 2;
       first = false;
     });
+    // Runt page: a chapter whose last page carries only one or two lines wastes a leaf
+    // and reads as a mistake. Counted so the leading optimiser can pull those lines back.
+    if (page !== chapterOpenPage && cursor > 0 && cursor <= 2) stats.runtPages += 1;
   });
 
   // 4) Colophon + padding
@@ -598,7 +602,7 @@ export async function renderInterior(ctx, layout, { title = '', author = '', ble
 
 function scoreLayout(layout, candidate) {
   const s = layout.stats;
-  return s.paddingPages * 3 + s.blankPagesForRecto + s.shortPages * 0.5 + s.overflowLines * 10 + (candidate.leadingDelta ? 0.3 : 0);
+  return s.paddingPages * 3 + s.blankPagesForRecto + s.shortPages * 0.5 + (s.runtPages || 0) * 2 + s.overflowLines * 10 + (candidate.leadingDelta ? 0.3 : 0);
 }
 
 /**
@@ -692,6 +696,7 @@ export async function buildInteriorPdf({
         pages: c.layout.pages.length,
         paddingPages: c.layout.stats.paddingPages,
         shortPages: c.layout.stats.shortPages,
+        runtPages: c.layout.stats.runtPages,
         chosen: c === best
       }))
     },
