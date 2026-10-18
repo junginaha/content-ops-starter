@@ -21,7 +21,7 @@ import { analyzeForDesign } from '../utils/print/designAnalysis';
 import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
 import { COVER_LAYOUTS, COVER_PALETTES } from '../utils/print/coverGenome';
 import { createPrintJobTicket } from '../utils/printJobTicket';
-import { designReferences, recommendDesignProfiles } from '../data/designReferences';
+import { recommendDesignProfiles } from '../data/designReferences';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -317,10 +317,10 @@ export default function OneDayBooksOS() {
   const printOptions = { ...DEFAULT_PRINT_OPTIONS, ...(project.printOptions || {}) };
   const printGates = { ...EMPTY_PROJECT.printGates, ...(project.printGates || {}) };
   const printGatesPassed = PRINT_HUMAN_GATES.every((gate) => printGates[gate.key]);
-  const designAnalysis = useMemo(
-    () => (processedManuscript ? analyzeForDesign(processedManuscript, { title: project.title }) : null),
-    [processedManuscript, project.title]
-  );
+  const designAnalysis = useMemo(() => {
+    const source = processedManuscript || manuscript;
+    return source ? analyzeForDesign(source, { title: project.title }) : null;
+  }, [processedManuscript, manuscript, project.title]);
   const chosenProfile = DESIGN_PROFILES[printOptions.designProfile]
     ? printOptions.designProfile
     : designAnalysis?.genre || 'humanities';
@@ -555,19 +555,20 @@ export default function OneDayBooksOS() {
   }
 
   async function exportReleaseBundle() {
-    if (!processedManuscript) return;
+    if (!manuscript) return;
 
     setReleaseBuilding(true);
     setReleaseError('');
 
     try {
+      const source = processedManuscript || safeAutoFix(manuscript).text;
       const result = await buildReleaseBundle({
         title: project.title,
         author: project.author,
         objective: project.objective,
         isbn: project.isbn,
         originalText: manuscript,
-        processedText: processedManuscript,
+        processedText: source,
         printSpec: project.printSpec
       });
 
@@ -592,16 +593,17 @@ export default function OneDayBooksOS() {
   }
 
   async function exportPrintPackage() {
-    if (!processedManuscript) return;
+    if (!manuscript) return;
     setPrintPkgBuilding(true);
     setPrintPkgError('');
 
     try {
+      const source = processedManuscript || safeAutoFix(manuscript).text;
       // Loaded on demand: pdf-lib + fonts are only needed when a print package is built.
       const printModule = await import('../utils/print/printPackage');
       const fonts = await printModule.loadPrintFonts({
         includeFallback: printModule.needsFallbackFont(
-          `${processedManuscript}${project.title}${project.author}${printOptions.publisher}${printOptions.subtitle}`
+          `${source}${project.title}${project.author}${printOptions.publisher}${printOptions.subtitle}`
         ),
         includeSans: profileUsesSans(chosenProfile)
       });
@@ -612,7 +614,7 @@ export default function OneDayBooksOS() {
         title: project.title,
         author: project.author,
         isbn: project.isbn,
-        manuscript: processedManuscript,
+        manuscript: source,
         printSpec: project.printSpec || EMPTY_PROJECT.printSpec,
         options: printOptions,
         fonts,
@@ -715,26 +717,37 @@ export default function OneDayBooksOS() {
         throw new Error('현재는 DOCX, TXT, MD 원고를 지원합니다. PDF 원고 입력은 다음 단계에서 추가합니다.');
       }
 
+      if (!text.trim()) {
+        throw new Error('원고에서 읽을 수 있는 텍스트를 찾지 못했습니다.');
+      }
+
+      const production = safeAutoFix(text);
+      const fallbackTitle = String(file.name || '')
+        .replace(/\.(docx|txt|md)$/i, '')
+        .replace(/[_-]+/g, ' ')
+        .trim();
+
       setManuscript(text);
-      setProcessedManuscript('');
-      setEngineAnalysis(analyzeManuscript(text));
-      setEngineRunAt(null);
+      setProcessedManuscript(production.text);
+      setEngineAnalysis(production.analysis);
+      setEngineRunAt(Date.now());
       const nextProject = {
         ...project,
         projectId: project.projectId || createProjectId(),
-        title: project.title || metadata.title || '',
+        title: project.title || metadata.title || fallbackTitle || '제목 없음',
         author: project.author || metadata.creator || '',
         fileName: file.name,
         charCount: text.length,
-        startedAt: project.startedAt || Date.now()
+        startedAt: project.startedAt || Date.now(),
+        stageIndex: Math.max(project.stageIndex, 3)
       };
       setProject(nextProject);
-      await persistVersion('원고 접수', {
+      await persistVersion('원고 접수 · 자동 정리 완료', {
         project: nextProject,
         manuscript: text,
-        processedManuscript: '',
+        processedManuscript: production.text,
         aiDraft: '',
-        engineAnalysis: analyzeManuscript(text)
+        engineAnalysis: production.analysis
       });
     } catch (error) {
       setFileError(error?.message || '원고 파일을 읽지 못했습니다.');
@@ -924,7 +937,7 @@ export default function OneDayBooksOS() {
 
           {project.fileName && (
             <div className="file-info">
-              {project.fileName} · 약 {project.charCount.toLocaleString()}자 · DOCX/TXT/MD 입력 지원
+              {project.fileName} · 약 {project.charCount.toLocaleString()}자 · 분석 완료 · 결과물 생성 가능
             </div>
           )}
           {fileError && <div className="error-box">{fileError}</div>}
@@ -967,7 +980,7 @@ export default function OneDayBooksOS() {
             <button
               className="secondary"
               onClick={exportReleaseBundle}
-              disabled={!processedManuscript || releaseBuilding}
+              disabled={!manuscript || releaseBuilding}
             >
               {releaseBuilding ? '출판 파일 생성 중…' : '출간 패키지 ZIP'}
             </button>
@@ -1185,7 +1198,7 @@ export default function OneDayBooksOS() {
                 <button
                   className="primary"
                   onClick={exportPrintPackage}
-                  disabled={!processedManuscript || printPkgBuilding}
+                  disabled={!manuscript || printPkgBuilding}
                 >
                   {printPkgBuilding ? '인쇄 패키지 생성 중…' : '인쇄 패키지 생성'}
                 </button>
@@ -1320,7 +1333,7 @@ export default function OneDayBooksOS() {
               <div className="design-recommendation">
                 <div className="design-recommendation-head">
                   <strong>편집디자인 추천</strong>
-                  <span>검증 레퍼런스 기반 · 복제 금지 · 규칙만 적용</span>
+                  <span>원고 분석 기반 자동 추천</span>
                 </div>
                 <div className="design-profile-grid">
                   {designProfiles.map((profile) => (
@@ -1329,11 +1342,6 @@ export default function OneDayBooksOS() {
                       <strong>{profile.label}</strong>
                       <p>{profile.purpose}</p>
                       <small>{profile.rules.join(' · ')}</small>
-                      {profile.references?.[0] && (
-                        <a href={profile.references[0].officialUrl} target="_blank" rel="noreferrer">
-                          {profile.references[0].title} ↗
-                        </a>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -1375,50 +1383,6 @@ export default function OneDayBooksOS() {
               </div>
             </div>
           )}
-        </section>
-
-        <section className="panel design-library-panel">
-          <div className="section-head">
-            <div>
-              <div className="kicker">DESIGN SYSTEM</div>
-              <h2>출판 편집디자인 레퍼런스</h2>
-            </div>
-            <span className="status-pill ready">{designReferences.length} verified</span>
-          </div>
-
-          <p className="muted">
-            수상·공식 선정·전문 디자인 평가가 확인된 실제 출간물만 저장합니다.
-            레퍼런스는 복제하지 않고 여백 · 그리드 · 본문 폭 · 페이지 리듬 같은 재사용 규칙으로 변환합니다.
-          </p>
-
-          <div className="reference-grid">
-            {designReferences.map((ref) => (
-              <article className="reference-card" key={ref.id}>
-                <div className="reference-meta">{ref.year} · {ref.module}</div>
-                <h3>{ref.title}</h3>
-                <p>{ref.publisher} · {ref.designer}</p>
-                <small>{ref.evidence}</small>
-                <div className="reference-tags">
-                  {ref.tags.map((tag) => <span key={tag}>#{tag}</span>)}
-                </div>
-                <div className="reference-rights">
-                  Layout {ref.rights.layout} · Font {ref.rights.font} · Images {ref.rights.images}
-                </div>
-                <div className="reference-links">
-                  <a href={ref.officialUrl} target="_blank" rel="noreferrer">근거 ↗</a>
-                  {ref.previewUrl && (
-                    <a href={ref.previewUrl} target="_blank" rel="noreferrer">내지/미리보기 ↗</a>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="human-boundary">
-            <strong>권리 원칙:</strong>
-            공개 미리보기는 열람용입니다. 색상·일반 레이아웃은 ADAPT, 서체는 라이선스 확인,
-            사진·삽화·본문은 별도 권리 확인 전 재사용하지 않습니다.
-          </div>
         </section>
 
         <section className="panel ai-panel">
