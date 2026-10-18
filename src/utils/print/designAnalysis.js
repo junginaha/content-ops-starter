@@ -54,7 +54,8 @@ export function analyzeForDesign(manuscript = '', { title = '' } = {}) {
     pastNarrativeRatio: round(sentences.length ? sentences.filter((s) => PAST_NARRATIVE_RE.test(s)).length / sentences.length : 0),
     sectionsPerChapter: round(structure.stats.chapters ? structure.stats.sections / structure.stats.chapters : structure.stats.sections, 1),
     hanjaPer1k: round(per1k((text.match(/[一-鿿]/g) || []).length), 1),
-    latinPer1k: round(per1k((text.match(/[A-Za-z]+/g) || []).length), 1)
+    latinPer1k: round(per1k((text.match(/[A-Za-z]+/g) || []).length), 1),
+    nonfictionFrame: structure.chapters.some((ch) => /^(들어가며|나가며|마치며|맺으며|머리말|맺음말|들어가는 말|나가는 말|여는 글|닫는 글)$/.test(ch.title || ''))
   };
 
   // Scores: each signal adds weight with a stated reason.
@@ -74,6 +75,10 @@ export function analyzeForDesign(manuscript = '', { title = '' } = {}) {
 
   if (m.firstPersonPer1k >= 3) add('essay', 3, `1인칭 표현 1천 자당 ${m.firstPersonPer1k}회`);
   else if (m.firstPersonPer1k >= 1.5) add('essay', 1, `1인칭 표현 1천 자당 ${m.firstPersonPer1k}회`);
+  // A dense singular narrator ("나는", "내가") is the strongest memoir/essay signal; quoted
+  // dialogue alone does not make a book fiction.
+  if (m.firstPersonPer1k >= 6) add('essay', 3, `1인칭 화자 밀도 높음(1천 자당 ${m.firstPersonPer1k}회)`);
+  if (m.nonfictionFrame) add('essay', 1, '들어가며·나가며 등 논픽션 머리말·맺음말 구성');
   if (m.firstPersonPer1k >= 1.5 && m.dialogueRatio < 0.08 && m.avgParagraphChars >= 50 && m.avgParagraphChars <= 200) add('essay', 1, `호흡이 짧은 문단(평균 ${m.avgParagraphChars}자)`);
 
   if (m.listRatio >= 0.06) add('practical', 3, `목록형 문단 ${Math.round(m.listRatio * 100)}%`);
