@@ -152,7 +152,7 @@ function tableText(table) {
   return rows.join('\n');
 }
 
-function parseDocumentXml(xmlText) {
+function parseDocumentXml(xmlText, { markHeadings = false, styleNames = {} } = {}) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'application/xml');
 
@@ -171,7 +171,15 @@ function parseDocumentXml(xmlText) {
       const text = paragraphText(node);
       if (!text) return;
       const style = paragraphStyle(node);
-      const isHeading = /heading|title|제목|머리말/i.test(style || '');
+      const isHeading = /heading|title|제목|머리말/i.test(style || '') || /heading|title|제목/i.test(styleNames[style] || '');
+      if (markHeadings && isHeading) {
+        // Optional (1900): turn Word heading levels into the manuscript markers the print engine reads.
+        const name = `${styleNames[style] || ''} ${style || ''}`;
+        const level = /title|^제목\s/i.test(styleNames[style] || '') && !/\d/.test(styleNames[style] || '') ? 0
+          : /(heading|제목)\s*1\b|heading1\b/i.test(name) ? 1 : 2;
+        blocks.push(level === 0 ? `\n${text}\n` : `\n${level === 1 ? '#' : '##'} ${text}\n`);
+        return;
+      }
       blocks.push(isHeading ? `\n${text}\n` : text);
       return;
     }
@@ -207,7 +215,7 @@ function parseCoreProperties(xmlText) {
   };
 }
 
-export async function extractDocx(file) {
+export async function extractDocx(file, { markHeadings = false } = {}) {
   if (!file) throw new Error('DOCX 파일이 없습니다.');
   if (!/\.docx$/i.test(file.name || '')) throw new Error('DOCX 파일만 처리할 수 있습니다.');
   if (file.size > 25 * 1024 * 1024) throw new Error('현재 MVP에서는 25MB 이하 DOCX를 지원합니다.');
@@ -222,7 +230,22 @@ export async function extractDocx(file) {
 
   const documentBytes = await readZipEntry(buffer, documentEntry);
   const documentXml = new TextDecoder('utf-8').decode(documentBytes);
-  const text = parseDocumentXml(documentXml);
+  let styleNames = {};
+  if (markHeadings && entries.get('word/styles.xml')) {
+    try {
+      const stylesXml = new TextDecoder('utf-8').decode(await readZipEntry(buffer, entries.get('word/styles.xml')));
+      const doc = new DOMParser().parseFromString(stylesXml, 'application/xml');
+      nodesByLocalName(doc, 'style').forEach((st) => {
+        const id = getWordAttribute(st, 'styleId');
+        const nameNode = nodesByLocalName(st, 'name')[0];
+        const name = nameNode && getWordAttribute(nameNode, 'val');
+        if (id && name) styleNames[id] = name;
+      });
+    } catch (_) {
+      styleNames = {};
+    }
+  }
+  const text = parseDocumentXml(documentXml, { markHeadings, styleNames });
 
   let metadata = {};
   const coreEntry = entries.get('docProps/core.xml');

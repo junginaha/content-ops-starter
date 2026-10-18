@@ -122,7 +122,7 @@ export function layoutInterior(ctx, input, design) {
   const {
     title = '', author = '', publisher = '', isbn = '', price = '', firstEdition = '', registration = '', contact = '',
     trimWidthMm = 140, trimHeightMm = 210, bleedMm = 3, pageMultiple = 4, includeToc = true, includeCopyright = true,
-    structure
+    structure, premium = null
   } = input;
   const { runsFor, widthOf, measureFor, pdfFonts, roleKey } = ctx;
   const W = mm(trimWidthMm);
@@ -213,6 +213,40 @@ export function layoutInterior(ctx, input, design) {
   if (author) put(tp, nfc(author), 'regular', size * 1.1, ty - size * 1.6, tAlign);
   if (publisher) put(tp, nfc(publisher), F.head, size * 0.95, bottom + size * 1.5, tAlign);
   newPage('blank');
+
+  // 1b) Premium front matter (2차 제작): dedication / epigraph, each on a recto with a blank verso.
+  // Not manuscript text — placed with put() so the text-completeness check stays manuscript-only.
+  const quoteBlock = (pg, text, source, { startLine, x, width, fontSize }) => {
+    let li = startLine;
+    String(text || '').split(/\n/).forEach((para) => {
+      breakFor(nfc(para), 'regular', fontSize, width).forEach((t) => {
+        if (t) addItem(pg, { font: 'regular', size: fontSize, x, y: baselineAt(li), text: t, tc: 0 });
+        li += 1;
+      });
+    });
+    if (source) {
+      const src = `— ${nfc(source)}`;
+      const sw = widthOf('regular', src, fontSize * 0.88);
+      li += 1;
+      addItem(pg, { font: 'regular', size: fontSize * 0.88, x: x + width - sw, y: baselineAt(li), text: src, tc: 0 });
+      li += 1;
+    }
+    return li;
+  };
+  if (premium?.dedication && String(premium.dedication).trim()) {
+    const dp = newPage('dedication');
+    const lines = String(premium.dedication).trim().split(/\n/);
+    let li = Math.round(LPP * 0.3);
+    lines.forEach((para) => {
+      breakFor(nfc(para), 'regular', size * 0.95, textW * 0.7).forEach((t) => { if (t) put(dp, t, 'regular', size * 0.95, baselineAt(li), 'center'); li += 1; });
+    });
+    newPage('blank');
+  }
+  if (premium?.epigraph?.text && String(premium.epigraph.text).trim()) {
+    const ep = newPage('epigraph');
+    quoteBlock(ep, String(premium.epigraph.text).trim(), premium.epigraph.source, { startLine: Math.round(LPP * 0.28), x: textW * 0.3, width: textW * 0.7, fontSize: size * 0.92 });
+    newPage('blank');
+  }
 
   // 2) TOC
   const titled = structure.chapters.filter((c) => !c.untitled);
@@ -419,6 +453,12 @@ export function layoutInterior(ctx, input, design) {
     const chapterOpenPage = page;
     chapterStarts.push({ chapter, pageNumber: pages.length });
     if (opener) openChapter(chapter);
+    const chEpi = premium?.chapterEpigraphs?.[chapterIndex];
+    if (opener && chEpi?.text && String(chEpi.text).trim()) {
+      // Chapter epigraph: right-hanging block under the chapter title, before the first paragraph.
+      const end = quoteBlock(page, String(chEpi.text).trim(), chEpi.source, { startLine: cursor, x: textW * 0.34, width: textW * 0.66, fontSize: size * 0.88 });
+      cursor = Math.min(LPP, end + 1);
+    }
 
     let first = true;
     chapter.blocks.forEach((block) => {
@@ -631,16 +671,19 @@ export async function buildInteriorPdf({
   density = 'standard',
   optimize = true,
   fonts,
+  premium = null,
   generatedAt = new Date().toISOString()
 } = {}) {
   if (!String(manuscript || '').trim()) throw new Error('조판할 원고가 없습니다.');
+  const premiumText = premium ? [premium.dedication, premium.epigraph?.text, premium.epigraph?.source,
+    ...Object.values(premium.chapterEpigraphs || {}).flatMap((e) => [e?.text, e?.source])].filter(Boolean).join('') : '';
   const bookTitle = nfc(title || '제목 없음').trim();
   const structure = parseBookStructure(manuscript, { title: bookTitle });
   const base = resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density });
   const needSans = base.headingFont === 'sans' || base.runningHead?.font === 'sans' || base.section?.font === 'sans';
-  const ctx = await createFontContext(fonts, { text: `${manuscript}${title}${author}${publisher}`, needSans });
+  const ctx = await createFontContext(fonts, { text: `${manuscript}${title}${author}${publisher}${premiumText}`, needSans });
 
-  const input = { title, author, publisher, isbn, price, firstEdition, registration, contact, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, includeToc, includeCopyright, structure };
+  const input = { title, author, publisher, isbn, price, firstEdition, registration, contact, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, includeToc, includeCopyright, structure, premium };
   const deltas = optimize ? [0, -0.04, 0.04] : [0];
   const candidates = deltas.map((leadingDelta) => {
     const design = resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density, leadingDelta });
@@ -735,7 +778,10 @@ export async function buildInteriorPdf({
       body: layout.pages.filter((p) => p.kind === 'body').length,
       front: layout.pages.findIndex((p) => p.kind === 'body'),
       toc: layout.tocPageCount,
-      copyright: includeCopyright
+      copyright: includeCopyright,
+      dedication: layout.pages.some((p) => p.kind === 'dedication'),
+      epigraph: layout.pages.some((p) => p.kind === 'epigraph'),
+      chapterEpigraphs: Object.values(premium?.chapterEpigraphs || {}).filter((e) => e && String(e.text || '').trim()).length
     },
     chapters: layout.chapterStarts.map((s) => ({ label: s.chapter.label, title: s.chapter.untitled ? '' : s.chapter.title, startPage: s.pageNumber })),
     stats: layout.stats,

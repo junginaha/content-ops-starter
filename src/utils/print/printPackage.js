@@ -3,6 +3,7 @@ import { createStoredZip } from '../epubBuilder';
 import { validateIsbn13 } from '../preflight';
 import { buildInteriorPdf } from './interiorPdf';
 import { buildCoverPdf, calculateSpineMm } from './coverPdf';
+import { buildDesignedCoverPdf } from './coverDesigned';
 import { inspectGeneratedPdf, evaluatePrintPackage } from './printPreflight';
 import { DEFAULT_PRINT_OPTIONS } from './presets';
 import { analyzeForDesign } from './designAnalysis';
@@ -92,7 +93,7 @@ export function sniffImage(bytes) {
   return null;
 }
 
-function orderSheet({ title, author, publisher, isbn, interior, cover, options, files, generatedAt }) {
+function orderSheet({ title, author, publisher, isbn, interior, cover, options, files, generatedAt, revisions = [] }) {
   const L = interior.layout;
   const rows = [
     '[인쇄 지시서] ooOS 자동 생성 — 인쇄소 확정 전 초안',
@@ -117,7 +118,13 @@ function orderSheet({ title, author, publisher, isbn, interior, cover, options, 
     `날개           ${cover.geometry.flapMm ? `${cover.geometry.flapMm}mm` : '없음'}`,
     `표지 용지      ${options.coverPaper || '[인쇄소 협의]'}`,
     `제본           ${options.binding || '무선제본'}`,
+    ...(cover.finish ? [`후가공         ${cover.finish.label} — 대상: ${cover.finish.targets.join(', ')} (별도 판 PDF 첨부, K100 = 가공 영역)`] : []),
+    ...(cover.band ? [`띠지           ${cover.band.totalWidthMm} × ${cover.band.totalHeightMm}mm (띠지 높이 ${cover.band.heightMm}mm, 도련 포함)${cover.band.barcode ? ' · 바코드 포함' : ''}`] : []),
+    ...(interior.pages?.dedication || interior.pages?.epigraph || interior.pages?.chapterEpigraphs
+      ? [`앞붙이        ${[interior.pages.dedication ? '헌사' : '', interior.pages.epigraph ? '제사' : '', interior.pages.chapterEpigraphs ? `장 제사 ${interior.pages.chapterEpigraphs}곳` : ''].filter(Boolean).join(' · ')}`]
+      : []),
     '',
+    ...(revisions.length ? ['■ 2차 제작 수정 이력', ...revisions.map((r) => `- v${r.version} ${r.at || ''} ${r.summary || ''}`.trim()), ''] : []),
     '■ 파일',
     ...files.map((name) => `- ${name}`),
     '',
@@ -133,11 +140,10 @@ function orderSheet({ title, author, publisher, isbn, interior, cover, options, 
 }
 
 /**
- * Build the complete print package.
- * @param {object} input
- * @param {{regular:Uint8Array,bold:Uint8Array,extraBold:Uint8Array,license?:Uint8Array}} input.fonts
+ * Stage 1 — analyse the manuscript, choose the design profile and typeset the interior.
+ * Split out so a UI can re-run only the cover (stage 2) and checks (stage 3) while editing.
  */
-export async function buildPrintPackage({
+export async function prepareInterior({
   title = '',
   author = '',
   isbn = '',
@@ -145,7 +151,7 @@ export async function buildPrintPackage({
   printSpec = {},
   options = {},
   fonts,
-  frontImage = null,
+  premium = null,
   generatedAt = new Date().toISOString()
 } = {}) {
   const opts = { ...DEFAULT_PRINT_OPTIONS, ...options };
@@ -181,6 +187,7 @@ export async function buildPrintPackage({
     bleedMm,
     pageMultiple,
     fonts,
+    premium,
     generatedAt
   });
 
@@ -190,6 +197,15 @@ export async function buildPrintPackage({
     coverAllowanceMm: opts.coverAllowanceMm
   });
 
+  return { title, author, isbn, isbnCheck, isbnText, opts, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, analysis, designProfile, designSource, interior, spineMm, generatedAt };
+}
+
+/**
+ * Stage 2 — wrap cover + designer guide. `coverDesign` (optional) switches the front/back/spine
+ * artwork to a colour template (see coverDesigned.js); without it the genre profile cover is used.
+ */
+export async function prepareCover(ctx, { fonts, frontImage = null, coverDesign = null } = {}) {
+  const { title, author, isbnText, opts, trimWidthMm, trimHeightMm, bleedMm, spineMm, designProfile, generatedAt } = ctx;
   let image = null;
   if (frontImage?.bytes) {
     const sniff = sniffImage(frontImage.bytes);
@@ -214,8 +230,16 @@ export async function buildPrintPackage({
     style: DESIGN_PROFILES[designProfile].cover,
     generatedAt
   };
-  const cover = await buildCoverPdf(coverInput);
+  const cover = coverDesign
+    ? await buildDesignedCoverPdf({ ...coverInput, design: coverDesign })
+    : await buildCoverPdf(coverInput);
   const coverGuide = await buildCoverPdf({ ...coverInput, guide: true });
+  return { cover, coverGuide };
+}
+
+/** Stage 3 — reopen both PDFs, evaluate, write the order sheet / report / manifest and zip. */
+export async function assemblePrintPackage(ctx, { cover, coverGuide }, fonts, { revisionLog = [] } = {}) {
+  const { title, author, isbnCheck, isbnText, opts, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, analysis, designSource, interior, generatedAt } = ctx;
 
   const interiorCheck = await inspectGeneratedPdf(interior.bytes, { trimWidthMm, trimHeightMm, bleedMm });
   const coverCheck = await inspectGeneratedPdf(cover.bytes, {
@@ -225,11 +249,28 @@ export async function buildPrintPackage({
   });
 
   const evaluation = evaluatePrintPackage({ interior, interiorCheck, cover, coverCheck, isbnCheck, pageMultiple });
+  // 2차 제작 산출물(후가공 판·띠지)도 같은 방식으로 다시 열어 검사한다.
+  const extraChecks = [];
+  if (cover.finish?.bytes) {
+    const fc = await inspectGeneratedPdf(cover.finish.bytes, { trimWidthMm: cover.geometry.trimWidthMm, trimHeightMm: cover.geometry.trimHeightMm, bleedMm });
+    extraChecks.push({ key: 'finish-plate', label: `후가공 판(${cover.finish.label})`, passed: fc.boxErrors === 0 && fc.transparencyObjects === 0, detail: `표지와 같은 ${cover.geometry.totalWidthMm}×${cover.geometry.totalHeightMm}mm · 대상 ${cover.finish.targets.join(', ')}`, severity: 'blocker' });
+  }
+  if (cover.band?.bytes) {
+    const bc = await inspectGeneratedPdf(cover.band.bytes, { trimWidthMm: cover.geometry.trimWidthMm, trimHeightMm: cover.band.heightMm, bleedMm });
+    extraChecks.push({ key: 'band', label: '띠지', passed: bc.boxErrors === 0 && (!cover.band.barcode || !!cover.band.barcode.decoded), detail: `${cover.band.totalWidthMm}×${cover.band.totalHeightMm}mm${cover.band.barcode ? ` · 바코드 ${cover.band.barcode.decoded ? '디코딩 검증 통과' : '실패'}` : ''}`, severity: 'blocker' });
+  }
+  extraChecks.forEach((c) => {
+    evaluation.checks.push(c);
+    if (!c.passed) evaluation.blockers.push(`${c.label}: ${c.detail}`);
+  });
+  if (evaluation.blockers.length) { evaluation.status = 'BLOCKED'; evaluation.statusLabel = '자동검사 실패'; }
 
   const name = safeName(title || 'book');
   const interiorName = `print/${name}_내지_${trimWidthMm}x${trimHeightMm}_도련${bleedMm}mm_${interior.pageCount}p.pdf`;
   const coverName = `print/${name}_표지_${cover.geometry.totalWidthMm}x${cover.geometry.totalHeightMm}_책등${cover.geometry.spineMm}mm.pdf`;
   const guideName = `print/${name}_표지가이드_작업용.pdf`;
+  const finishName = cover.finish?.bytes ? `print/${name}_표지_후가공판_${cover.finish.label.replace(/[^0-9a-zA-Z가-힣]+/g, '')}.pdf` : null;
+  const bandName = cover.band?.bytes ? `print/${name}_띠지_${cover.band.totalWidthMm}x${cover.band.totalHeightMm}.pdf` : null;
 
   const report = {
     schema: 'onedaybooks.print-package.v1',
@@ -258,28 +299,20 @@ export async function buildPrintPackage({
       barcode: cover.report.barcode,
       image: cover.report.image,
       spineText: cover.report.spineText,
+      ...(cover.report.design ? { design: cover.report.design } : {}),
+      ...(finishName ? { finishFile: finishName, finish: { type: cover.finish.type, label: cover.finish.label, targets: cover.finish.targets } } : {}),
+      ...(bandName ? { bandFile: bandName, band: { heightMm: cover.band.heightMm, totalWidthMm: cover.band.totalWidthMm, totalHeightMm: cover.band.totalHeightMm, barcode: cover.band.barcode } } : {}),
       pdfCheck: coverCheck
     },
     checks: evaluation.checks,
     blockers: evaluation.blockers,
     warnings: evaluation.warnings,
     humanGates: evaluation.humanGates.map((gate) => ({ ...gate, approved: false })),
-    options: opts
+    options: opts,
+    ...(revisionLog.length ? { revisions: revisionLog } : {})
   };
 
-  const payload = [
-    { name: interiorName, data: interior.bytes },
-    { name: coverName, data: cover.bytes },
-    { name: guideName, data: coverGuide.bytes },
-    { name: 'print/인쇄지시서.txt', data: '' },
-    { name: 'reports/print_preflight.json', data: JSON.stringify(report, null, 2) },
-    { name: 'licenses/OFL-NanumMyeongjo.txt', data: fonts.license || 'SIL Open Font License 1.1 — Nanum Myeongjo' },
-    ...(interior.sansUsed ? [{ name: 'licenses/OFL-NanumGothic.txt', data: fonts.sansLicense || 'SIL Open Font License 1.1 — Nanum Gothic' }] : []),
-    ...(interior.layout.fonts.fallback
-      ? [{ name: 'licenses/OFL-ooOSFallbackSerif.txt', data: fonts.fallbackLicense || 'SIL Open Font License 1.1 — ooOS Fallback Serif (subset of Noto Serif KR)' }]
-      : [])
-  ];
-  payload[3].data = orderSheet({
+  const sheet = orderSheet({
     title,
     author,
     publisher: opts.publisher,
@@ -287,9 +320,26 @@ export async function buildPrintPackage({
     interior,
     cover,
     options: opts,
-    files: [interiorName, coverName, guideName].map((n) => n.replace(/^print\//, '')),
-    generatedAt
+    files: [interiorName, coverName, guideName, finishName, bandName].filter(Boolean).map((n) => n.replace(/^print\//, '')),
+    generatedAt,
+    revisions: revisionLog
   });
+
+  const payload = [
+    { name: interiorName, data: interior.bytes },
+    { name: coverName, data: cover.bytes },
+    { name: guideName, data: coverGuide.bytes },
+    ...(finishName ? [{ name: finishName, data: cover.finish.bytes }] : []),
+    ...(bandName ? [{ name: bandName, data: cover.band.bytes }] : []),
+    { name: 'print/인쇄지시서.txt', data: sheet },
+    { name: 'reports/print_preflight.json', data: JSON.stringify(report, null, 2) },
+    ...(revisionLog.length ? [{ name: 'reports/revision_log.json', data: JSON.stringify({ schema: 'onedaybooks.revision-log.v1', generatedAt, revisions: revisionLog }, null, 2) }] : []),
+    { name: 'licenses/OFL-NanumMyeongjo.txt', data: fonts.license || 'SIL Open Font License 1.1 — Nanum Myeongjo' },
+    ...(interior.sansUsed || cover.report.sansUsed ? [{ name: 'licenses/OFL-NanumGothic.txt', data: fonts.sansLicense || 'SIL Open Font License 1.1 — Nanum Gothic' }] : []),
+    ...(interior.layout.fonts.fallback
+      ? [{ name: 'licenses/OFL-ooOSFallbackSerif.txt', data: fonts.fallbackLicense || 'SIL Open Font License 1.1 — ooOS Fallback Serif (subset of Noto Serif KR)' }]
+      : [])
+  ];
 
   const manifestFiles = [];
   for (const file of payload) {
@@ -305,8 +355,28 @@ export async function buildPrintPackage({
     files: files.map((f) => f.name),
     report,
     manifest,
+    orderSheet: sheet,
     interiorBytes: interior.bytes,
     interiorFileName: interiorName.replace(/^print\//, ''),
-    coverBytes: cover.bytes
+    coverBytes: cover.bytes,
+    coverFileName: coverName.replace(/^print\//, ''),
+    coverGuideBytes: coverGuide.bytes,
+    coverGuideFileName: guideName.replace(/^print\//, ''),
+    finishBytes: cover.finish?.bytes || null,
+    finishFileName: finishName ? finishName.replace(/^print\//, '') : null,
+    bandBytes: cover.band?.bytes || null,
+    bandFileName: bandName ? bandName.replace(/^print\//, '') : null
   };
+}
+
+/**
+ * Build the complete print package.
+ * @param {object} input
+ * @param {{regular:Uint8Array,bold:Uint8Array,extraBold:Uint8Array,license?:Uint8Array}} input.fonts
+ * @param {object} [input.coverDesign] optional colour cover template (coverDesigned.js)
+ */
+export async function buildPrintPackage(input = {}) {
+  const ctx = await prepareInterior(input);
+  const parts = await prepareCover(ctx, { fonts: input.fonts, frontImage: input.frontImage || null, coverDesign: input.coverDesign || null });
+  return assemblePrintPackage(ctx, parts, input.fonts);
 }

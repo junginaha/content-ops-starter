@@ -188,3 +188,49 @@ test('design analysis: first-person memoir with quoted dialogue reads as essay, 
   const ms = ['들어가며', para, '제1장 목요일', ...Array.from({ length: 8 }, (_, i) => (i % 3 === 0 ? '“가장 오래 머문 문장은 어디였나요?”' : para)), '나가며', para].join('\n\n');
   assert.equal(analyzeForDesign(ms).genre, 'essay');
 });
+
+test('1900 designed cover: colour templates stay CMYK, no transparency, EAN-13 + EAN-5 add-on', async () => {
+  const { prepareInterior, prepareCover, assemblePrintPackage } = await import('../src/utils/print/printPackage');
+  const { designImageSlot, hexToCmyk } = await import('../src/utils/print/coverDesigned');
+  const ctx = await prepareInterior({
+    title: '별이 지는 밤', author: '데모 작가', isbn: '979-11-998126-9-7',
+    manuscript: sampleManuscript(2, 6),
+    printSpec: { trimWidthMm: 152, trimHeightMm: 225, bleedMm: 3 },
+    options: { publisher: '19호실출판사', price: '16800', flapMm: 100 },
+    fonts: FONTS
+  });
+  for (const template of ['typo', 'frame', 'split', 'image']) {
+    const parts = await prepareCover(ctx, { fonts: FONTS, coverDesign: { template, color: '#2f5d50', backCopy: '소개 글입니다. 두 번째 문장.', authorBio: '저자 소개', addon: '03810' } });
+    const res = await assemblePrintPackage(ctx, parts, FONTS);
+    assert.equal(res.report.cover.barcode.symbology, 'EAN-13+5');
+    assert.equal(res.report.cover.barcode.decoded, '9791199812697');
+    assert.equal(res.report.cover.pdfCheck.transparencyObjects, 0, `${template}: no transparency`);
+    assert.equal(res.report.cover.pdfCheck.boxErrors, 0, `${template}: boxes`);
+    assert.ok(res.report.cover.geometry.flapMm === 100);
+    assert.ok(res.files.some((f) => f.includes('표지가이드')));
+    assert.ok(res.orderSheet.includes('인쇄 지시서'));
+  }
+  assert.deepEqual(hexToCmyk('#000000'), [0, 0, 0, 1]);
+  assert.equal(designImageSlot({ template: 'typo', trimWidthMm: 152, trimHeightMm: 225 }), null);
+  assert.ok(designImageSlot({ template: 'image', trimWidthMm: 152, trimHeightMm: 225 }).heightMm === 231);
+});
+
+test('2차 제작 premium: dedication/epigraph pages keep text completeness; finish plate and belly band are checked and packaged', async () => {
+  const { prepareInterior, prepareCover, assemblePrintPackage } = await import('../src/utils/print/printPackage');
+  const ctx = await prepareInterior({
+    title: '별이 지는 밤', author: '데모 작가', isbn: '979-11-998126-9-7', manuscript: sampleManuscript(2, 6),
+    printSpec: { trimWidthMm: 152, trimHeightMm: 225, bleedMm: 3 }, options: { publisher: '19호실출판사', price: '16800' }, fonts: FONTS,
+    premium: { dedication: '엄마에게', epigraph: { text: '기억은 냄새로 먼저 온다.', source: '작가 노트' }, chapterEpigraphs: { 1: { text: '첫 문장은 늦게 온다.', source: '편지' } } }
+  });
+  assert.ok(ctx.interior.completeness.match, 'premium text is not counted as manuscript');
+  assert.ok(ctx.interior.pages.dedication && ctx.interior.pages.epigraph);
+  assert.equal(ctx.interior.pages.chapterEpigraphs, 1);
+  const parts = await prepareCover(ctx, { fonts: FONTS, coverDesign: { template: 'typo', color: '#7a2e2e', tagline: '조용한 귀환', finish: { type: 'gold', targets: ['title', 'rule'] }, band: { enabled: true, heightMm: 70, headline: '올가을의 소설' }, addon: '03810' } });
+  const res = await assemblePrintPackage(ctx, parts, FONTS, { revisionLog: [{ version: 2, summary: '헌사·금박·띠지' }] });
+  assert.equal(res.report.status, 'PRINT_CANDIDATE');
+  assert.ok(res.files.some((f) => f.includes('후가공판_금박')) && res.files.some((f) => f.includes('띠지')) && res.files.includes('reports/revision_log.json'));
+  assert.ok(res.report.checks.find((c) => c.key === 'finish-plate').passed);
+  assert.ok(res.report.checks.find((c) => c.key === 'band').passed);
+  assert.equal(res.report.cover.band.barcode.decoded, '9791199812697');
+  assert.ok(res.orderSheet.includes('후가공') && res.orderSheet.includes('띠지') && res.orderSheet.includes('수정 이력'));
+});
