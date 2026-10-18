@@ -229,6 +229,78 @@ export const designReferences = [
     officialUrl: 'https://www.schweizerkulturpreise.ch/en/the-house-of-dr-koolhaas-en',
     previewUrl: 'https://pub-mediabox-storage.rxweb-prd.com/exhibitor/document/exh-35712cc4-9f72-420a-ba85-8f9698d65902/62f68f72-7202-4e06-8fc9-478ea2b72c81.pdf',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'die-anrufung-der-riesin',
+    title: 'Die Anrufung der Riesin',
+    publisher: 'starfruit publications',
+    designer: 'StudioNearMe / Karin Kolb',
+    year: 2024,
+    module: 'DENSITY_SWITCH',
+    tags: ['에세이', '회고', '여백형', '이미지인터루드'],
+    evidence: 'Die Schönsten Deutschen Bücher 2025 — Stiftung Buchkunst',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/die-anrufung-der-riesin/',
+    galleryUrl: 'https://studio-near.me/home/',
+    previewUrl: 'https://studio-near.me/wp-content/uploads/2024/09/Riesin04-1-265x224.webp',
+    dimensionsMm: [140, 210],
+    pageCount: 128,
+    typefaces: [
+      { name: 'Kalice', status: 'CHECK' },
+      { name: 'Elza', status: 'CHECK' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE' }
+    ],
+    palette: 'Apple-green linen cover, deep purple typography, cream paper; monochrome and muted photographic accents',
+    layoutNotes: 'Readable essay columns, unconventional footnotes, full-page and double-page photography; exact margins and leading not published',
+    editorialIdea: 'Alternate stable essay text with occasional photographic interludes; maintain readable body width and footnote hierarchy',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'logorrhea-jean-michel-wicker',
+    title: 'logorrhea',
+    publisher: 'a bouncing people planet',
+    designer: 'Marietta Eugster',
+    year: 2024,
+    module: 'PROGRESSIVE_TEXT',
+    tags: ['짧은글', '시', '여백형', '타이포그래피'],
+    evidence: 'The Most Beautiful Swiss Books 2024 — Swiss Federal Office of Culture',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/logorrhea-4',
+    galleryUrl: 'https://www.schweizerkulturpreise.ch/en/logorrhea-4',
+    previewUrl: 'https://www.lespressesdureel.com/EN/img_hd/img/ouvrage/11499/logorrhea_double_page_for_pdr_17.jpg',
+    dimensionsMm: [140, 210],
+    pageCount: 468,
+    pageCountNote: 'Distributor: 468 pages; Swiss jury: 466 black-and-white pages',
+    typefaces: [
+      { name: 'Gill Sans Bold', status: 'CHECK' },
+      { name: 'Unidentified introductory serif', status: 'CHECK' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE' }
+    ],
+    palette: 'Black on warm white, occasional fluorescent yellow',
+    layoutNotes: 'Very short text at top of page or freely positioned; generous negative space; occasional oversized glyphs; exact leading unpublished',
+    editorialIdea: 'Use short statements and sparse placement to create rhythm; avoid gratuitous blank-page inflation',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'freinet-techniques',
+    title: 'Freinet Techniques, Freinettechnieken, Techniques Freinet',
+    publisher: 'Rollo Press / Drukkerij Raddraaier SSP',
+    designer: 'Paul Gangloff',
+    year: 2024,
+    module: 'ARCHIVE_VS_PRESENT',
+    tags: ['문화예술', '짧은글', '그리드형', '자료대조'],
+    evidence: 'The Most Beautiful Swiss Books 2024 — Swiss Federal Office of Culture',
+    officialUrl: 'https://www.schweizerkulturprijzen.ch/en/freinet-techniques-freinettechnieken-techniques-freinet-4',
+    galleryUrl: 'https://www.schweizerkulturprijzen.ch/en/freinet-techniques-freinettechnieken-techniques-freinet-4',
+    previewUrl: 'https://draw-down.com/cdn/shop/files/FreinetTechniques7_2048x2048.jpg?v=1752865152',
+    dimensionsMm: [170, 210],
+    pageCount: 296,
+    typefaces: [
+      { name: 'Original sans-serif (unidentified)', status: 'CHECK' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE' }
+    ],
+    palette: 'Yellow cloth cover, black type, black-and-white archive sheets, translucent paper',
+    layoutNotes: 'Archival student text per page paired with translation, short introductory essays and multilingual columns; exact leading unpublished',
+    editorialIdea: 'Pair source image with transcription or translation on facing page; preserve source attribution',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
