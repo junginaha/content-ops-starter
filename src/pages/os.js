@@ -16,6 +16,7 @@ import {
 } from '../utils/projectStore';
 import { evaluateReleaseReadiness } from '../utils/preflight';
 import { evaluatePrintPdf, inspectPdfFile } from '../utils/pdfPreflight';
+import { createPrintJobTicket } from '../utils/printJobTicket';
 import { designReferences, recommendDesignProfiles } from '../data/designReferences';
 
 const STAGES = [
@@ -244,6 +245,15 @@ export default function OneDayBooksOS() {
     () => evaluatePrintPdf(printPdfReport, project.printSpec || EMPTY_PROJECT.printSpec),
     [printPdfReport, project.printSpec]
   );
+  const printJobTicket = useMemo(() => createPrintJobTicket({
+    title: project.title,
+    author: project.author,
+    isbn: project.isbn,
+    pages: project.printSpec?.expectedPages,
+    trimWidthMm: project.printSpec?.trimWidthMm,
+    trimHeightMm: project.printSpec?.trimHeightMm,
+    bleedMm: project.printSpec?.bleedMm
+  }), [project.title, project.author, project.isbn, project.printSpec]);
   const releaseReadiness = useMemo(() => evaluateReleaseReadiness({
     project,
     manuscript,
@@ -860,6 +870,12 @@ export default function OneDayBooksOS() {
 
           {/종이책/.test(project.objective || '') && (
             <div className="print-preflight-card">
+              <div style={{ padding: "12px", marginBottom: "12px", border: "1px solid #d5d5d5", borderRadius: "8px" }}>
+                <strong>인쇄 제작지시서 · {printJobTicket.valid ? "규격 확인" : "입력 확인 필요"}</strong>
+                <p style={{ fontSize: "13px", margin: "8px 0" }}>규격 확인은 실제 PDF 인쇄 적합성 인증이 아닙니다. 최종 인쇄 승인 전 PDF 프리플라이트와 인쇄소 검수가 필요합니다.</p>
+                {printJobTicket.errors.length > 0 && <ul>{printJobTicket.errors.map((error, i) => <li key={i}>{error}</li>)}</ul>}
+                <button type="button" disabled={!printJobTicket.valid} onClick={() => downloadText(`${(project.title || "book").replace(/[^a-zA-Z0-9가-힣_-]/g, "_")}_print_ticket.json`, JSON.stringify(printJobTicket.ticket, null, 2), "application/json;charset=utf-8")}>제작지시서 JSON 다운로드</button>
+              </div>
               <div className="print-preflight-head">
                 <div>
                   <strong>종이책 인쇄 PDF 프리플라이트</strong>
