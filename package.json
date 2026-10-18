@@ -9,11 +9,8 @@
         "print:sample": "tsx scripts/print-sample.mjs"
     },
     "dependencies": {
-        "@algolia/autocomplete-js": "^1.17.1",
-        "@algolia/autocomplete-theme-classic": "^1.17.1",
         "@pdf-lib/fontkit": "^1.1.1",
         "@types/leaflet": "^1.9.21",
-        "algoliasearch": "^4.24.0",
         "classnames": "^2.5.1",
         "dayjs": "^1.11.11",
         "front-matter": "^4.0.2",
@@ -31,8 +28,7 @@
     },
     "devDependencies": {
         "@base2/pretty-print-object": "^1.0.2",
-        "@stackbit/cms-git": "^1.0.32",
-        "@stackbit/types": "^2.1.10",
+        "@stackbit/types": "^2.1.15",
         "@types/glob": "^8.1.0",
         "@types/react": "^19.1.0",
         "@types/react-dom": "^19.1.1",

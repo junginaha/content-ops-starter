@@ -63,24 +63,8 @@ function renderSections(sections: any[], fieldName: string, enableAnnotations: b
     );
 }
 
-function SearchBox({ enableSearch }) {
-    if (!enableSearch) {
-        return null;
-    }
-    const AutoCompletePosts = getComponent('AutoCompletePosts');
-    const searchBoxStyle = {
-        '--aa-text-color-rgb': '2,0,29',
-        '--aa-muted-color-rgb': '2,0,29',
-        '--aa-muted-color-alpha': 0.5,
-        '--aa-input-border-color-rgb': '2,0,29',
-        '--aa-input-border-color-alpha': 0.25,
-        '--aa-primary-color-rgb': '2,0,29'
-    } as React.CSSProperties;
-    return (
-        <div className="w-full mb-9" style={searchBoxStyle}>
-            <AutoCompletePosts />
-        </div>
-    );
+function SearchBox(_props: { enableSearch?: boolean }) {
+    return null;
 }
 
 function PageLinks({ pageIndex, baseUrlPath, numOfPages }) {

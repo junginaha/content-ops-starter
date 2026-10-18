@@ -20,6 +20,8 @@ import { DEFAULT_PRINT_OPTIONS, PRINT_HUMAN_GATES, TRIM_PRESETS } from '../utils
 import { analyzeForDesign } from '../utils/print/designAnalysis';
 import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
 import { COVER_LAYOUTS, COVER_PALETTES } from '../utils/print/coverGenome';
+import { createPrintJobTicket } from '../utils/printJobTicket';
+import { designReferences, recommendDesignProfiles } from '../data/designReferences';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -258,6 +260,15 @@ export default function OneDayBooksOS() {
     () => evaluatePrintPdf(printPdfReport, project.printSpec || EMPTY_PROJECT.printSpec),
     [printPdfReport, project.printSpec]
   );
+  const printJobTicket = useMemo(() => createPrintJobTicket({
+    title: project.title,
+    author: project.author,
+    isbn: project.isbn,
+    pages: project.printSpec?.expectedPages,
+    trimWidthMm: project.printSpec?.trimWidthMm,
+    trimHeightMm: project.printSpec?.trimHeightMm,
+    bleedMm: project.printSpec?.bleedMm
+  }), [project.title, project.author, project.isbn, project.printSpec]);
   const releaseReadiness = useMemo(() => evaluateReleaseReadiness({
     project,
     manuscript,
@@ -284,6 +295,10 @@ export default function OneDayBooksOS() {
     qaCount === QA_GATES.length &&
     releaseReadiness.ready;
   const withinTarget = internalElapsed > 0 && internalElapsed <= 60 * 60 * 1000;
+  const designProfiles = useMemo(
+    () => recommendDesignProfiles(engineAnalysis || {}),
+    [engineAnalysis]
+  );
 
   function updateField(key, value) {
     setProject((p) => ({ ...p, [key]: value }));
@@ -960,6 +975,12 @@ export default function OneDayBooksOS() {
 
           {/종이책/.test(project.objective || '') && (
             <div className="print-preflight-card">
+              <div style={{ padding: "12px", marginBottom: "12px", border: "1px solid #d5d5d5", borderRadius: "8px" }}>
+                <strong>인쇄 제작지시서 · {printJobTicket.valid ? "규격 확인" : "입력 확인 필요"}</strong>
+                <p style={{ fontSize: "13px", margin: "8px 0" }}>규격 확인은 실제 PDF 인쇄 적합성 인증이 아닙니다. 최종 인쇄 승인 전 PDF 프리플라이트와 인쇄소 검수가 필요합니다.</p>
+                {printJobTicket.errors.length > 0 && <ul>{printJobTicket.errors.map((error, i) => <li key={i}>{error}</li>)}</ul>}
+                <button type="button" disabled={!printJobTicket.valid} onClick={() => downloadText(`${(project.title || "book").replace(/[^a-zA-Z0-9가-힣_-]/g, "_")}_print_ticket.json`, JSON.stringify(printJobTicket.ticket, null, 2), "application/json;charset=utf-8")}>제작지시서 JSON 다운로드</button>
+              </div>
               <div className="print-preflight-head">
                 <div>
                   <strong>종이책 인쇄 PDF 프리플라이트</strong>
@@ -1296,6 +1317,28 @@ export default function OneDayBooksOS() {
                 ))}
               </div>
 
+              <div className="design-recommendation">
+                <div className="design-recommendation-head">
+                  <strong>편집디자인 추천</strong>
+                  <span>검증 레퍼런스 기반 · 복제 금지 · 규칙만 적용</span>
+                </div>
+                <div className="design-profile-grid">
+                  {designProfiles.map((profile) => (
+                    <div className="design-profile-card" key={profile.id}>
+                      <div className="design-profile-id">{profile.id}</div>
+                      <strong>{profile.label}</strong>
+                      <p>{profile.purpose}</p>
+                      <small>{profile.rules.join(' · ')}</small>
+                      {profile.references?.[0] && (
+                        <a href={profile.references[0].officialUrl} target="_blank" rel="noreferrer">
+                          {profile.references[0].title} ↗
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="human-boundary">
                 <strong>최종 승인:</strong>
                 저자 의도 · 사실/인용 · 저작권 · 최종 편집디자인 · 최종 출간 승인
@@ -1332,6 +1375,50 @@ export default function OneDayBooksOS() {
               </div>
             </div>
           )}
+        </section>
+
+        <section className="panel design-library-panel">
+          <div className="section-head">
+            <div>
+              <div className="kicker">DESIGN SYSTEM</div>
+              <h2>출판 편집디자인 레퍼런스</h2>
+            </div>
+            <span className="status-pill ready">{designReferences.length} verified</span>
+          </div>
+
+          <p className="muted">
+            수상·공식 선정·전문 디자인 평가가 확인된 실제 출간물만 저장합니다.
+            레퍼런스는 복제하지 않고 여백 · 그리드 · 본문 폭 · 페이지 리듬 같은 재사용 규칙으로 변환합니다.
+          </p>
+
+          <div className="reference-grid">
+            {designReferences.map((ref) => (
+              <article className="reference-card" key={ref.id}>
+                <div className="reference-meta">{ref.year} · {ref.module}</div>
+                <h3>{ref.title}</h3>
+                <p>{ref.publisher} · {ref.designer}</p>
+                <small>{ref.evidence}</small>
+                <div className="reference-tags">
+                  {ref.tags.map((tag) => <span key={tag}>#{tag}</span>)}
+                </div>
+                <div className="reference-rights">
+                  Layout {ref.rights.layout} · Font {ref.rights.font} · Images {ref.rights.images}
+                </div>
+                <div className="reference-links">
+                  <a href={ref.officialUrl} target="_blank" rel="noreferrer">근거 ↗</a>
+                  {ref.previewUrl && (
+                    <a href={ref.previewUrl} target="_blank" rel="noreferrer">내지/미리보기 ↗</a>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="human-boundary">
+            <strong>권리 원칙:</strong>
+            공개 미리보기는 열람용입니다. 색상·일반 레이아웃은 ADAPT, 서체는 라이선스 확인,
+            사진·삽화·본문은 별도 권리 확인 전 재사용하지 않습니다.
+          </div>
         </section>
 
         <section className="panel ai-panel">
@@ -1913,6 +2000,101 @@ export default function OneDayBooksOS() {
           font-size: 13px;
           line-height: 1.55;
         }
+        .design-recommendation {
+          margin-top: 16px;
+          padding: 14px;
+          border: 1px solid #d7cdbf;
+          border-radius: 13px;
+          background: #fffdf7;
+        }
+        .design-recommendation-head {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          align-items: baseline;
+          margin-bottom: 10px;
+        }
+        .design-recommendation-head span {
+          color: #6d675e;
+          font-size: 12px;
+        }
+        .design-profile-grid,
+        .reference-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .design-profile-card,
+        .reference-card {
+          min-width: 0;
+          padding: 13px;
+          border: 1px solid #d8cfc1;
+          border-radius: 12px;
+          background: rgba(255,255,255,.66);
+        }
+        .design-profile-id,
+        .reference-meta {
+          margin-bottom: 7px;
+          color: #7a321f;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: .06em;
+          overflow-wrap: anywhere;
+        }
+        .design-profile-card strong,
+        .reference-card h3 {
+          display: block;
+          margin: 0;
+          font-size: 15px;
+          line-height: 1.35;
+        }
+        .design-profile-card p,
+        .reference-card p {
+          margin: 7px 0;
+          color: #4f4a43;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+        .design-profile-card small,
+        .reference-card small,
+        .reference-rights {
+          display: block;
+          color: #6d675e;
+          font-size: 11px;
+          line-height: 1.5;
+        }
+        .design-profile-card a,
+        .reference-links a {
+          color: #7a321f;
+          font-size: 12px;
+          font-weight: 800;
+          text-decoration: none;
+        }
+        .design-profile-card a {
+          display: inline-block;
+          margin-top: 8px;
+        }
+        .reference-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 5px;
+          margin: 9px 0;
+        }
+        .reference-tags span {
+          padding: 4px 6px;
+          border-radius: 999px;
+          background: #eee8dd;
+          font-size: 10px;
+        }
+        .reference-rights {
+          margin-top: 8px;
+        }
+        .reference-links {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 10px;
+        }
         .ai-health {
           display: flex;
           align-items: center;
@@ -2137,6 +2319,10 @@ export default function OneDayBooksOS() {
           font-size: 12px;
         }
         @media (max-width: 720px) {
+          .design-profile-grid,
+          .reference-grid { grid-template-columns: 1fr; }
+          .design-recommendation-head { display: block; }
+          .design-recommendation-head span { display: block; margin-top: 4px; }
           .os-shell { width: min(100% - 22px, 980px); padding-top: 14px; }
           .hero { padding-top: 22px; }
           .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
