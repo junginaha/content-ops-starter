@@ -3,7 +3,10 @@
 import { parseBookStructure, nfc } from './bookStructure';
 
 const LIST_RE = /^(\d{1,2}[.)]\s|[-•·▪■□○●◦※✓✔]\s|[①-⑳]|[가-하][.)]\s|\(\d{1,2}\)\s)/;
-const DIALOGUE_RE = /^["“「『'‘―—-]/;
+// Dialogue openers. A hyphen followed by a space is a list bullet, not a dash of speech.
+const DIALOGUE_RE = /^(["“「『'‘―—]|-(?!\s))/;
+// Korean written questions often end in a period: "…만들어졌는가." / "…아닐까."
+const RHETORICAL_Q_RE = /(는가|인가|은가|을까|ㄹ까|일까|않은가|아닌가)[.?？]?$/;
 // Singular narrator only — the generic "우리" of nonfiction is not a personal voice signal.
 const FIRST_PERSON_RE = /(^|[\s“"'(])(나는|나의|내가|나를|나에게|나도|내게|저는|제가|저의)/g;
 const FORMAL_END_RE = /(습니다|합니다|입니다|됩니다|십시오|세요)[.!?]?$/;
@@ -49,7 +52,7 @@ export function analyzeForDesign(manuscript = '', { title = '' } = {}) {
     listRatio: round(paragraphs.length ? paragraphs.filter((p) => p.lines.some((l) => LIST_RE.test(l))).length / paragraphs.length : 0),
     firstPersonPer1k: round(per1k((text.match(FIRST_PERSON_RE) || []).length), 1),
     numbersPer1k: round(per1k((text.match(/\d+/g) || []).length), 1),
-    questionsPer1k: round(per1k((text.match(/[?？]/g) || []).length), 1),
+    questionsPer1k: round(per1k((text.match(/[?？]/g) || []).length + sentences.filter((s) => !/[?？]$/.test(s) && RHETORICAL_Q_RE.test(s)).length), 1),
     formalEndingRatio: round(sentences.length ? sentences.filter((s) => FORMAL_END_RE.test(s)).length / sentences.length : 0),
     pastNarrativeRatio: round(sentences.length ? sentences.filter((s) => PAST_NARRATIVE_RE.test(s)).length / sentences.length : 0),
     sectionsPerChapter: round(structure.stats.chapters ? structure.stats.sections / structure.stats.chapters : structure.stats.sections, 1),
@@ -78,7 +81,7 @@ export function analyzeForDesign(manuscript = '', { title = '' } = {}) {
   // A dense singular narrator ("나는", "내가") is the strongest memoir/essay signal; quoted
   // dialogue alone does not make a book fiction.
   if (m.firstPersonPer1k >= 6) add('essay', 3, `1인칭 화자 밀도 높음(1천 자당 ${m.firstPersonPer1k}회)`);
-  if (m.nonfictionFrame) add('essay', 1, '들어가며·나가며 등 논픽션 머리말·맺음말 구성');
+  if (m.nonfictionFrame && m.firstPersonPer1k >= 1.5) add('essay', 1, '들어가며·나가며 등 논픽션 머리말·맺음말 구성');
   if (m.firstPersonPer1k >= 1.5 && m.dialogueRatio < 0.08 && m.avgParagraphChars >= 50 && m.avgParagraphChars <= 200) add('essay', 1, `호흡이 짧은 문단(평균 ${m.avgParagraphChars}자)`);
 
   if (m.listRatio >= 0.06) add('practical', 3, `목록형 문단 ${Math.round(m.listRatio * 100)}%`);
@@ -87,6 +90,7 @@ export function analyzeForDesign(manuscript = '', { title = '' } = {}) {
   if (m.formalEndingRatio >= 0.3) add('practical', 1, `경어체 문장 ${Math.round(m.formalEndingRatio * 100)}%`);
 
   if (m.avgParagraphChars >= 120 && m.dialogueRatio < 0.05 && m.firstPersonPer1k < 1.5) add('humanities', 2, `논증형 긴 문단(평균 ${m.avgParagraphChars}자) · 대화·1인칭 적음`);
+  else if (m.avgParagraphChars >= 60 && m.dialogueRatio < 0.05 && m.firstPersonPer1k < 1 && m.listRatio < 0.06 && m.pastNarrativeRatio < 0.35) add('humanities', 2, `3인칭 논증 문단(평균 ${m.avgParagraphChars}자) · 대화·1인칭·목록 없음`);
   if (m.questionsPer1k >= 1 && m.dialogueRatio < 0.08) add('humanities', 1, `질문 1천 자당 ${m.questionsPer1k}회`);
   if (m.hanjaPer1k >= 1) add('humanities', 1, `한자 병기 1천 자당 ${m.hanjaPer1k}회`);
   if (m.sectionsPerChapter >= 0.5 && m.listRatio < 0.06) add('humanities', 1, `장당 소제목 ${m.sectionsPerChapter}개`);

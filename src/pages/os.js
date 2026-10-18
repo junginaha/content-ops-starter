@@ -19,6 +19,7 @@ import { evaluatePrintPdf, inspectPdfBytes, inspectPdfFile } from '../utils/pdfP
 import { DEFAULT_PRINT_OPTIONS, PRINT_HUMAN_GATES, TRIM_PRESETS } from '../utils/print/presets';
 import { analyzeForDesign } from '../utils/print/designAnalysis';
 import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
+import { COVER_LAYOUTS, COVER_PALETTES } from '../utils/print/coverGenome';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -1050,6 +1051,27 @@ export default function OneDayBooksOS() {
                           ))}
                         </select>
                       </label>
+                      <label>
+                        <span>표지 구도</span>
+                        <select value={COVER_LAYOUTS[printOptions.coverLayout] ? printOptions.coverLayout : 'auto'} onChange={(e) => updatePrintOption('coverLayout', e.target.value)}>
+                          <option value="auto">원고 분석으로 결정</option>
+                          {Object.entries(COVER_LAYOUTS).map(([key, layout]) => (
+                            <option key={key} value={key}>{layout.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        <span>표지 색</span>
+                        <select
+                          value={(COVER_PALETTES[chosenProfile] || []).some((p) => p.key === printOptions.coverPalette) ? printOptions.coverPalette : 'auto'}
+                          onChange={(e) => updatePrintOption('coverPalette', e.target.value)}
+                        >
+                          <option value="auto">원고 분석으로 결정</option>
+                          {(COVER_PALETTES[chosenProfile] || []).map((palette) => (
+                            <option key={palette.key} value={palette.key}>{palette.label}</option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
                     <div className="file-info">{DESIGN_PROFILES[chosenProfile].label} — {DESIGN_PROFILES[chosenProfile].summary}</div>
                   </div>
@@ -1159,7 +1181,16 @@ export default function OneDayBooksOS() {
                         value={`${printPkg.report.cover.geometry.totalWidthMm}×${printPkg.report.cover.geometry.totalHeightMm}mm`}
                       />
                       <MiniMetric label="편집디자인" value={printPkg.report.design.label} />
+                      {printPkg.report.cover.design && (
+                        <MiniMetric label="표지" value={`${printPkg.report.cover.design.palette} · ${printPkg.report.cover.design.layout}`} />
+                      )}
                     </div>
+                    {printPkg.report.cover.design && (
+                      <div className="file-info">
+                        표지 디자인 근거 · {printPkg.report.cover.design.reasons.join(' · ')}
+                        {printPkg.report.cover.design.excerpt ? ` · 뒤표지 발췌: “${printPkg.report.cover.design.excerpt}”` : ''}
+                      </div>
+                    )}
 
                     <div className="preflight-grid print-check-grid">
                       {printPkg.report.checks.map((check) => (

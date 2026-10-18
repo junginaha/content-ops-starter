@@ -188,3 +188,50 @@ test('design analysis: first-person memoir with quoted dialogue reads as essay, 
   const ms = ['들어가며', para, '제1장 목요일', ...Array.from({ length: 8 }, (_, i) => (i % 3 === 0 ? '“가장 오래 머문 문장은 어디였나요?”' : para)), '나가며', para].join('\n\n');
   assert.equal(analyzeForDesign(ms).genre, 'essay');
 });
+
+test('cover genome: deterministic per manuscript, varied across manuscripts, print-safe ink', async () => {
+  const { deriveCoverGenome, COVER_PALETTES, totalInk } = await import('../src/utils/print/coverGenome');
+  const { analyzeForDesign } = await import('../src/utils/print/designAnalysis');
+  Object.values(COVER_PALETTES).flat().forEach((p) => [p.ground, p.deep, p.accent].forEach((c) => assert.ok(totalInk(c) <= 280, `${p.key} ${c}`)));
+  const ms = sampleManuscript(5, 6);
+  const a = analyzeForDesign(ms);
+  const g1 = deriveCoverGenome({ manuscript: ms, title: '아침의 질문', analysis: a });
+  const g2 = deriveCoverGenome({ manuscript: ms, title: '아침의 질문', analysis: a });
+  assert.deepEqual(g1, g2);
+  assert.ok(g1.excerpt && ms.includes(g1.excerpt), 'excerpt is quoted verbatim from the manuscript');
+  const seeds = new Set();
+  const looks = new Set();
+  for (let i = 0; i < 12; i += 1) {
+    const other = `${ms}\n\n변주 문단 ${i}번이 붙는다.`;
+    const g = deriveCoverGenome({ manuscript: other, title: `책 ${i}`, analysis: analyzeForDesign(other) });
+    seeds.add(g.seed);
+    looks.add(`${g.palette.key}/${g.layout}`);
+  }
+  assert.equal(seeds.size, 12);
+  assert.ok(looks.size >= 4, `12 manuscripts should not collapse into one look (got ${looks.size})`);
+});
+
+test('cover genome: every composition renders a valid wrap cover, thick spine takes the deep colour', async () => {
+  const { deriveCoverGenome, COVER_LAYOUTS } = await import('../src/utils/print/coverGenome');
+  const { analyzeForDesign } = await import('../src/utils/print/designAnalysis');
+  const { buildCoverPdf } = await import('../src/utils/print/coverPdf');
+  const ms = sampleManuscript(4, 5);
+  const analysis = analyzeForDesign(ms);
+  for (const layout of Object.keys(COVER_LAYOUTS)) {
+    const genome = deriveCoverGenome({ manuscript: ms, title: '아침의 질문', analysis, genre: 'essay', layout });
+    const out = await buildCoverPdf({ title: '아침의 질문', author: '저자', publisher: '출판사', isbn: '979-11-998126-9-7', price: '15000',
+      spineMm: 14, flapMm: 80, fonts: FONTS, style: 'essay', genome });
+    assert.equal(out.blockers.length, 0, `${layout}: ${out.blockers.join(', ')}`);
+    assert.equal(out.report.genome.spineColour, 'deep');
+    assert.ok(out.report.barcode.decoded);
+  }
+});
+
+test('design analysis: third-person argument is humanities; "- " bullets are not dialogue', async () => {
+  const { analyzeForDesign } = await import('../src/utils/print/designAnalysis');
+  const arg = '도시는 걷는 사람을 위해 만들어졌는가. 이 질문은 도시계획의 백 년 역사를 관통한다. 보도는 남는 공간에 배치되었고 보행자는 틈을 이용하는 존재가 되었다.';
+  const hum = ['서문', arg, '제1장 보행', arg, arg, '제2장 거리', arg, arg, '맺음말', arg].join('\n\n');
+  assert.equal(analyzeForDesign(hum).genre, 'humanities');
+  const list = ['1. 원가', '원가는 재료비와 포장비를 더한 값입니다.', '- 30% 이하: 효자 메뉴', '- 40% 이상: 다시 봅니다'].join('\n\n');
+  assert.equal(analyzeForDesign(list).metrics.dialogueRatio, 0);
+});

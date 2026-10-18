@@ -19,14 +19,19 @@ import {
   endPath,
   pushGraphicsState,
   popGraphicsState,
-  rotateAndSkewTextRadiansAndTranslate
+  rotateAndSkewTextRadiansAndTranslate,
+  appendBezierCurve,
+  closePath
 } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { padFontBytes, PT_PER_MM } from './interiorPdf';
 import { nfc } from './bookStructure';
+import { typeOn, cmykLuminance } from './coverGenome';
 
 const mm = (value) => Number(value) * PT_PER_MM;
 const round1 = (value) => Math.round(Number(value) * 10) / 10;
+// 16000 → 16,000 (값 표기는 천 단위 쉼표가 관례)
+const formatPrice = (value) => String(value).replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 // ---------- spine ----------
 export function calculateSpineMm({ pageCount, paperCaliperMm = 0.1, coverAllowanceMm = 0.5 }) {
@@ -127,6 +132,180 @@ export function coverGeometry({ trimWidthMm, trimHeightMm, bleedMm = 3, spineMm,
   };
 }
 
+// ---------- genome artwork ----------
+const fillC = (c) => setFillingCmykColor(c[0] / 100, c[1] / 100, c[2] / 100, c[3] / 100);
+const strokeC = (c) => setStrokingCmykColor(c[0] / 100, c[1] / 100, c[2] / 100, c[3] / 100);
+
+function circlePath(cx, cy, r) {
+  const k = 0.5522847498 * r;
+  return [
+    moveTo(cx + r, cy),
+    appendBezierCurve(cx + r, cy + k, cx + k, cy + r, cx, cy + r),
+    appendBezierCurve(cx - k, cy + r, cx - r, cy + k, cx - r, cy),
+    appendBezierCurve(cx - r, cy - k, cx - k, cy - r, cx, cy - r),
+    appendBezierCurve(cx + k, cy - r, cx + r, cy - k, cx + r, cy),
+    closePath()
+  ];
+}
+
+// Large type may carry the palette's deep colour; it must still read against its field.
+function titleColourOn(field, palette) {
+  if (cmykLuminance(field) < 0.5) return [0, 0, 0, 0];
+  return cmykLuminance(palette.deep) < 0.32 ? palette.deep : [0, 0, 0, 100];
+}
+
+/**
+ * Draws the front-panel composition and returns where the typography may sit.
+ * All geometry is in points; the front panel is clipped so nothing leaks onto the spine.
+ */
+export function composeCoverArt(genome, { frontX, frontW, extendRight, B, H, totalH, inset, title = '', glyphFont = null }) {
+  const { palette, motif, layout } = genome;
+  const out = [];
+  const X0 = frontX;
+  const X1 = frontX + frontW;
+  const top = B + H;
+  const lengths = motif.lengths.slice(0, 12);
+  const maxLen = Math.max(...lengths, 1);
+  const j = (i) => motif.jitter[i % motif.jitter.length];
+  // Default: type on the ground at the top-left.
+  const zone = { mode: 'top', align: 'left', field: palette.ground, footField: palette.ground, showPublisher: true };
+
+  out.push(pushGraphicsState(), rectangle(X0, 0, frontW + extendRight, totalH), clip(), endPath());
+
+  if (layout === 'horizon') {
+    const hy = B + H * (0.3 + 0.1 * genome.axes.openness);
+    const r = frontW * (0.15 + 0.07 * motif.scale);
+    const cx = X0 + frontW * motif.position;
+    out.push(fillC(palette.accent), ...circlePath(cx, hy, r), fill());
+    out.push(fillC(palette.deep), rectangle(X0, 0, frontW + extendRight, hy), fill());
+    // Reflection: one stroke per chapter, narrowing toward the bottom.
+    const n = motif.count;
+    const span = hy - (B + inset + mm(12));
+    for (let i = 1; i <= n; i += 1) {
+      const y = hy - (span * i) / (n + 1);
+      const w = 2 * r * (1 - i / (n + 2)) * (0.55 + 0.45 * j(i));
+      out.push(fillC(palette.accent), rectangle(cx - w / 2, y, w, Math.max(1, 2.2 - i * 0.12)), fill());
+    }
+    zone.footField = palette.deep;
+  } else if (layout === 'terrain') {
+    // One hill per chapter, height = chapter length; the longest chapter is the lit peak.
+    const base = B + inset + mm(8);
+    const areaH = H * 0.42;
+    const n = lengths.length;
+    const slot = (frontW + extendRight) / n;
+    const tallest = lengths.indexOf(maxLen);
+    const order = lengths.map((len, i) => i).sort((a, b) => lengths[b] - lengths[a]);
+    order.forEach((i) => {
+      const h = Math.max(mm(6), (lengths[i] / maxLen) * areaH);
+      const w = slot * (1.7 + 0.6 * j(i));
+      const cx = X0 + slot * (i + 0.5);
+      const x0 = cx - w / 2;
+      const x1 = cx + w / 2;
+      out.push(fillC(i === tallest ? palette.accent : palette.deep), moveTo(x0, base),
+        appendBezierCurve(x0 + w * 0.3, base + h * 1.33, x1 - w * 0.3, base + h * 1.33, x1, base), closePath(), fill());
+    });
+    out.push(fillC(palette.deep), rectangle(X0, 0, frontW + extendRight, base + 0.5), fill());
+    zone.footField = palette.deep;
+  } else if (layout === 'rings') {
+    const corner = motif.corner === 'top-right';
+    const cx = corner ? X1 + extendRight * 0.4 : X0;
+    const cy = corner ? totalH : 0;
+    // Rings stop short of the title block, which sits low-left (zone.bottomY).
+    const titleGuess = Math.min(34, frontW / 6.2);
+    const clearance = corner ? totalH - (B + H * 0.2 + titleGuess * 3.4) - mm(6) : frontW * 1.02;
+    const maxR = Math.min(frontW * 1.02 * motif.scale, clearance);
+    const n = Math.max(4, Math.min(9, motif.count + 1));
+    for (let i = 0; i < n; i += 1) {
+      const r = maxR * (1 - i / n);
+      const colour = i % 2 === 0 ? palette.deep : (i % 4 === 1 ? palette.accent : palette.ground);
+      out.push(fillC(colour), ...circlePath(cx, cy, r), fill());
+    }
+    if (corner) { zone.mode = 'bottom'; zone.bottomY = B + H * 0.2; }
+    else { zone.footField = palette.deep; zone.showPublisher = false; }
+  } else if (layout === 'rhythm') {
+    const regionTop = B + H * 0.5;
+    const n = lengths.length;
+    const gap = mm(1.4);
+    const total = lengths.reduce((a, b) => a + b, 0) || 1;
+    let y = 0;
+    const avail = regionTop - gap * n;
+    lengths.forEach((len, i) => {
+      const h = Math.max(mm(2.5), (len / total) * avail);
+      const w = (frontW + extendRight) * (0.5 + 0.5 * j(i));
+      out.push(fillC(i % 3 === 1 ? palette.accent : palette.deep), rectangle(X0, y, w, h), fill());
+      y += h + gap;
+    });
+    zone.showPublisher = false;
+  } else if (layout === 'grid') {
+    const cols = 4;
+    const cell = frontW / cols;
+    const startY = B + H * 0.47;
+    const rows = Math.ceil((totalH - startY) / cell);
+    const cells = [];
+    for (let rI = 0; rI < rows; rI += 1) for (let c = 0; c < cols; c += 1) cells.push([c, rI]);
+    const fills = Math.min(cells.length - 1, motif.count);
+    const order = cells.map((cellPos, i) => ({ cellPos, key: j(i * 7 + 3) + (i % 5) * 0.001 })).sort((a, b) => a.key - b.key);
+    order.slice(0, fills).forEach(({ cellPos: [c, rI] }, i) => {
+      const colour = i === 0 ? palette.deep : palette.accent;
+      const x = X0 + c * cell;
+      const yy = startY + rI * cell;
+      if (j(i + 11) < 0.35) out.push(fillC(colour), ...circlePath(x + cell / 2, yy + cell / 2, cell * 0.42), fill());
+      else out.push(fillC(colour), rectangle(x + cell * 0.08, yy + cell * 0.08, cell * 0.84, cell * 0.84), fill());
+    });
+    out.push(strokeC(palette.deep), setLineWidth(0.5));
+    for (let c = 0; c <= cols; c += 1) out.push(moveTo(X0 + c * cell, startY), lineTo(X0 + c * cell, totalH), stroke());
+    for (let rI = 0; rI <= rows; rI += 1) out.push(moveTo(X0, startY + rI * cell), lineTo(X1 + extendRight, startY + rI * cell), stroke());
+    zone.mode = 'bottom';
+    zone.bottomY = B + H * 0.24;
+  } else if (layout === 'band') {
+    const bandY = B + H * 0.55;
+    out.push(fillC(palette.deep), rectangle(X0, bandY, frontW + extendRight, totalH - bandY), fill());
+    const n = lengths.length;
+    const areaTop = B + H * 0.4;
+    const areaBottom = B + inset + mm(14);
+    const rowH = (areaTop - areaBottom) / n;
+    lengths.forEach((len, i) => {
+      const w = (frontW - 2 * inset) * 0.55 * (0.25 + 0.75 * len / maxLen);
+      out.push(fillC(i === lengths.indexOf(maxLen) ? palette.accent : palette.deep), rectangle(X1 - inset - w, areaTop - (i + 1) * rowH + rowH * 0.2, w, rowH * 0.6), fill());
+    });
+    zone.mode = 'band';
+    zone.field = palette.deep;
+    zone.bandY = bandY;
+  } else if (layout === 'letter' && glyphFont) {
+    const ch = Array.from(nfc(title).trim())[0] || '';
+    const size = frontW * 1.05;
+    const w = glyphFont.font.widthOfTextAtSize(ch, size);
+    const x = X1 + extendRight * 0.3 - w * 0.82;
+    const y = B + H * 0.02 - size * 0.06;
+    out.push(fillC(palette.accent), beginText(), setFontAndSize(glyphFont.key, size), setTextMatrix(1, 0, 0, 1, x, y), showText(glyphFont.font.encodeText(ch)), endText());
+    out.push(fillC(palette.deep), rectangle(X0 + inset, B + H * 0.62, mm(12), 1.4), fill());
+  } else if (layout === 'mark') {
+    const cx = X0 + frontW / 2;
+    const cy = B + H * 0.7;
+    out.push(fillC(palette.accent), ...circlePath(cx, cy, frontW * 0.032), fill());
+    out.push(fillC(palette.deep), rectangle(cx - 0.4, B + H * 0.58, 0.8, H * 0.08), fill());
+    zone.mode = 'center';
+    zone.align = 'center';
+  }
+  out.push(popGraphicsState());
+  zone.titleColour = titleColourOn(zone.field, palette);
+  zone.typeColour = typeOn(zone.field);
+  zone.footColour = typeOn(zone.footField);
+  return { shapes: out, zone };
+}
+
+function wrapText(font, text, size, maxW) {
+  const lines = [];
+  let cur = '';
+  String(text).split(/\s+/).filter(Boolean).forEach((word) => {
+    const next = cur ? `${cur} ${word}` : word;
+    if (font.widthOfTextAtSize(next, size) <= maxW || !cur) cur = next;
+    else { lines.push(cur); cur = word; }
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
 function drawTextOps(ops, key, font, size, x, y, text) {
   ops.push(setFontAndSize(key, size), setTextMatrix(1, 0, 0, 1, x, y), showText(font.encodeText(text)));
 }
@@ -150,6 +329,7 @@ export async function buildCoverPdf({
   frontImage = null,
   fonts,
   style = 'humanities',
+  genome = null,
   guide = false,
   generatedAt = new Date().toISOString()
 } = {}) {
@@ -233,11 +413,106 @@ export async function buildCoverPdf({
     warnings.push('앞표지 이미지를 사용했습니다 — 이미지에 제목·저자가 포함됐는지 확인하세요(자동 제목 미배치).');
   }
 
+  let art = null;
+  const inkK = [0, 0, 0, 100];
+  let backInk = inkK;
+  let spineInk = inkK;
+  if (!guide && genome) {
+    const pal = genome.palette;
+    const extendRightFront = geo.flapMm > 0 ? 0 : B;
+    // Ground colour runs to the bleed on every panel (around the artwork when an image is supplied).
+    if (frontImage?.bytes) {
+      shapes.push(fillC(pal.ground), rectangle(0, 0, frontX, totalH), fill());
+      const after = frontX + frontW + extendRightFront;
+      if (after < totalW) shapes.push(fillC(pal.ground), rectangle(after, 0, totalW - after, totalH), fill());
+    } else {
+      shapes.push(fillC(pal.ground), rectangle(0, 0, totalW, totalH), fill());
+      art = composeCoverArt(genome, {
+        frontX, frontW, extendRight: extendRightFront, B, H, totalH, inset: safety + mm(6),
+        title, glyphFont: { font: f.extraBold, key: keys.extraBold }
+      });
+      shapes.push(...art.shapes);
+    }
+    // A colour change exactly on a thin spine shows every millimetre of binding drift: below 6mm the
+    // spine keeps the ground colour.
+    const spP = panel('spine');
+    let spineField = pal.ground;
+    if (spP.width >= 6) {
+      spineField = pal.deep;
+      shapes.push(fillC(pal.deep), rectangle(mm(spP.x), 0, mm(spP.width), totalH), fill());
+    }
+    backInk = typeOn(pal.ground);
+    spineInk = typeOn(spineField);
+    report.genome = {
+      seed: genome.seed,
+      genre: genome.genre,
+      palette: pal.label,
+      layout: genome.layoutLabel,
+      axes: genome.axes,
+      excerpt: genome.excerpt,
+      maxTotalInk: genome.maxTotalInk,
+      spineColour: spP.width >= 6 ? 'deep' : 'ground (책등 6mm 미만)',
+      reasons: genome.reasons
+    };
+    if (genome.maxTotalInk > 280) warnings.push(`표지 색 총잉크량 ${genome.maxTotalInk}% — 280% 이하 권장`);
+    warnings.push(`표지 색은 화면과 인쇄 결과가 다릅니다 — 인쇄소 교정쇄(${pal.label})로 색을 확인하세요.`);
+    if (genome.excerpt) warnings.push('뒤표지 발췌문은 원고 문장 그대로입니다 — 저자 승인 후 출고하세요.');
+  }
+
   if (!guide) {
     ops.push(setFillingCmykColor(0, 0, 0, 1), beginText());
 
-    // Front typography (only when no artwork supplied) — layout follows the book's design profile.
-    if (!frontImage?.bytes) {
+    // Front typography from the cover genome: placement follows the composition's free zone.
+    if (!frontImage?.bytes && art) {
+      const z = art.zone;
+      const inset = safety + mm(6);
+      const left = frontX + inset;
+      const maxW = frontW - 2 * inset;
+      const g = genome.genre;
+      const T = g === 'practical' && useSans
+        ? { font: f.sansExtraBold, key: keys.sansExtraBold }
+        : (g === 'essay' || g === 'poetry') ? { font: f.bold, key: keys.bold } : { font: f.extraBold, key: keys.extraBold };
+      const sizeBy = {
+        essay: Math.min(25, frontW / 8.2),
+        fiction: Math.min(34, frontW / 6.2),
+        humanities: Math.min(30, frontW / 7),
+        practical: Math.min(32, frontW / 6.4),
+        poetry: Math.min(18, frontW / 10.5)
+      };
+      const size = sizeBy[g] || Math.min(28, frontW / 7.2);
+      const lines = wrapText(T.font, safeTitle, size, maxW * (z.align === 'center' ? 0.8 : 0.92));
+      const lead = size * 1.3;
+      const xFor = (font, text, s) => (z.align === 'center' ? frontX + (frontW - font.widthOfTextAtSize(text, s)) / 2 : left);
+      let y;
+      if (z.mode === 'top') y = B + H - inset - size;
+      else if (z.mode === 'bottom') y = (z.bottomY || B + H * 0.3) + (lines.length - 1) * lead;
+      else if (z.mode === 'band') y = z.bandY + inset + (lines.length - 1) * lead;
+      else y = B + H * 0.5 + ((lines.length - 1) * lead) / 2;
+      ops.push(fillC(z.titleColour));
+      lines.forEach((line) => { drawTextOps(ops, T.key, T.font, size, xFor(T.font, line, size), y, line); y -= lead; });
+      const sub = subtitle ? nfc(subtitle) : '';
+      const a = author ? nfc(author) : '';
+      const p = publisher ? nfc(publisher) : '';
+      if (z.mode === 'band') {
+        // Title sits inside the colour band; subtitle and author drop below it onto the ground.
+        y = z.bandY - mm(11);
+        ops.push(fillC(typeOn(genome.palette.ground)));
+      } else ops.push(fillC(z.typeColour));
+      if (sub) {
+        const ss = Math.max(9.5, size * 0.42);
+        drawTextOps(ops, keys.regular, f.regular, ss, xFor(f.regular, sub, ss), y - ss * 0.2, sub);
+        y -= ss * 1.9;
+      }
+      if (a) {
+        const as = Math.min(12, Math.max(10, size * 0.46));
+        drawTextOps(ops, keys.regular, f.regular, as, xFor(f.regular, a, as), y - mm(3), a);
+      }
+      if (p && z.showPublisher) {
+        ops.push(fillC(z.footColour));
+        drawTextOps(ops, keys.bold, f.bold, 9, xFor(f.bold, p, 9), B + inset, p);
+      }
+      ops.push(fillC(inkK));
+    } else if (!frontImage?.bytes) {
       const wrap = (font, text, size, maxW) => {
         const lines = [];
         let cur = '';
@@ -316,6 +591,7 @@ export async function buildCoverPdf({
     const sp = panel('spine');
     const spX = mm(sp.x);
     const spW = mm(sp.width);
+    ops.push(fillC(spineInk));
     if (sp.width >= 7) {
       // Upright stacked Hangul (세로쓰기), title then author, publisher at the foot.
       const size = Math.min(11, spW * 0.58);
@@ -356,10 +632,32 @@ export async function buildCoverPdf({
       warnings.push(`책등 ${sp.width}mm — 4mm 미만이라 책등 글자를 넣지 않았습니다.`);
     }
 
-    // Back: ISBN + price + EAN-13
+    // Back: excerpt (genome) + ISBN + price + EAN-13
     const back = panel('back');
     const backX = mm(back.x);
     const backW = mm(back.width);
+    if (genome?.excerpt) {
+      const inset = safety + mm(6);
+      const es = Math.min(13, backW / 21);
+      const lead = es * 1.8;
+      const ex0 = backX + inset;
+      let ey = B + H - inset - mm(16);
+      shapes.push(fillC(genome.palette.accent), rectangle(ex0, ey + es * 2.1, mm(9), 1.4), fill());
+      ops.push(fillC(backInk));
+      wrapText(f.regular, nfc(genome.excerpt), es, (backW - 2 * inset) * 0.86).forEach((line) => {
+        drawTextOps(ops, keys.regular, f.regular, es, ex0, ey, line);
+        ey -= lead;
+      });
+      drawTextOps(ops, keys.regular, f.regular, 8.5, ex0, ey - mm(3), `— 『${safeTitle}』 중에서`);
+    }
+    if (genome) {
+      ops.push(fillC(backInk));
+      const fF = panel('flapFront');
+      if (fF && author) drawTextOps(ops, keys.bold, f.bold, 10.5, mm(fF.x) + safety + mm(6), B + H - safety - mm(20), nfc(author));
+      const fB = panel('flapBack');
+      if (fB && publisher) drawTextOps(ops, keys.bold, f.bold, 9, mm(fB.x) + safety + mm(6), B + safety + mm(6), nfc(publisher));
+    }
+    ops.push(fillC(inkK));
     const digits = String(isbn || '').replace(/[^0-9]/g, '');
     if (digits) {
       try {
@@ -386,12 +684,17 @@ export async function buildCoverPdf({
         const lw2 = f.regular.widthOfTextAtSize(hr[2], textSize);
         drawTextOps(ops, keys.regular, f.regular, textSize, x0 + 50 * moduleW + (42 * moduleW - lw2) / 2, y0 - guardExtra - textSize * 0.2, hr[2]);
         if (price) {
-          const pt = `값 ${String(price).replace(/[^0-9,]/g, '')}원`;
+          const pt = `값 ${formatPrice(price)}원`;
           const pw = f.bold.widthOfTextAtSize(pt, 9);
           drawTextOps(ops, keys.bold, f.bold, 9, x0 + codeW - pw, y0 + barH + mm(7), pt);
         }
         // White quiet-zone plate so artwork never runs into the code, then bars in K100.
-        shapes.push(setFillingCmykColor(0, 0, 0, 0), rectangle(x0 - quietLeft, y0 - guardExtra - mm(4), blockW, barH + guardExtra + mm(4)), fill());
+        // On a coloured ground the plate also carries the ISBN label and price.
+        const plateTop = genome ? mm(12) : 0;
+        const labelX = x0 + (codeW - lw) / 2;
+        const plateX = genome ? Math.min(x0 - quietLeft, labelX - mm(1.5)) : x0 - quietLeft;
+        const plateR = genome ? Math.max(x0 - quietLeft + blockW, labelX + lw + mm(1.5)) : x0 - quietLeft + blockW;
+        shapes.push(setFillingCmykColor(0, 0, 0, 0), rectangle(plateX, y0 - guardExtra - mm(4), plateR - plateX, barH + guardExtra + mm(4) + plateTop), fill());
         shapes.push(setFillingCmykColor(0, 0, 0, 1));
         const guards = new Set([0, 1, 2, 45, 46, 47, 48, 49, 92, 93, 94]);
         barRuns(bits).forEach(([start, len]) => {
@@ -416,9 +719,11 @@ export async function buildCoverPdf({
     } else {
       warnings.push('ISBN이 없어 뒤표지 바코드를 넣지 않았습니다 — 발급 후 재생성하세요.');
       if (price) {
-        const pt = `값 ${String(price).replace(/[^0-9,]/g, '')}원`;
+        const pt = `값 ${formatPrice(price)}원`;
         const pw = f.bold.widthOfTextAtSize(pt, 9);
+        ops.push(fillC(backInk));
         drawTextOps(ops, keys.bold, f.bold, 9, backX + backW - mm(10) - pw, B + mm(14), pt);
+        ops.push(fillC(inkK));
       }
     }
     ops.push(endText());
@@ -466,7 +771,7 @@ export async function buildCoverPdf({
   }
 
   // glyph coverage for cover typography
-  Array.from(`${safeTitle}${author}${publisher}${subtitle}`).forEach((ch) => {
+  Array.from(`${safeTitle}${author}${publisher}${subtitle}${genome?.excerpt || ''}`).forEach((ch) => {
     if (/\s/.test(ch)) return;
     if (!glyph.hasGlyphForCodePoint(ch.codePointAt(0))) blockers.push(`표지 서체에 없는 글자: ${ch}`);
   });
