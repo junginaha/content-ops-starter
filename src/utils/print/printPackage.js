@@ -3,6 +3,7 @@ import { createStoredZip } from '../epubBuilder';
 import { validateIsbn13 } from '../preflight';
 import { buildInteriorPdf } from './interiorPdf';
 import { buildCoverPdf, calculateSpineMm } from './coverPdf';
+import { buildDesignedCoverPdf } from './coverDesigned';
 import { inspectGeneratedPdf, evaluatePrintPackage } from './printPreflight';
 import { DEFAULT_PRINT_OPTIONS } from './presets';
 import { analyzeForDesign } from './designAnalysis';
@@ -133,11 +134,10 @@ function orderSheet({ title, author, publisher, isbn, interior, cover, options, 
 }
 
 /**
- * Build the complete print package.
- * @param {object} input
- * @param {{regular:Uint8Array,bold:Uint8Array,extraBold:Uint8Array,license?:Uint8Array}} input.fonts
+ * Stage 1 — analyse the manuscript, choose the design profile and typeset the interior.
+ * Split out so a UI can re-run only the cover (stage 2) and checks (stage 3) while editing.
  */
-export async function buildPrintPackage({
+export async function prepareInterior({
   title = '',
   author = '',
   isbn = '',
@@ -145,7 +145,6 @@ export async function buildPrintPackage({
   printSpec = {},
   options = {},
   fonts,
-  frontImage = null,
   generatedAt = new Date().toISOString()
 } = {}) {
   const opts = { ...DEFAULT_PRINT_OPTIONS, ...options };
@@ -190,6 +189,15 @@ export async function buildPrintPackage({
     coverAllowanceMm: opts.coverAllowanceMm
   });
 
+  return { title, author, isbn, isbnCheck, isbnText, opts, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, analysis, designProfile, designSource, interior, spineMm, generatedAt };
+}
+
+/**
+ * Stage 2 — wrap cover + designer guide. `coverDesign` (optional) switches the front/back/spine
+ * artwork to a colour template (see coverDesigned.js); without it the genre profile cover is used.
+ */
+export async function prepareCover(ctx, { fonts, frontImage = null, coverDesign = null } = {}) {
+  const { title, author, isbnText, opts, trimWidthMm, trimHeightMm, bleedMm, spineMm, designProfile, generatedAt } = ctx;
   let image = null;
   if (frontImage?.bytes) {
     const sniff = sniffImage(frontImage.bytes);
@@ -214,8 +222,16 @@ export async function buildPrintPackage({
     style: DESIGN_PROFILES[designProfile].cover,
     generatedAt
   };
-  const cover = await buildCoverPdf(coverInput);
+  const cover = coverDesign
+    ? await buildDesignedCoverPdf({ ...coverInput, design: coverDesign })
+    : await buildCoverPdf(coverInput);
   const coverGuide = await buildCoverPdf({ ...coverInput, guide: true });
+  return { cover, coverGuide };
+}
+
+/** Stage 3 — reopen both PDFs, evaluate, write the order sheet / report / manifest and zip. */
+export async function assemblePrintPackage(ctx, { cover, coverGuide }, fonts) {
+  const { title, author, isbnCheck, isbnText, opts, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, analysis, designSource, interior, generatedAt } = ctx;
 
   const interiorCheck = await inspectGeneratedPdf(interior.bytes, { trimWidthMm, trimHeightMm, bleedMm });
   const coverCheck = await inspectGeneratedPdf(cover.bytes, {
@@ -258,6 +274,7 @@ export async function buildPrintPackage({
       barcode: cover.report.barcode,
       image: cover.report.image,
       spineText: cover.report.spineText,
+      ...(cover.report.design ? { design: cover.report.design } : {}),
       pdfCheck: coverCheck
     },
     checks: evaluation.checks,
@@ -267,19 +284,7 @@ export async function buildPrintPackage({
     options: opts
   };
 
-  const payload = [
-    { name: interiorName, data: interior.bytes },
-    { name: coverName, data: cover.bytes },
-    { name: guideName, data: coverGuide.bytes },
-    { name: 'print/인쇄지시서.txt', data: '' },
-    { name: 'reports/print_preflight.json', data: JSON.stringify(report, null, 2) },
-    { name: 'licenses/OFL-NanumMyeongjo.txt', data: fonts.license || 'SIL Open Font License 1.1 — Nanum Myeongjo' },
-    ...(interior.sansUsed ? [{ name: 'licenses/OFL-NanumGothic.txt', data: fonts.sansLicense || 'SIL Open Font License 1.1 — Nanum Gothic' }] : []),
-    ...(interior.layout.fonts.fallback
-      ? [{ name: 'licenses/OFL-ooOSFallbackSerif.txt', data: fonts.fallbackLicense || 'SIL Open Font License 1.1 — ooOS Fallback Serif (subset of Noto Serif KR)' }]
-      : [])
-  ];
-  payload[3].data = orderSheet({
+  const sheet = orderSheet({
     title,
     author,
     publisher: opts.publisher,
@@ -290,6 +295,19 @@ export async function buildPrintPackage({
     files: [interiorName, coverName, guideName].map((n) => n.replace(/^print\//, '')),
     generatedAt
   });
+
+  const payload = [
+    { name: interiorName, data: interior.bytes },
+    { name: coverName, data: cover.bytes },
+    { name: guideName, data: coverGuide.bytes },
+    { name: 'print/인쇄지시서.txt', data: sheet },
+    { name: 'reports/print_preflight.json', data: JSON.stringify(report, null, 2) },
+    { name: 'licenses/OFL-NanumMyeongjo.txt', data: fonts.license || 'SIL Open Font License 1.1 — Nanum Myeongjo' },
+    ...(interior.sansUsed || cover.report.sansUsed ? [{ name: 'licenses/OFL-NanumGothic.txt', data: fonts.sansLicense || 'SIL Open Font License 1.1 — Nanum Gothic' }] : []),
+    ...(interior.layout.fonts.fallback
+      ? [{ name: 'licenses/OFL-ooOSFallbackSerif.txt', data: fonts.fallbackLicense || 'SIL Open Font License 1.1 — ooOS Fallback Serif (subset of Noto Serif KR)' }]
+      : [])
+  ];
 
   const manifestFiles = [];
   for (const file of payload) {
@@ -305,8 +323,24 @@ export async function buildPrintPackage({
     files: files.map((f) => f.name),
     report,
     manifest,
+    orderSheet: sheet,
     interiorBytes: interior.bytes,
     interiorFileName: interiorName.replace(/^print\//, ''),
-    coverBytes: cover.bytes
+    coverBytes: cover.bytes,
+    coverFileName: coverName.replace(/^print\//, ''),
+    coverGuideBytes: coverGuide.bytes,
+    coverGuideFileName: guideName.replace(/^print\//, '')
   };
+}
+
+/**
+ * Build the complete print package.
+ * @param {object} input
+ * @param {{regular:Uint8Array,bold:Uint8Array,extraBold:Uint8Array,license?:Uint8Array}} input.fonts
+ * @param {object} [input.coverDesign] optional colour cover template (coverDesigned.js)
+ */
+export async function buildPrintPackage(input = {}) {
+  const ctx = await prepareInterior(input);
+  const parts = await prepareCover(ctx, { fonts: input.fonts, frontImage: input.frontImage || null, coverDesign: input.coverDesign || null });
+  return assemblePrintPackage(ctx, parts, input.fonts);
 }
