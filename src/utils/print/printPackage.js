@@ -3,6 +3,7 @@ import { createStoredZip } from '../epubBuilder';
 import { validateIsbn13 } from '../preflight';
 import { buildInteriorPdf } from './interiorPdf';
 import { buildCoverPdf, calculateSpineMm } from './coverPdf';
+import { deriveCoverGenome } from './coverGenome';
 import { inspectGeneratedPdf, evaluatePrintPackage } from './printPreflight';
 import { DEFAULT_PRINT_OPTIONS } from './presets';
 import { analyzeForDesign } from './designAnalysis';
@@ -212,6 +213,14 @@ export async function buildPrintPackage({
     frontImage: image,
     fonts,
     style: DESIGN_PROFILES[designProfile].cover,
+    genome: opts.coverGenome === false ? null : deriveCoverGenome({
+      manuscript,
+      title,
+      analysis,
+      genre: designProfile,
+      layout: opts.coverLayout,
+      palette: opts.coverPalette
+    }),
     generatedAt
   };
   const cover = await buildCoverPdf(coverInput);
@@ -258,6 +267,7 @@ export async function buildPrintPackage({
       barcode: cover.report.barcode,
       image: cover.report.image,
       spineText: cover.report.spineText,
+      design: cover.report.genome || null,
       pdfCheck: coverCheck
     },
     checks: evaluation.checks,
