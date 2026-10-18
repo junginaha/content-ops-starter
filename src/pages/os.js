@@ -17,7 +17,7 @@ import {
 import { evaluateReleaseReadiness } from '../utils/preflight';
 import { evaluatePrintPdf, inspectPdfFile } from '../utils/pdfPreflight';
 import { createPrintJobTicket } from '../utils/printJobTicket';
-import { designReferences, recommendDesignProfiles } from '../data/designReferences';
+import { recommendDesignProfiles } from '../data/designReferences';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -983,20 +983,15 @@ export default function OneDayBooksOS() {
               <div className="design-recommendation">
                 <div className="design-recommendation-head">
                   <strong>편집디자인 추천</strong>
-                  <span>검증 레퍼런스 기반 · 복제 금지 · 규칙만 적용</span>
+                  <span>프로젝트 맞춤 추천 · 디자인 규칙 적용</span>
                 </div>
                 <div className="design-profile-grid">
                   {designProfiles.map((profile) => (
                     <div className="design-profile-card" key={profile.id}>
-                      <div className="design-profile-id">{profile.id}</div>
+                      
                       <strong>{profile.label}</strong>
                       <p>{profile.purpose}</p>
                       <small>{profile.rules.join(' · ')}</small>
-                      {profile.references?.[0] && (
-                        <a href={profile.references[0].officialUrl} target="_blank" rel="noreferrer">
-                          {profile.references[0].title} ↗
-                        </a>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -1038,50 +1033,6 @@ export default function OneDayBooksOS() {
               </div>
             </div>
           )}
-        </section>
-
-        <section className="panel design-library-panel">
-          <div className="section-head">
-            <div>
-              <div className="kicker">DESIGN SYSTEM</div>
-              <h2>출판 편집디자인 레퍼런스</h2>
-            </div>
-            <span className="status-pill ready">{designReferences.length} verified</span>
-          </div>
-
-          <p className="muted">
-            수상·공식 선정·전문 디자인 평가가 확인된 실제 출간물만 저장합니다.
-            레퍼런스는 복제하지 않고 여백 · 그리드 · 본문 폭 · 페이지 리듬 같은 재사용 규칙으로 변환합니다.
-          </p>
-
-          <div className="reference-grid">
-            {designReferences.map((ref) => (
-              <article className="reference-card" key={ref.id}>
-                <div className="reference-meta">{ref.year} · {ref.module}</div>
-                <h3>{ref.title}</h3>
-                <p>{ref.publisher} · {ref.designer}</p>
-                <small>{ref.evidence}</small>
-                <div className="reference-tags">
-                  {ref.tags.map((tag) => <span key={tag}>#{tag}</span>)}
-                </div>
-                <div className="reference-rights">
-                  Layout {ref.rights.layout} · Font {ref.rights.font} · Images {ref.rights.images}
-                </div>
-                <div className="reference-links">
-                  <a href={ref.officialUrl} target="_blank" rel="noreferrer">근거 ↗</a>
-                  {ref.previewUrl && (
-                    <a href={ref.previewUrl} target="_blank" rel="noreferrer">내지/미리보기 ↗</a>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="human-boundary">
-            <strong>권리 원칙:</strong>
-            공개 미리보기는 열람용입니다. 색상·일반 레이아웃은 ADAPT, 서체는 라이선스 확인,
-            사진·삽화·본문은 별도 권리 확인 전 재사용하지 않습니다.
-          </div>
         </section>
 
         <section className="panel ai-panel">
