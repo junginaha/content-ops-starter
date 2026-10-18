@@ -158,6 +158,7 @@ export default function OneDayBooksOS() {
   const [snapshots, setSnapshots] = useState([]);
   const [snapshotError, setSnapshotError] = useState('');
   const [snapshotSaving, setSnapshotSaving] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const autoRestoreRef = useRef(false);
 
   useEffect(() => {
@@ -592,6 +593,15 @@ export default function OneDayBooksOS() {
     }
   }
 
+  async function buildBookNow() {
+    if (!manuscript) return;
+    if (/종이책/.test(project.objective || '')) {
+      await exportPrintPackage();
+    } else {
+      await exportReleaseBundle();
+    }
+  }
+
   async function exportPrintPackage() {
     if (!manuscript) return;
     setPrintPkgBuilding(true);
@@ -870,24 +880,26 @@ export default function OneDayBooksOS() {
           <h1>Publishing Workspace</h1>
           <p className="hero-copy">원고 · 교정 · 디자인 · 검수 · 출간</p>
           <div className="scope-note">
-            제작 기준 · 60분 | 외부 공정 별도
+            원고를 올리고 버튼 한 번이면 됩니다.
           </div>
         </header>
 
-        <section className="metrics">
-          <Metric label="제작 시간" value={fmtDuration(internalElapsed)} emphasis={withinTarget} />
-          <Metric label="휴먼터치 시간" value={`${project.humanMinutes}분`} />
-          <Metric label="휴먼터치" value={`${project.interventionCount}회`} />
-          <Metric label="검수 통과" value={`${qaCount}/${QA_GATES.length}`} emphasis={qaCount === QA_GATES.length} />
-        </section>
+        {showAdvanced && (
+          <section className="metrics">
+            <Metric label="제작 시간" value={fmtDuration(internalElapsed)} emphasis={withinTarget} />
+            <Metric label="휴먼터치 시간" value={`${project.humanMinutes}분`} />
+            <Metric label="휴먼터치" value={`${project.interventionCount}회`} />
+            <Metric label="검수 통과" value={`${qaCount}/${QA_GATES.length}`} emphasis={qaCount === QA_GATES.length} />
+          </section>
+        )}
 
         <section className="panel">
           <div className="section-head">
             <div>
               <div className="kicker">01 · INPUT</div>
-              <h2>프로젝트 접수</h2>
+              <h2>원고 올리기</h2>
             </div>
-            <button className="ghost" onClick={resetProject}>초기화</button>
+            {showAdvanced && <button className="ghost" onClick={resetProject}>초기화</button>}
           </div>
 
           <div className="form-grid">
@@ -942,12 +954,54 @@ export default function OneDayBooksOS() {
           )}
           {fileError && <div className="error-box">{fileError}</div>}
 
-          <button className="primary" onClick={startProject} disabled={!!project.startedAt}>
-            {project.startedAt ? '측정 중' : '제작 타이머 시작'}
+          {showAdvanced && (
+            <button className="secondary" onClick={startProject} disabled={!!project.startedAt}>
+              {project.startedAt ? '제작 시간 측정 중' : '제작 시간 측정'}
+            </button>
+          )}
+        </section>
+
+        <section className="panel quick-build-panel">
+          <div className="quick-build-copy">
+            <div className="kicker">02 · MAKE</div>
+            <h2>{manuscript ? '책을 만들 준비가 됐습니다' : '원고를 올려주세요'}</h2>
+            <p className="muted">
+              {manuscript
+                ? '복잡한 설정 없이 원고 분석·편집디자인·출판 파일 생성을 한 번에 진행합니다.'
+                : 'DOCX, TXT, MD 원고를 올리면 자동으로 분석합니다.'}
+            </p>
+          </div>
+          <button
+            className="primary quick-build-button"
+            onClick={buildBookNow}
+            disabled={!manuscript || printPkgBuilding || releaseBuilding}
+          >
+            {printPkgBuilding || releaseBuilding
+              ? '책 만드는 중…'
+              : /종이책/.test(project.objective || '') ? '인쇄용 책 만들기' : '전자책 만들기'}
+          </button>
+
+          {(printPkg || releaseResult) && (
+            <div className="quick-result">
+              <strong>완료</strong>
+              <span>
+                {printPkg
+                  ? `${printPkg.fileName} · ${printPkg.files.length}개 파일`
+                  : `출간 패키지 ZIP · ${releaseResult.files.length}개 파일`}
+              </span>
+            </div>
+          )}
+          {(printPkgError || releaseError) && (
+            <div className="error-box">{printPkgError || releaseError}</div>
+          )}
+
+          <button className="ghost advanced-toggle" onClick={() => setShowAdvanced((value) => !value)}>
+            {showAdvanced ? '세부 설정 닫기' : '세부 설정 보기'}
           </button>
         </section>
 
-
+        {showAdvanced && (
+          <>
         <section className="panel engine-panel">
           <div className="section-head">
             <div>
@@ -1696,6 +1750,9 @@ export default function OneDayBooksOS() {
           </div>
         </section>
 
+          </>
+        )}
+
         <footer>
           <strong>OneDayBooks</strong>
           <span>Publishing Operations</span>
@@ -1756,6 +1813,36 @@ export default function OneDayBooksOS() {
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 10px;
           margin: 20px 0;
+        }
+        .quick-build-panel {
+          text-align: center;
+          padding: 30px 22px;
+        }
+        .quick-build-copy {
+          max-width: 620px;
+          margin: 0 auto 20px;
+        }
+        .quick-build-button {
+          width: min(100%, 420px);
+          min-height: 58px;
+          font-size: 18px;
+          font-weight: 800;
+        }
+        .quick-result {
+          width: min(100%, 620px);
+          margin: 18px auto 0;
+          padding: 14px 16px;
+          border: 1px solid #9eaa92;
+          border-radius: 12px;
+          background: rgba(245,255,242,.72);
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .advanced-toggle {
+          display: block;
+          margin: 18px auto 0;
         }
         .panel {
           background: rgba(255,255,255,.55);
