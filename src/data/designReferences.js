@@ -378,6 +378,88 @@ export const designReferences = [
     layoutNotes: 'Six nested small-format booklets, seven short scholarly essays, three visual essays, two image sections; English left-to-right and Arabic right-to-left; exact page count, format, leading and grid not published',
     editorialIdea: 'Group short essays and visual sections into six coherent chapters; adapt only modular organization, not costly or intentionally degrading materials',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'library-of-artistic-print-on-demand',
+    title: 'Library of Artistic Print on Demand: Post-Digital Publishing in Times of Platform Capitalism',
+    publisher: 'Spector Books',
+    editor: 'Annette Gilbert, Andreas Bülhoff',
+    designer: 'Lyosha Kritsouk / Spector Books',
+    year: 2025,
+    dimensionsMm: [220, 290],
+    pageCount: 720,
+    module: 'MULTI_COLUMN_REFERENCE_GRID',
+    tags: ['문화예술', '그리드형', '내지', '출판', 'POD'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst (design award)',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/library-of-artistic-print-on-demand/?view=grid&year=2026',
+    publisherUrl: 'https://www.spectorbooks.com/book/library-of-artistic-print-on-demand',
+    galleryUrl: 'https://www.graphic-design-books.com/en/products/library-of-artistic-print-on-demand',
+    previewUrl: 'https://www.graphic-design-books.com/cdn/shop/files/5_51dbc1ea-7bcc-43ac-88c0-d137634bb0d2.jpg?v=1763614976&width=1920',
+    previewStatus: 'Public JPG of actual interior spread; not an editable source or reuse license',
+    typefaces: [
+      { name: 'Akzidenz Grotesk Book Pro', status: 'CHECK' },
+      { name: 'GT Alpina Regular', status: 'CHECK', source: 'https://cdn.grillitype.com/typeface/gt-alpina' },
+      { name: 'GT Alpina Typewriter', status: 'CHECK', source: 'https://cdn.grillitype.com/typeface/gt-alpina' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE' }
+    ],
+    palette: 'White paper, black text and rules, prominent yellow titles and chapter gradients',
+    layoutNotes: 'Multi-column bibliographic tables and image cells with consistent horizontal rules, oversized yellow names overlaying data hierarchy, essay sections embedded in same grid; exact body width and leading not disclosed',
+    editorialIdea: 'For ooOS, reuse metadata-driven content roles: title, source, summary, visual evidence and rights status as fixed columns, with generous chapter opener',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'bruchstuecke-leerstellen-blinde-flecken',
+    title: 'Bruchstücke, Leerstellen, Blinde Flecken (HGB Magazine #3)',
+    publisher: 'Hochschule für Grafik und Buchkunst Leipzig',
+    editor: 'Julia Blume, Nanne Buurman, Julia Kurz',
+    designer: 'Emil Kowalczyk, Merle Petsch',
+    year: 2026,
+    dimensionsMm: [238, 322],
+    pageCount: 232,
+    pageCountNote: 'Stiftung Buchkunst records 232 pages and 238 × 322 mm; publisher describes 228 pages and 235 × 325 mm',
+    module: 'MARGIN_NOTE_GRID',
+    tags: ['문화예술', '그리드형', '회지', '내지', '주석'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst (design award)',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/bruchstuecke-leerstellen-blinde-flecken/?view=grid&year=2026',
+    publisherUrl: 'https://www.hgb-leipzig.de/hochschule/presse/hgbmagazine/',
+    galleryUrl: 'https://www.hgb-leipzig.de/hochschule/presse/hgbmagazine/',
+    previewUrl: null,
+    previewStatus: 'Publisher cover image and jury layout description verified; directly downloadable interior JPG/PDF not verified',
+    typefaces: [
+      { name: 'ReformGrotesk', status: 'CHECK', source: 'https://forgotten-shapes.com/' },
+      { name: 'Sabon', status: 'CHECK', source: 'https://www.myfonts.com/collections/sabon-font-monotype-imaging' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE' }
+    ],
+    palette: 'Black recurring orientation bars, white and grayscale archival material, occasional restrained color',
+    layoutNotes: 'Changing orientation, dense archive image layers and articles; black edge bars anchor navigation, fine footnotes and concealed flap contents; numeric body width, leading and margins not published',
+    editorialIdea: 'Use a stable black navigation rail and dedicated footnote grid to reconcile archival fragments with editorial interpretation',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'the-tinklers-charts-and-stories',
+    title: 'The Tinklers Charts and Stories',
+    publisher: 'Rollo Press',
+    designer: 'Olivier Lebrun, Urs Lehni',
+    editor: 'Olivier Lebrun, Urs Lehni',
+    year: 2025,
+    dimensionsMm: [240, 320],
+    pageCount: 216,
+    module: 'REPEATABLE_CARD',
+    tags: ['짧은글', '문화예술', '글이미지50_50', '이미지인터루드', '내지'],
+    evidence: 'The Most Beautiful Swiss Books 2025, announced 13 May 2026 — Swiss Federal Office of Culture',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/the-tinklers-en',
+    galleryUrl: 'https://librairiesanstitre.com/en/products/the-tinklers-charts-and-stories',
+    previewUrl: 'https://librairiesanstitre.com/cdn/shop/files/636bc9c0-4148-4ce7-b2f9-07b859b91e39.jpg?v=1778689068&width=1445',
+    previewStatus: 'Public JPG of actual interior spread; not an editable source or reuse license',
+    typefaces: [
+      { name: 'Original facsimile handwriting/typewriter lettering', status: 'CHECK' },
+      { name: 'Original modern typesetting font unidentified', status: 'CHECK' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE' }
+    ],
+    palette: 'White softcover, colored papers in alternating sections, monochrome hand-drawn illustrations and black type',
+    layoutNotes: 'Five source publications unified in size and production, separated by minimal title pages and changing colored sheets; hand-written illustrated narratives alternate with typed blocks; exact margins and leading not published',
+    editorialIdea: 'Combine five small text-and-illustration sequences using shared title-page rules and controlled paper/color section rhythm',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
