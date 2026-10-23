@@ -460,6 +460,62 @@ export const designReferences = [
     layoutNotes: 'Five source publications unified in size and production, separated by minimal title pages and changing colored sheets; hand-written illustrated narratives alternate with typed blocks; exact margins and leading not published',
     editorialIdea: 'Combine five small text-and-illustration sequences using shared title-page rules and controlled paper/color section rhythm',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'how-to-do-things-with-valie-export',
+    title: 'How to Do Things with VALIE EXPORT',
+    publisher: 'Spector Books',
+    designer: 'Malin Gewinner',
+    year: 2025,
+    module: 'MULTI_COLUMN_REFERENCE_GRID',
+    tags: ['문화예술', '글이미지50_50', '그리드형', '이미지인터루드', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/how-to-do-things-with-valie-export/?view=list&year=2026',
+    galleryUrl: 'https://www.spectorbooks.com/de/buch/how-to-do-things-with-valie-export-de',
+    previewUrl: 'https://www.spectorbooks.com/f/bookgallery/89b1293a84.jpg',
+    previewStatus: 'Publisher JPG of actual spread; public preview only, not editable source or reuse license',
+    dimensionsMm: [227, 276],
+    pageCount: 240,
+    isbn: '978-3-95905-890-2',
+    specificationNote: 'Award source lists thread-sewn hardcover; publisher lists softcover. Verify actual edition before manufacturing.',
+    typefaces: [
+      { name: 'EK Modena Heavy Italic', status: 'CHECK', source: 'https://erkinkaramemet.com/' },
+      { name: 'Intra Regular Dots', status: 'CHECK' },
+      { name: 'Periodica Light/Regular/Italic', status: 'CHECK' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', source: 'https://notofonts.github.io/noto-docs/website/use/' }
+    ],
+    palette: 'Black and white typography, black-and-white film stills, sparing color images',
+    layoutNotes: 'Dense multi-column serif body; film-strip-like rounded image corners, large typographic chapter openers, unusual folio system; exact margins and leading unpublished',
+    editorialIdea: 'Use repeatable title–essay–image–caption page roles in interview or culture books; avoid copying dense typesetting into small-format reading pages',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'wald-ohne-baeume',
+    title: 'Wald ohne Bäume',
+    publisher: 'Carlsen Verlag',
+    designer: 'Hanna Harms',
+    year: 2026,
+    module: 'TECHNICAL_ILLUSTRATION_GRID',
+    tags: ['문화예술', '짧은글', '여백형', '그리드형', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/wald-ohne-baeume/?view=list&year=2026',
+    galleryUrl: 'https://www.carlsen.de/hardcover/wald-ohne-baume/978-3-551-80448-8',
+    previewUrl: 'https://www.carlsen.de/sites/default/files/styles/s_265_auto/public/produkt/innenansicht/wald-ohne-baume_6.jpg?itok=fHOe2RAF',
+    previewStatus: 'Small publisher JPG of actual spread; public preview only, not editable source or reuse license',
+    dimensionsMm: [173, 245],
+    pageCount: 192,
+    isbn: '978-3-551-80448-8',
+    specificationNote: 'Publisher 173×245mm; award page rounds to 170×240mm. Confirm physical trim before production.',
+    typefaces: [
+      { name: 'Futura Std', status: 'CHECK' },
+      { name: 'Gotham Book', status: 'CHECK' },
+      { name: 'Hanna Harms hand lettering', status: 'CHECK' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', source: 'https://notofonts.github.io/noto-docs/website/use/' }
+    ],
+    palette: 'Warm white, black, gray, muted green and orange; color principles adaptable',
+    layoutNotes: 'Short explanatory text near diagrams, large negative space, varied widths according to graphic roles; clear infographics and illustration-based page rhythm; exact leading and margins unpublished',
+    editorialIdea: 'Turn short nonfiction into a coherent sequence of thesis, concise explanation and informative diagram; never inflate page count with decorative filler',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
