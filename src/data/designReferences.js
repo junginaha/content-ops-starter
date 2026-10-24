@@ -516,6 +516,88 @@ export const designReferences = [
     layoutNotes: 'Short explanatory text near diagrams, large negative space, varied widths according to graphic roles; clear infographics and illustration-based page rhythm; exact leading and margins unpublished',
     editorialIdea: 'Turn short nonfiction into a coherent sequence of thesis, concise explanation and informative diagram; never inflate page count with decorative filler',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'taxi-nach-leipzig',
+    title: 'Taxi nach Leipzig: Die Stadt als Spielfeld',
+    author: 'Gunnar Volkmann',
+    publisher: 'M BOOKS',
+    designer: 'Copa-Ipa',
+    photographer: 'Christian Rothe',
+    year: 2025,
+    dimensionsMm: [120, 180],
+    pageCount: 416,
+    module: 'DENSITY_SWITCH',
+    tags: ['에세이', '문화예술', '그리드형', '이미지인터루드', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst, official jury report',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/taxi-nach-leipzig/?view=list&year=2026',
+    galleryUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/taxi-nach-leipzig/?view=list&year=2026',
+    previewUrl: null,
+    previewStatus: 'Official award page and cover listing verified; individual interior JPG/PDF direct link not verified; no editable source',
+    typefaces: [
+      { name: 'Rosart', status: 'CHECK', source: 'https://camelot-typefaces.com/rosart' },
+      { name: 'Monument Grotesk', status: 'CHECK', source: 'https://abcdinamo.com/typefaces/monument-grotesk' },
+      { name: 'Noto Serif KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk' }
+    ],
+    palette: 'Black-and-white photographs and body text, sparing red chapter separators and emphasis; general color system ADAPT',
+    layoutNotes: 'Compact 120x180mm portrait, carefully set text, repeated red chapter separators, two typefaces, alternating monochrome images including full spreads; exact margins and leading unpublished',
+    editorialIdea: 'For long essay or travel nonfiction, retain one reading grid, insert monochrome images at measured intervals, and use restrained chapter color as navigational pause',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'chien-fou-selected-writings',
+    title: 'Chien fou: Selected Writings',
+    author: 'Germaine Krull',
+    editor: 'Kerstin Meincke, Petra Steinhardt',
+    publisher: 'MACK / Museum Folkwang',
+    designer: 'Helmut Völter',
+    year: 2025,
+    dimensionsMm: [165, 240],
+    dimensionsNote: 'Stiftung Buchkunst 165x240mm; MACK publisher lists 170x240mm',
+    pageCount: 320,
+    pageCountNote: 'Stiftung jury lists German 320 and English/French 288; MACK lists 320 for its English product. Verify edition before production use.',
+    module: 'MARGIN_NOTE_GRID',
+    tags: ['회고', '에세이', '문화예술', '여백형', '이미지인터루드', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst, official jury report',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/chien-fou/?view=list&year=2026',
+    galleryUrl: 'https://mackbooks.co.uk/products/chien-fou-selected-writings-germaine-krull',
+    previewUrl: null,
+    previewStatus: 'Publisher product page publicly viewable; direct individual JPG/PDF not confirmed; editable originals not provided',
+    typefaces: [
+      { name: 'Martina Plantijn Regular/Italic', status: 'CHECK', source: 'https://klim.co.nz/fonts/martina-plantijn/' },
+      { name: 'Neutral Regular/Italic', status: 'CHECK', source: 'https://www.typotheque.com/fonts/neutral' },
+      { name: 'Noto Serif KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk' }
+    ],
+    palette: 'Distinctive cover colors per language edition; monochrome archive images and partial/full color fields',
+    layoutNotes: 'Readable text-led memoir/reportage with small monochrome archival images on uncoated paper; controlled colored fields and edition-wide visual system; exact leading, margins and image ratio unpublished',
+    editorialIdea: 'Long memoir: establish body-text rhythm first, then insert documentary images in a few consistent sizes; use one restrained color system to differentiate sections or editions',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'oskar-fiala-prinzip-der-kleinsten-wirkung',
+    title: 'Oskar Fiala und das Prinzip der kleinsten Wirkung',
+    author: 'Oswald Egger',
+    publisher: 'Suhrkamp Verlag',
+    designer: 'Oswald Egger (interior); Oswald Egger and Nina Knapitsch (cover)',
+    year: 2025,
+    dimensionsMm: [135, 215],
+    dimensionsNote: 'Stiftung Buchkunst 135x215mm; publisher product page lists approximately 142x221mm',
+    pageCount: 208,
+    module: 'SINGLE_STRONG_RULE',
+    tags: ['짧은글', '에세이', '회고', '여백형', '내지', '표지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026 — Stiftung Buchkunst, official jury report',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/oskar-fiala-und-das-prinzip-der-kleinsten-wirkung/?view=list&year=2026',
+    galleryUrl: 'https://www.suhrkamp.de/buch/oswald-egger-oskar-fiala-und-das-prinzip-der-kleinsten-wirkung-t-9783518432501',
+    previewUrl: null,
+    previewStatus: 'Publisher offers a reading sample entry; a directly accessible interior JPG/PDF URL was not confirmed; no editable source',
+    typefaces: [
+      { name: 'Stempel Garamond', status: 'CHECK', source: 'https://www.myfonts.com/collections/stempel-garamond-lt-font-linotype/' },
+      { name: 'Noto Serif KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk' }
+    ],
+    palette: 'Black/white body with sparse line-grid vignettes; contrasting front and back endpaper colors; moire cover (do not copy artwork)',
+    layoutNotes: 'Book-to-type-area proportion praised by jury; interlocking grid vignettes preface paragraphs as breathing spaces; sparse illustrations and deliberate endpaper color difference; exact text block and leading unpublished',
+    editorialIdea: 'For 150–220pp poetic prose, use a consistent serif reading grid with one restrained recurring chapter/paragraph motif instead of filler images or enlarged text',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
