@@ -20,11 +20,27 @@ module.exports = {
                 dark: themeStyle.dark,
                 neutral: themeStyle.neutral,
                 neutralAlt: themeStyle.neutralAlt,
-                primary: themeStyle.primary
+                primary: themeStyle.primary,
+                studio: {
+                    black: '#0A0A0B',
+                    charcoal: '#121316',
+                    panel: '#17181C',
+                    line: '#26272C',
+                    ivory: '#F6F3EC',
+                    white: '#FBFAF7',
+                    ink: '#E8E6E0',
+                    muted: '#9A978F',
+                    blue: '#2C4A73',
+                    blueLight: '#4A6FA5',
+                    gold: '#C6A15B',
+                    goldLight: '#DCC087'
+                }
             },
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],
-                serif: ['Roboto Slab', 'serif']
+                serif: ['Roboto Slab', 'serif'],
+                'studio-serif': ['"Noto Serif"', '"Noto Serif KR"', 'serif'],
+                'studio-sans': ['Pretendard', 'Inter', 'sans-serif']
             },
             gridTemplateColumns: {
                 16: 'repeat(16, minmax(0, 1fr))'
