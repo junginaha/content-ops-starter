@@ -150,10 +150,29 @@ export async function buildPrintPackage({
   generatedAt = new Date().toISOString()
 } = {}) {
   const opts = { ...DEFAULT_PRINT_OPTIONS, ...options };
-  const trimWidthMm = Number(printSpec.trimWidthMm) || 140;
-  const trimHeightMm = Number(printSpec.trimHeightMm) || 210;
-  const bleedMm = Number.isFinite(Number(printSpec.bleedMm)) ? Number(printSpec.bleedMm) : 3;
-  const pageMultiple = Number(opts.pageMultiple) || 4;
+  // Fail closed on invalid production dimensions: never silently replace invalid values
+  // with default dimensions, because the resulting PDFs could be printed incorrectly.
+  const rawWidth = printSpec.trimWidthMm ?? 140;
+  const rawHeight = printSpec.trimHeightMm ?? 210;
+  const rawBleed = printSpec.bleedMm ?? 3;
+  const rawMultiple = opts.pageMultiple ?? 4;
+  const trimWidthMm = Number(rawWidth);
+  const trimHeightMm = Number(rawHeight);
+  const bleedMm = Number(rawBleed);
+  const pageMultiple = Number(rawMultiple);
+  if (!Number.isFinite(trimWidthMm) || trimWidthMm < 80 || trimWidthMm > 400 ||
+      !Number.isFinite(trimHeightMm) || trimHeightMm < 80 || trimHeightMm > 400) {
+    throw new Error('재단 크기는 가로·세로 각각 80~400mm 범위로 설정하세요.');
+  }
+  if (!Number.isFinite(bleedMm) || bleedMm < 0 || bleedMm > 15) {
+    throw new Error('도련은 0~15mm 범위로 설정하세요. 인쇄소 규격을 우선 확인하세요.');
+  }
+  if (!Number.isInteger(pageMultiple) || pageMultiple < 2 || pageMultiple > 64) {
+    throw new Error('제본 쪽수 배수는 2~64 사이의 정수로 설정하세요.');
+  }
+  if (!String(manuscript || '').trim()) {
+    throw new Error('인쇄할 원고가 없습니다.');
+  }
   const isbnCheck = validateIsbn13(isbn);
   const isbnText = isbnCheck.valid ? String(isbn || '').trim() : '';
 
