@@ -235,3 +235,21 @@ test('design analysis: third-person argument is humanities; "- " bullets are not
   const list = ['1. 원가', '원가는 재료비와 포장비를 더한 값입니다.', '- 30% 이하: 효자 메뉴', '- 40% 이상: 다시 봅니다'].join('\n\n');
   assert.equal(analyzeForDesign(list).metrics.dialogueRatio, 0);
 });
+
+
+test('print package: invalid press specifications fail before rendering PDFs', async () => {
+  const base = { title: '테스트', author: '저자', manuscript: '본문입니다.', fonts: FONTS };
+  const invalid = [
+    { printSpec: { trimWidthMm: -140, trimHeightMm: 210, bleedMm: 3 }, pattern: /재단 크기/ },
+    { printSpec: { trimWidthMm: 140, trimHeightMm: 210, bleedMm: -1 }, pattern: /도련/ },
+    { printSpec: { trimWidthMm: 140, trimHeightMm: 210, bleedMm: 25 }, pattern: /도련/ },
+    { options: { pageMultiple: 2.5 }, pattern: /제본 쪽수/ }
+  ];
+  for (const item of invalid) {
+    await assert.rejects(() => buildPrintPackage({ ...base, ...item }), item.pattern);
+  }
+  await assert.rejects(
+    () => buildPrintPackage({ ...base, manuscript: '   ' }),
+    /인쇄할 원고/
+  );
+});
