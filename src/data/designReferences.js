@@ -681,6 +681,56 @@ export const designReferences = [
     layoutNotes: 'Editorial magazine with artist interviews and word-based drawing. White space and controlled spread boundaries frame variable lettering and visual work. Exact text widths, leading, font families and image area ratios not verified.',
     editorialIdea: 'For short text and illustrated cultural essays, rotate a limited set of page modules (interview, image, short prose, full-page typographic work) without copying artists’ works.',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'words-rather-than-pictures',
+    title: 'Words Rather than Pictures',
+    author: 'John Baldessari (text excerpts)',
+    publisher: 'Optimo, Genève',
+    designer: 'Studio Optimo — Gilles Gavillet, Joana Siniavskaja',
+    year: 2025,
+    dimensionsMm: null,
+    pageCount: 48,
+    module: 'SINGLE_STRONG_RULE',
+    tags: ['짧은글', '문화예술', '여백형', '표지', '내지'],
+    evidence: 'The Most Beautiful Swiss Books 2025 (awarded 2026); Swiss Federal Office of Culture, jury commentary published 2026-05-13',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/words-rather-than-pictures-en',
+    galleryUrl: 'https://www.schweizerkulturpreise.ch/en/words-rather-than-pictures-en',
+    previewUrl: null,
+    previewStatus: 'Official award gallery contains photographs of actual printed spreads; individual direct JPG not independently verified; no editable source or reuse licence verified',
+    typefaces: [
+      { name: 'SuperScotch (François Rappo)', status: 'CHECK', note: 'Original typeface identified in official jury commentary; commercial printing, PDF and EPUB rights not independently verified' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'OFL 1.1: permitted for commercial print subject to licence conditions' }
+    ],
+    palette: 'Strong black ink with varying paper whites and warm paper tones; restrained visual palette (ADAPT)',
+    layoutNotes: '48-page large-format letterpress type specimen. Excerpts from John Baldessari books, widely varying type sizes and text placements; unified through a single type family and controlled black ink. Six paper stocks; exact trim size, body measure, leading and grid not verified. This is not a standard long-form reading model.',
+    editorialIdea: 'Use one consistent type family and a few carefully scaled text treatments for section openers or short quotations; retain conventional readable body settings in Korean editions.',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'florian-graf-school-models',
+    title: 'Florian Graf. School Models',
+    author: 'Various; edited by Florian Graf',
+    publisher: 'Scheidegger & Spiess',
+    designer: 'A Language — Martin Stoecklin, Melina Wilson',
+    year: 2025,
+    dimensionsMm: [195, 290],
+    pageCount: 132,
+    module: 'SECTION_OPENER',
+    tags: ['문화예술', '그리드형', '이미지인터루드', '내지'],
+    evidence: 'The Most Beautiful Swiss Books 2025 (awarded 2026); Swiss Federal Office of Culture, jury commentary published 2026-05-13',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/school-model-en',
+    galleryUrl: 'https://www.schweizerkulturpreise.ch/en/school-model-en',
+    previewUrl: null,
+    previewStatus: 'Official award gallery contains photographs of printed cover and interior. No direct JPG or editable original independently verified.',
+    typefaces: [
+      { name: 'Original typeface families unidentified', status: 'CHECK' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'OFL 1.1: commercial print permitted subject to licence conditions' }
+    ],
+    palette: 'White, vivid green and salmon pink; color-coding by language (ADAPT)',
+    layoutNotes: 'Bilingual texts: German in green, English in salmon; occasional headings aligned with edge-positioned contents information. Image essays document art production and use. Hardcover has extended edges with visible table of contents. Published page counts vary by distributor (128 vs 132); 132 cited by UChicago Press distribution listing. Image count around 87, so use as a selective color-coded editorial reference, not a model for text-dominant books.',
+    editorialIdea: 'For interview collections or bilingual cultural essays, assign a restrained consistent color to each language or text role; preserve readable type and conventional margins rather than copying protruding covers.',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
