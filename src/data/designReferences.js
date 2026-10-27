@@ -731,6 +731,82 @@ export const designReferences = [
     layoutNotes: 'Bilingual texts: German in green, English in salmon; occasional headings aligned with edge-positioned contents information. Image essays document art production and use. Hardcover has extended edges with visible table of contents. Published page counts vary by distributor (128 vs 132); 132 cited by UChicago Press distribution listing. Image count around 87, so use as a selective color-coded editorial reference, not a model for text-dominant books.',
     editorialIdea: 'For interview collections or bilingual cultural essays, assign a restrained consistent color to each language or text role; preserve readable type and conventional margins rather than copying protruding covers.',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'ein-recht-grosses-stueck-himmel',
+    title: 'Ein recht großes Stück Himmel',
+    author: 'Fanti Baum, Heike Schuppelius, Marc Ries and HfG Offenbach students',
+    publisher: 'Hochschule für Gestaltung Offenbach',
+    designer: 'Bruno Jacoby, Lukas Marstaller',
+    year: 2026,
+    dimensionsMm: [120, 180],
+    pageCount: 444,
+    module: 'DENSITY_SWITCH',
+    tags: ['에세이', '짧은글', '여백형', '이미지인터루드', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026; Stiftung Buchkunst official jury commentary and production specification',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/ein-recht-grosses-stueck-himmel/?view=grid&year=2026',
+    galleryUrl: 'https://www.designforschung.org/2026/06/23/quite-a-large-piece-of-sky',
+    previewUrl: null,
+    previewStatus: 'Official university and design research pages show photographs; verified direct JPG/PDF interior download not established; editable originals unavailable',
+    typefaces: [
+      { name: 'Times New Roman Bold', status: 'CHECK', note: 'Identified by official jury specification; confirm desktop print and embedding rights for installed version' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'OFL 1.1 terms apply' }
+    ],
+    palette: 'Black text, white/uncoated stock, Cherry, Baby Blue, Pistachio, Spring Green and Light Blue divider sheets; general palette ADAPT',
+    layoutNotes: 'Compact 120×180 mm, 444 pages. Greek and German observations/essays balanced typographically; restrained layouts, photo sequences and blank colored sheets regulate pacing. Exact margins, body measure, line spacing and text/image proportion unpublished.',
+    editorialIdea: 'For short essays or travel notes, alternate stable reading pages, documentary image sequences and restrained section separators; translate color-sheet rhythm into standard single-stock POD when cost-sensitive.',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'suche-nach-dem-unbestimmten',
+    title: 'Suche nach dem Unbestimmten',
+    author: 'Steffen Kunkel',
+    publisher: 'Spector Books',
+    designer: 'Markus Dreßen',
+    year: 2026,
+    dimensionsMm: [230, 330],
+    pageCount: 384,
+    module: 'MARGIN_NOTE_GRID',
+    tags: ['문화예술', '그리드형', '이미지인터루드', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2026; Stiftung Buchkunst official jury commentary and specification',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/suche-nach-dem-unbestimmten/?view=grid&year=2026',
+    galleryUrl: 'https://www.spectorbooks.com/book/steffen-kunkel-suche-nach-dem-unbestimmten',
+    previewUrl: null,
+    previewStatus: 'Publisher gallery exposes printed interior previews; direct JPG/PDF and editable source not independently verified',
+    typefaces: [
+      { name: 'Agipo Bold (RP Digital Type Foundry)', status: 'CHECK', note: 'Official title face; commercial desktop and embedding rights require verification' },
+      { name: 'Syncro Book / Syncro Italic (Out of the Dark)', status: 'CHECK', note: 'Official body faces; commercial desktop and embedding rights require verification' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'OFL 1.1 terms apply' }
+    ],
+    palette: 'Matte uncoated white stock, monochrome typography, archival greyscale and selected color images; general palette ADAPT',
+    layoutNotes: '230×330 mm, 384 pp. Historical photographs, architectural plans and text use cross-references; page numbers centered in lower margin. Serif body with sans title/metadata, tight but legible leading. Exact grid, text width and image ratio unpublished.',
+    editorialIdea: 'Use fixed body, image, caption and source-number positions in memoirs with archives; reserve centered folios and cross-reference keys, but avoid expensive linen binding and large trim for routine POD.',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'flametti-dandyism-of-the-poor',
+    title: 'Flametti, or the Dandyism of the Poor',
+    author: 'Hugo Ball; translated and read by Catherine Schelbert',
+    publisher: 'edition fink / Fucking Good Art',
+    designer: 'Nienke Terpsma',
+    year: 2024,
+    dimensionsMm: [110, 180],
+    pageCount: 196,
+    module: 'SINGLE_STRONG_RULE',
+    tags: ['에세이', '짧은글', '여백형', '표지', '내지'],
+    evidence: 'The Most Beautiful Swiss Books 2024 (awarded 2025); Swiss Federal Office of Culture jury review published 2025-06-13',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/flametti-or-the-dandyism-of-the-poor-translated-and-read-by-catherine-schelber-4',
+    galleryUrl: 'https://www.schweizerkulturpreise.ch/en/flametti-or-the-dandyism-of-the-poor-translated-and-read-by-catherine-schelber-4',
+    previewUrl: null,
+    previewStatus: 'Official jury gallery shows actual book and accompanying vinyl; direct JPG/PDF and editable originals not verified. Some retailers list 208 pages; book publisher listing specifies 196.',
+    typefaces: [
+      { name: 'Original serif typeface (family not disclosed)', status: 'CHECK' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'OFL 1.1 terms apply' }
+    ],
+    palette: 'Red/yellow dust jacket, record sleeve and insert in intentionally varied yellows; general color relationships ADAPT',
+    layoutNotes: 'Small 110×180 mm prose paperback, around 196 pp, dust jacket and 10-inch LP. Repeated serif typography and red/yellow accents connect mismatched media; exact body measure, leading, margins and text/image proportion not published.',
+    editorialIdea: 'Maintain a restrained readable text block and connect the book to optional audio via QR code; adapt cross-media color and type consistency without replicating the vinyl package or QR placement.',
+    rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
   }
 ];
 
