@@ -807,6 +807,60 @@ export const designReferences = [
     layoutNotes: 'Small 110×180 mm prose paperback, around 196 pp, dust jacket and 10-inch LP. Repeated serif typography and red/yellow accents connect mismatched media; exact body measure, leading, margins and text/image proportion not published.',
     editorialIdea: 'Maintain a restrained readable text block and connect the book to optional audio via QR code; adapt cross-media color and type consistency without replicating the vinyl package or QR placement.',
     rights: { layout: 'ADAPT', font: 'CHECK', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'on-the-edges-of-graphic-design-a-z-infinity',
+    title: 'On the Edges of Graphic Design from A—Z—∞',
+    author: 'Anja Lutz; edited by Anja Lutz and Soraya Guimarães Hoepfner',
+    publisher: "Set Margins' publications",
+    designer: 'Anja Lutz',
+    year: 2025,
+    dimensionsMm: [120, 165],
+    pageCount: 548,
+    module: 'REPEATABLE_CARD',
+    tags: ['짧은글', '문화예술', '그리드형', '이미지인터루드', '내지'],
+    evidence: 'AIGA 50 Books | 50 Covers 2025 Book winner (announced August 2026); AIGA official winners gallery and official AIGA announcement naming Anja Lutz; PAGE magazine design review (2026-08-07). Published 2025-09-27.',
+    officialUrl: 'https://50books50covers.secure-platform.com/a/gallery?roundId=417',
+    awardEvidenceUrl: 'https://www.linkedin.com/posts/aiga_aiga-50-books-50-covers-2025-winner-gallery-activity-7492603365323964416-i_Or',
+    galleryUrl: 'https://www.setmargins.press/books/on-the-edges-of-graphic-design-from-a-z-%E2%88%9E/',
+    interiorGalleryUrl: 'https://www.printmag.com/daily-heller/the-daily-heller-anja-lutz/',
+    previewUrl: null,
+    previewStatus: 'Publisher project page and PRINT magazine feature contain book photographs; direct public interior JPG/PNG/PDF and editable original not independently verified. Relative specimen PDF is a type specimen, NOT a book interior.',
+    typefaces: [
+      { name: 'Relative (Colophon Foundry)', status: 'CHECK', source: 'https://a.storyblok.com/f/146262/x/3da0a12f8d/relative-specimen-v2-002.pdf', note: 'Publisher explicitly identifies Relative. Desktop DTP license described in foundry specimen; verify current Monotype license and PDF/EPUB embedding terms.' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'SIL OFL 1.1; commercial print allowed under license terms.' }
+    ],
+    palette: 'Yellow and silver book sections with black type, varied full-color images; general color relationships ADAPT.',
+    layoutNotes: '120×165 mm, 548 pp, over 100 alphabetically indexed cross-referenced short entries followed by 36 future-facing contributions; 500 color and 24 B&W images per publisher. Small format and modular text/image sequencing unify many contributors. Exact body measure, leading, margins and image-to-text area ratio not independently measured.',
+    editorialIdea: 'For many short essays or community contributions, use repeatable entry templates: keyword, 1–3 paragraphs, optional image, cross-reference and consistent folio. Group sections by limited accent colors; do not reproduce expensive Swiss binding as a default POD specification.',
+    rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO' }
+  },
+  {
+    id: 'making-of-modern-korean-art-letters',
+    title: 'The Making of Modern Korean Art: The Letters of Kim Tschang-Yeul, Kim Whanki, Lee Ufan, and Park Seo-Bo, 1961–1982',
+    author: 'Edited by Yeon Shim Chung and Doryun Chong; essay by Kyung An',
+    publisher: 'Gregory R. Miller & Co. / Tina Kim Gallery',
+    designer: 'Studio Lin',
+    year: 2025,
+    dimensionsMm: [247, 323],
+    pageCount: 336,
+    module: 'ARCHIVE_VS_PRESENT',
+    tags: ['회고', '문화예술', '한글조판', '그리드형', '이미지인터루드', '내지'],
+    evidence: 'AIGA 50 Books | 50 Covers 2025 Book winner (announced August 2026); official AIGA winners gallery. Gallery/publisher confirms published 2025. Distributor states 336 pp, commissioning gallery lists 338 pp: edition/metadata discrepancy.',
+    officialUrl: 'https://50books50covers.secure-platform.com/a/gallery?roundId=417',
+    galleryUrl: 'https://tinakimgallery.com/store/products/25-the-making-of-modern-korean-art-the-letters-of-kim-tschang-yeul-kim-whanki-lee/',
+    interiorGalleryUrl: 'https://news.artnet.com/art-world/modern-korean-art-book-exhibition-2653829',
+    previewUrl: null,
+    previewStatus: 'Artnet (2025-06-06) displays a verified photograph of the opened printed book with fold-out facsimile letters, credited to Studio Lin. Individual JPG/PDF direct download and editable production source not independently verified. Tina Kim Gallery says 338 pages, D.A.P. says 336.',
+    typefaces: [
+      { name: 'Original Latin/Korean typeface families (not disclosed)', status: 'CHECK', note: 'No reliable family names in the verified publisher/AIGA information; do not infer.' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'SIL OFL 1.1; commercial print allowed under license terms.' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', source: 'https://github.com/notofonts/noto-cjk', note: 'SIL OFL 1.1; use for captions and archival metadata.' }
+    ],
+    palette: 'Three verified cover variants: light blue, dark blue and gray; archival paper tones, monochrome handwritten letters and artworks. Palette ADAPT, source artwork/letters NO.',
+    layoutNotes: 'Large approximately 247×323 mm hardcover, 336 pp per distributor (338 per commissioning gallery), 130 color illustrations. Actual-size facsimile reproductions of original Korean correspondence and selected fold-out archival material interleaved with contemporary essays/artworks. Exact body text width, leading, grid and image-area ratio not independently verified.',
+    editorialIdea: 'For Korean memoirs, give handwritten letters or historic documents dedicated facsimile pages and clearly separated contemporary transcription, translation and commentary; use captions/source IDs and optional fold-outs only where printing costs and binding allow.',
+    rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', letters: 'CHECK' }
   }
 ];
 
