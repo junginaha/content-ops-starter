@@ -861,7 +861,119 @@ export const designReferences = [
     layoutNotes: 'Large approximately 247×323 mm hardcover, 336 pp per distributor (338 per commissioning gallery), 130 color illustrations. Actual-size facsimile reproductions of original Korean correspondence and selected fold-out archival material interleaved with contemporary essays/artworks. Exact body text width, leading, grid and image-area ratio not independently verified.',
     editorialIdea: 'For Korean memoirs, give handwritten letters or historic documents dedicated facsimile pages and clearly separated contemporary transcription, translation and commentary; use captions/source IDs and optional fold-outs only where printing costs and binding allow.',
     rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', letters: 'CHECK' }
+  },
+{
+  "id": "rhona-muehlebach-obstacles-for-cows",
+  "title": "Rhona Mühlebach. Obstacles for Cows",
+  "publisher": "Jungle Books",
+  "designer": "Samuel Bänziger, Rosario Florio, Larissa Kasper",
+  "year": 2023,
+  "dimensionsMm": [
+    257,
+    364
+  ],
+  "pageCount": 100,
+  "module": "PROGRESSIVE_TEXT",
+  "tags": [
+    "짧은글",
+    "문화예술",
+    "여백형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "evidence": "The Most Beautiful Swiss Books 2023 (awarded 2024); Swiss Federal Office of Culture jury review and technical index, official catalogue pp. 28–29: 100 pp, 8 images, 257×364 mm, Helvetica Bold and Quadrant Mono.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/rhona-muehlebach-obstacles-for-cows-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/rhona-muehlebach-obstacles-for-cows-4",
+  "publisherUrl": "https://www.jungle-books.com/products/obstacles-for-cows",
+  "previewUrl": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/SaBtNIDsBLcY/THE%20MOST%20BEAUTIFUL%20SWISS%20BOOKS%202023%20(awarded%202024).pdf",
+  "previewStatus": "Verified public award catalogue PDF with printed-book photos and design specs on pp. 28–29; not an editable production file or a freely reusable book PDF. Individual direct JPG image URL not independently retrievable.",
+  "typefaces": [
+    {
+      "name": "Helvetica Bold (Linotype)",
+      "status": "CHECK",
+      "note": "Original face verified in Swiss official catalogue; desktop and embedding licences must be checked."
+    },
+    {
+      "name": "Quadrant Mono (Matter of Sorts)",
+      "status": "CHECK",
+      "note": "Original face verified in Swiss official catalogue; licensing needs verification."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "OFL 1.1 applies; usable for commercial print subject to licence terms."
+    }
+  ],
+  "palette": "Cream/beige patterned cover, blue title, black essay text, occasional green-tinted stills; general palette ADAPT.",
+  "layoutNotes": "Eight score-like chapters; large typographic dialogue and music notation, with running essay in a narrow outer-edge column on chapter openers. Each chapter includes one loose green-tinted still, 8 images across 100 pp. Exact leading, text width and page margins unpublished.",
+  "editorialIdea": "For short essays and interview collections, make 6–8 modular chapters with stable narrow sidebar text and a separate single image per chapter. Substitute ordinary printed image pages for costly loose inserts; retain source text and verify permissions.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
   }
+},
+{
+  "id": "langfristperspektiven-archaeologischer-staetten",
+  "title": "Langfristperspektiven archäologischer Stätten",
+  "publisher": "Hirmer Verlag",
+  "designer": "Hubertus Design — Kerstin Landis, Jonas Voegeli, Scott Vander Zee",
+  "year": 2017,
+  "dimensionsMm": [
+    245,
+    340
+  ],
+  "pageCount": 368,
+  "module": "MULTI_COLUMN_REFERENCE_GRID",
+  "tags": [
+    "문화예술",
+    "그리드형",
+    "이미지인터루드",
+    "여백형",
+    "내지"
+  ],
+  "evidence": "The Most Beautiful Swiss Books 2017 (juried 2018); Swiss Federal Office of Culture official jury commentary on almost twenty essays and their carefully aligned two-column Sabon typography; published 2017.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/langfristperspektiven-archaeologischer-staetten-3",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/langfristperspektiven-archaeologischer-staetten-3",
+  "previewUrl": null,
+  "previewStatus": "Official Swiss award gallery includes photographs of the printed cover and spreads. No publicly accessible full interior PDF or editable production source independently verified. A university-hosted chapter PDF was access-blocked and is intentionally omitted.",
+  "typefaces": [
+    {
+      "name": "Sabon (variant undisclosed)",
+      "status": "CHECK",
+      "note": "Swiss official jury identifies Sabon; exact vendor/weight and desktop/PDF/EPUB embedding licence not established."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "OFL 1.1 applies for Korean body substitute."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "OFL 1.1 applies for captions and notes."
+    }
+  ],
+  "palette": "Restrained black text on light paper, colour-coded endpapers and selected archive images; general neutral palette ADAPT.",
+  "layoutNotes": "Nearly twenty essays in two Sabon columns with centered uppercase chapter titles and generous leading. Separate uncoated illustration leaves carry 1–6 images with ample white space; embedded illustrations align exactly to a text column; reference markers and small footnotes form a disciplined grid. Approx 338 illustrations per distributor, 245×340 mm, 368 pp; exact text measure, line height and page-image ratio not published.",
+  "editorialIdea": "For cultural nonfiction or memoir with archives, use two-column text only where the trim size supports it, align figures to column width, and isolate visual documents on spacious plates. On 140×210 mm books prefer single-column body plus occasional image interludes.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+}
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
