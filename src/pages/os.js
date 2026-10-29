@@ -18,6 +18,7 @@ import { evaluateReleaseReadiness } from '../utils/preflight';
 import { evaluatePrintPdf, inspectPdfBytes, inspectPdfFile } from '../utils/pdfPreflight';
 import { DEFAULT_PRINT_OPTIONS, PRINT_HUMAN_GATES, TRIM_PRESETS } from '../utils/print/presets';
 import { analyzeForDesign } from '../utils/print/designAnalysis';
+import { parseBookStructure } from '../utils/print/bookStructure';
 import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
 import { COVER_LAYOUTS, COVER_PALETTES } from '../utils/print/coverGenome';
 import { createPrintJobTicket } from '../utils/printJobTicket';
@@ -159,11 +160,16 @@ export default function OneDayBooksOS() {
   const [printPkgError, setPrintPkgError] = useState('');
   const [printPkgBuilding, setPrintPkgBuilding] = useState(false);
   const [coverImageFile, setCoverImageFile] = useState(null);
+  const [photoAssets, setPhotoAssets] = useState([]);
+  const [photoError, setPhotoError] = useState('');
   const [snapshots, setSnapshots] = useState([]);
   const [snapshotError, setSnapshotError] = useState('');
   const [snapshotSaving, setSnapshotSaving] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const autoRestoreRef = useRef(false);
+  const photoAssetsRef = useRef([]);
+  useEffect(() => { photoAssetsRef.current = photoAssets; }, [photoAssets]);
+  useEffect(() => () => { photoAssetsRef.current.forEach((asset) => URL.revokeObjectURL(asset.previewUrl)); }, []);
 
   useEffect(() => {
     try {
@@ -305,6 +311,41 @@ export default function OneDayBooksOS() {
     [engineAnalysis]
   );
 
+  function addPhotoFiles(files) {
+    setPhotoError('');
+    const chosen = Array.from(files || []);
+    if (!chosen.length) return;
+    const accepted = [];
+    const skipped = [];
+    for (const file of chosen) {
+      if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 20 * 1024 * 1024) {
+        skipped.push(file.name);
+        continue;
+      }
+      const match = file.name.match(/(?:제?\s*(\d{1,2})\s*장|ch(?:apter)?[_ -]?(\d{1,2}))/i);
+      const proposedChapter = match ? String(Number(match[1] || match[2])) : '';
+      accepted.push({
+        id: createProjectId(), file, name: file.name,
+        previewUrl: URL.createObjectURL(file),
+        chapter: photoChapters.some((ch) => ch.id === proposedChapter) ? proposedChapter : '',
+        caption: '', rightsConfirmed: false
+      });
+    }
+    setPhotoAssets((previous) => [...previous, ...accepted]);
+    if (skipped.length) setPhotoError(`JPG/PNG 또는 20MB 이하가 아닌 파일 ${skipped.length}개를 제외했습니다.`);
+  }
+
+  function updatePhoto(id, field, value) {
+    setPhotoAssets((assets) => assets.map((asset) => asset.id === id ? { ...asset, [field]: value } : asset));
+  }
+
+  function removePhoto(id) {
+    setPhotoAssets((assets) => assets.filter((asset) => {
+      if (asset.id === id) URL.revokeObjectURL(asset.previewUrl);
+      return asset.id !== id;
+    }));
+  }
+
   function updateField(key, value) {
     setProject((p) => ({ ...p, [key]: value }));
   }
@@ -325,6 +366,14 @@ export default function OneDayBooksOS() {
   const designAnalysis = useMemo(() => {
     const source = processedManuscript || manuscript;
     return source ? analyzeForDesign(source, { title: project.title }) : null;
+  }, [processedManuscript, manuscript, project.title]);
+  const photoChapters = useMemo(() => {
+    const text = processedManuscript || manuscript;
+    if (!text) return [];
+    return parseBookStructure(text, { title: project.title }).chapters.map((ch, index) => ({
+      id: String(index + 1),
+      title: ch.title || ch.label || `${index + 1}장`
+    }));
   }, [processedManuscript, manuscript, project.title]);
   const chosenProfile = DESIGN_PROFILES[printOptions.designProfile]
     ? printOptions.designProfile
@@ -402,6 +451,8 @@ export default function OneDayBooksOS() {
     const newProject = { ...EMPTY_PROJECT, projectId: createProjectId() };
     setProject(newProject);
     setManuscript('');
+    setPhotoAssets((assets) => { assets.forEach((asset) => URL.revokeObjectURL(asset.previewUrl)); return []; });
+    setPhotoError('');
     setProcessedManuscript('');
     setEngineAnalysis(null);
     setEngineRunAt(null);
@@ -632,7 +683,15 @@ export default function OneDayBooksOS() {
         printSpec: project.printSpec || EMPTY_PROJECT.printSpec,
         options: printOptions,
         fonts,
-        frontImage
+        frontImage,
+        photoAssets: await Promise.all(photoAssets.map(async (asset) => ({
+          name: asset.name,
+          chapter: asset.chapter,
+          chapterTitle: photoChapters.find((ch) => ch.id === asset.chapter)?.title || '미지정',
+          caption: asset.caption,
+          rightsConfirmed: asset.rightsConfirmed,
+          bytes: new Uint8Array(await asset.file.arrayBuffer())
+        })))
       });
 
       downloadBlob(result.fileName, result.blob);
@@ -931,9 +990,10 @@ export default function OneDayBooksOS() {
           <div className="eyebrow">ooOS · PUBLISHING OS</div>
           <h1>Publishing Workspace</h1>
           <p className="hero-copy">원고 · 교정 · 디자인 · 검수 · 출간</p>
-          <div className="scope-note">
-            원고를 올리고 버튼 한 번이면 됩니다.
-          </div>
+          <p className="scope-note">원고와 사진을 올리면 내용과 구성을 분석해 편집디자인을 제안합니다.</p>
+          <button type="button" className="primary hero-upload-button" onClick={() => manuscriptInputRef.current?.click()} disabled={uploadStatus === 'reading'}>
+            {uploadStatus === 'reading' ? '원고 읽는 중…' : '원고 올리기'}
+          </button>
         </header>
 
         {showAdvanced && (
@@ -1013,6 +1073,37 @@ export default function OneDayBooksOS() {
               )}
               {uploadStatus === 'ready' && <p role="status">원고를 읽었습니다. 아래에서 분석과 제작을 진행할 수 있습니다.</p>}
             </div>
+          </div>
+
+          <div className="photo-upload-section">
+            <div className="section-head"><div><div className="kicker">PHOTOS · OPTIONAL</div><h3>사진 함께 올리기</h3></div></div>
+            <p className="muted">사진을 한 번에 올리고 각 사진의 장만 선택하세요. 파일명에 '1장', '2장'이 있으면 자동 분류를 시도합니다.</p>
+            <label className="photo-upload-label">
+              <span>사진 추가 (JPG/PNG · 여러 장 선택 가능)</span>
+              <input type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" multiple onChange={(event) => { addPhotoFiles(event.target.files); event.target.value = ''; }} />
+            </label>
+            {photoError && <div className="error-box">{photoError}</div>}
+            {photoAssets.length > 0 && <p className="muted">{photoAssets.length}장 선택됨 · 이 브라우저 탭에만 임시 보관됩니다. 인쇄 패키지를 내려받아 사진 원본을 보존하세요.</p>}
+            <div className="photo-grid">
+              {photoAssets.map((asset) => (
+                <div className="photo-card" key={asset.id}>
+                  <img src={asset.previewUrl} alt={asset.name} className="photo-preview" />
+                  <div className="photo-fields">
+                    <strong title={asset.name}>{asset.name}</strong>
+                    <label>들어갈 장
+                      <select value={asset.chapter} onChange={(event) => updatePhoto(asset.id, 'chapter', event.target.value)}>
+                        <option value="">미지정 · 확인 필요</option>
+                        {photoChapters.map((ch) => <option key={ch.id} value={ch.id}>{ch.id}장 · {ch.title}</option>)}
+                      </select>
+                    </label>
+                    <label>사진 설명 (선택)<input value={asset.caption} onChange={(event) => updatePhoto(asset.id, 'caption', event.target.value)} placeholder="예: 1982년 가족사진" /></label>
+                    <label className="photo-rights"><input type="checkbox" checked={asset.rightsConfirmed} onChange={(event) => updatePhoto(asset.id, 'rightsConfirmed', event.target.checked)} /> 사용 권리 확인</label>
+                    <button type="button" className="ghost" onClick={() => removePhoto(asset.id)}>사진 제거</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {photoAssets.length > 0 && <p className="muted">현재 인쇄 패키지는 사진 원본과 장별 배치 지시서를 포함합니다. 내지 PDF에 사진이 자동 삽입되지는 않습니다. 최종 인쇄 전 편집 검수가 필요합니다.</p>}
           </div>
 
           {project.fileName && (
@@ -1866,16 +1957,19 @@ export default function OneDayBooksOS() {
           font-size: clamp(17px, 2.3vw, 22px);
           line-height: 1.62;
         }
-        .scope-note {
-          margin-top: 20px;
-          display: inline-block;
-          border: 1px solid #b9ae9d;
-          background: rgba(255,255,255,.36);
-          padding: 10px 12px;
-          border-radius: 10px;
-          font-size: 13px;
-          line-height: 1.5;
-        }
+        .scope-note { margin: 18px 0 12px; max-width: 650px; color: #51483d; font-size: 15px; line-height: 1.65; }
+        .hero-upload-button { min-height: 48px; padding: 10px 24px; }
+        .photo-upload-section { margin-top: 22px; border-top: 1px solid #ddd5c9; padding-top: 22px; }
+        .photo-upload-label { display: block; padding: 12px; border: 1px dashed #b7a995; border-radius: 10px; }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
+        .photo-card { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 12px; border: 1px solid #d9d1c5; border-radius: 10px; padding: 10px; }
+        .photo-preview { width: 80px; height: 105px; object-fit: cover; border-radius: 5px; }
+        .photo-fields { min-width: 0; display: grid; gap: 6px; }
+        .photo-fields strong { overflow-wrap: anywhere; font-size: 12px; }
+        .photo-fields label { font-size: 12px; }
+        .photo-fields input, .photo-fields select { width: 100%; }
+        .photo-rights { display: flex; align-items: center; gap: 6px; }
+        .photo-rights input { width: auto; }
         .metrics {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
