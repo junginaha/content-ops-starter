@@ -147,6 +147,7 @@ export async function buildPrintPackage({
   options = {},
   fonts,
   frontImage = null,
+  photoAssets = [],
   generatedAt = new Date().toISOString()
 } = {}) {
   const opts = { ...DEFAULT_PRINT_OPTIONS, ...options };
@@ -259,11 +260,29 @@ export async function buildPrintPackage({
   const coverName = `print/${name}_표지_${cover.geometry.totalWidthMm}x${cover.geometry.totalHeightMm}_책등${cover.geometry.spineMm}mm.pdf`;
   const guideName = `print/${name}_표지가이드_작업용.pdf`;
 
+  // Photo assets are bundled with chapter assignments. They are NOT yet inserted into
+  // the interior PDF; never mark a photo-containing job as print-ready.
+  const photoFiles = [];
+  const photoPlan = [];
+  for (const [index, asset] of photoAssets.entries()) {
+    const sniff = sniffImage(asset.bytes);
+    if (!sniff || !['jpg', 'png'].includes(sniff.type)) throw new Error(`사진 ${index + 1}의 JPG/PNG 형식을 확인하지 못했습니다.`);
+    const extension = sniff.type === 'jpg' ? 'jpg' : 'png';
+    const safeOriginal = safeName(String(asset.name || `photo-${index + 1}`).replace(/\.[^.]+$/, '')).slice(0, 65);
+    const fileName = `photos/${String(index + 1).padStart(3, '0')}_${safeOriginal}.${extension}`;
+    photoFiles.push({ name: fileName, data: asset.bytes });
+    photoPlan.push({
+      file: fileName, originalName: asset.name, chapter: asset.chapter || null,
+      chapterTitle: asset.chapterTitle || null, caption: asset.caption || '',
+      rightsConfirmed: asset.rightsConfirmed === true, colorSpace: sniff.colorSpace,
+      placement: 'chapter-assigned; awaiting editorial placement and print-resolution review'
+    });
+  }
   const report = {
     schema: 'onedaybooks.print-package.v1',
     generatedAt,
-    status: evaluation.status,
-    statusLabel: evaluation.statusLabel,
+    status: photoPlan.length ? 'REVIEW_REQUIRED' : evaluation.status,
+    statusLabel: photoPlan.length ? '사진 내지 배치·인쇄 적합성 검수 필요' : evaluation.statusLabel,
     book: { title, author, publisher: opts.publisher, isbn: isbnText || null },
     analysis,
     design: { ...interior.design, source: designSource },
@@ -290,8 +309,9 @@ export async function buildPrintPackage({
       pdfCheck: coverCheck
     },
     checks: evaluation.checks,
-    blockers: evaluation.blockers,
-    warnings: evaluation.warnings,
+    blockers: [...evaluation.blockers, ...(photoPlan.length ? ['사진이 내지 PDF에 아직 삽입되지 않았습니다. 인쇄 발주 전 반드시 실제 페이지에 배치하고 재검수하세요.'] : [])],
+    warnings: [...evaluation.warnings, ...photoPlan.filter((photo) => !photo.chapter).map((photo) => `${photo.originalName}: 장 미지정`), ...photoPlan.filter((photo) => !photo.rightsConfirmed).map((photo) => `${photo.originalName}: 사진 사용 권리 미확인`)],
+    photos: { count: photoPlan.length, embeddedInInterior: false, plan: photoPlan },
     humanGates: evaluation.humanGates.map((gate) => ({ ...gate, approved: false })),
     options: opts
   };
@@ -300,6 +320,8 @@ export async function buildPrintPackage({
     { name: interiorName, data: interior.bytes },
     { name: coverName, data: cover.bytes },
     { name: guideName, data: coverGuide.bytes },
+    ...photoFiles,
+    ...(photoPlan.length ? [{ name: 'photos/장별_사진배치계획.json', data: JSON.stringify({ schema: 'onedaybooks.photo-plan.v1', warning: '사진 원본은 동봉했지만 내지 PDF에 아직 배치되지 않았습니다. 인쇄 전 편집자 확인 필수.', photos: photoPlan }, null, 2) }] : []),
     { name: 'print/인쇄지시서.txt', data: '' },
     { name: 'reports/print_preflight.json', data: JSON.stringify(report, null, 2) },
     { name: 'licenses/OFL-NanumMyeongjo.txt', data: fonts.license || 'SIL Open Font License 1.1 — Nanum Myeongjo' },
@@ -308,7 +330,8 @@ export async function buildPrintPackage({
       ? [{ name: 'licenses/OFL-ooOSFallbackSerif.txt', data: fonts.fallbackLicense || 'SIL Open Font License 1.1 — ooOS Fallback Serif (subset of Noto Serif KR)' }]
       : [])
   ];
-  payload[3].data = orderSheet({
+  const orderIndex = payload.findIndex((file) => file.name === 'print/인쇄지시서.txt');
+  payload[orderIndex].data = orderSheet({
     title,
     author,
     publisher: opts.publisher,
