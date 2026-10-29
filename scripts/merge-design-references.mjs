@@ -19,7 +19,7 @@ if (!Array.isArray(batch)) throw new Error('Batch must be a JSON array');
 const modules = new Set([...source.matchAll(/\bid:\s*'([A-Z_]+)'/g)].map((m) => m[1]));
 const existing = new Set([...source.matchAll(/\bid:\s*["']([a-z0-9][a-z0-9-]+)["']/g)].map((m) => m[1]));
 const key = (x) => String(x || '').normalize('NFKC').toLowerCase().replace(/[^a-z0-9가-힣]+/g, '');
-const seenTitles = new Set([...source.matchAll(/\btitle:\s*'([^']+)'/g)].map((m) => key(m[1])));
+const seenTitles = new Set([...source.matchAll(/\btitle:\s*["']([^"']+)["']/g)].map((m) => key(m[1])));
 const seenBatch = new Set();
 const approved = [], rejected = [], duplicates = [];
 const validUrl = (x) => typeof x === 'string' && /^https:\/\/[^\s/]+\.[^\s/]+/.test(x);
