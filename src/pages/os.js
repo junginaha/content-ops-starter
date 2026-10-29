@@ -135,6 +135,10 @@ export default function OneDayBooksOS() {
   const [engineAnalysis, setEngineAnalysis] = useState(null);
   const [engineRunAt, setEngineRunAt] = useState(null);
   const [fileError, setFileError] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('idle');
+  const [pasteDraft, setPasteDraft] = useState('');
+  const [showPaste, setShowPaste] = useState(false);
+  const manuscriptInputRef = useRef(null);
   const [aiAccessKey, setAiAccessKey] = useState('');
   const [aiMode, setAiMode] = useState('proofread');
   const [aiStatus, setAiStatus] = useState('idle');
@@ -707,6 +711,7 @@ export default function OneDayBooksOS() {
 
   async function readManuscriptFile(file) {
     if (!file) return;
+    setUploadStatus('reading');
     setFileError('');
     setAiDraft('');
     setAiChanges([]);
@@ -752,6 +757,7 @@ export default function OneDayBooksOS() {
         stageIndex: Math.max(project.stageIndex, 3)
       };
       setProject(nextProject);
+      setUploadStatus('ready');
       await persistVersion('원고 접수 · 자동 정리 완료', {
         project: nextProject,
         manuscript: text,
@@ -760,7 +766,53 @@ export default function OneDayBooksOS() {
         engineAnalysis: production.analysis
       });
     } catch (error) {
+      setUploadStatus('error');
       setFileError(error?.message || '원고 파일을 읽지 못했습니다.');
+    }
+  }
+
+  async function handleManuscriptSelection(event) {
+    const file = event.target.files?.[0];
+    // Reset immediately so choosing the same file again also triggers onChange.
+    event.target.value = '';
+    await readManuscriptFile(file);
+  }
+
+  async function importPastedManuscript() {
+    const text = pasteDraft.trim();
+    if (!text) {
+      setFileError('붙여넣은 원고가 비어 있습니다.');
+      return;
+    }
+    setFileError('');
+    setUploadStatus('reading');
+    try {
+      const production = safeAutoFix(text);
+      const nextProject = {
+        ...project,
+        projectId: project.projectId || createProjectId(),
+        title: project.title || '제목 없음',
+        fileName: '직접 입력한 원고',
+        charCount: text.length,
+        startedAt: project.startedAt || Date.now(),
+        stageIndex: Math.max(project.stageIndex, 3)
+      };
+      setManuscript(text);
+      setProcessedManuscript(production.text);
+      setEngineAnalysis(production.analysis);
+      setEngineRunAt(Date.now());
+      setProject(nextProject);
+      setUploadStatus('ready');
+      setShowPaste(false);
+      setPasteDraft('');
+      await persistVersion('직접 입력 · 자동 정리 완료', {
+        project: nextProject, manuscript: text,
+        processedManuscript: production.text,
+        aiDraft: '', engineAnalysis: production.analysis
+      });
+    } catch (error) {
+      setUploadStatus('error');
+      setFileError(error?.message || '입력 원고를 처리하지 못했습니다.');
     }
   }
 
@@ -936,15 +988,31 @@ export default function OneDayBooksOS() {
                 placeholder="예: 979-11-..."
               />
             </label>
-            <label>
-              <span>원고 파일</span>
+            <div className="manuscript-upload-control">
+              <strong>원고 업로드</strong>
               <input
+                ref={manuscriptInputRef}
                 className="file"
                 type="file"
+                aria-label="원고 파일 선택"
                 accept=".docx,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
-                onChange={(e) => readManuscriptFile(e.target.files?.[0])}
+                onChange={handleManuscriptSelection}
               />
-            </label>
+              <p className="muted">DOCX · TXT · MD 지원 (HWP/HWPX/PDF는 아직 미지원)</p>
+              <button type="button" className="secondary" disabled={uploadStatus === 'reading'} onClick={() => manuscriptInputRef.current?.click()}>
+                {uploadStatus === 'reading' ? '원고 읽는 중…' : '원고 파일 선택'}
+              </button>
+              <button type="button" className="ghost" onClick={() => setShowPaste((value) => !value)}>
+                파일 선택이 안 되나요? 텍스트 직접 붙여넣기
+              </button>
+              {showPaste && (
+                <div>
+                  <textarea aria-label="원고 직접 입력" rows={7} value={pasteDraft} onChange={(e) => setPasteDraft(e.target.value)} placeholder="원고 텍스트를 붙여넣으세요. 기존 프로젝트는 새 원고를 확인한 뒤 변경됩니다." />
+                  <button type="button" className="secondary" onClick={importPastedManuscript} disabled={!pasteDraft.trim() || uploadStatus === 'reading'}>붙여넣은 원고 분석하기</button>
+                </div>
+              )}
+              {uploadStatus === 'ready' && <p role="status">원고를 읽었습니다. 아래에서 분석과 제작을 진행할 수 있습니다.</p>}
+            </div>
           </div>
 
           {project.fileName && (
