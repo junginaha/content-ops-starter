@@ -973,6 +973,169 @@ export const designReferences = [
     "text": "NO",
     "editableOriginal": "NO"
   }
+},
+{
+  "id": "dear-aisha-can-i-have-a-minute",
+  "title": "Dear Aisha, Volume 1. Can i have a minute of your time",
+  "publisher": "Ligature Press",
+  "designer": "Studio Mathias Clottu — Mathias Clottu",
+  "year": 2021,
+  "pageCountApprox": 150,
+  "module": "PROGRESSIVE_TEXT",
+  "tags": [
+    "짧은글",
+    "에세이",
+    "여백형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "evidence": "Swiss Federal Office of Culture: The Most Beautiful Swiss Books 2021 (awarded 2022). Jury describes ~150 pages of email correspondence with broad white space and small loose fake-ad inserts; precise, restrained design decisions. ISBN 978-0-578-80626-6.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/dear-aisha-volume-1-can-i-have-a-minute-of-your-time-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/dear-aisha-volume-1-can-i-have-a-minute-of-your-time-4",
+  "previewStatus": "Official award-page photo gallery includes cover and interior; individual image URLs not independently verified. No public editable original or full book PDF confirmed.",
+  "typefaces": [
+    {
+      "name": "Original calligraphic/serif text face (name not disclosed)",
+      "status": "CHECK",
+      "note": "Official jury mentions calligraphic script; no verified font family or license."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "SIL OFL 1.1, commercial print permitted subject to license terms."
+    }
+  ],
+  "palette": "Beige hardcover, large white paper fields, occasional vivid multicolor advertisement slips; palette ADAPT.",
+  "layoutNotes": "Epistolary/email exchanges, short message blocks on spacious pages; minimal decoration, wide white fields and occasional small colored loose inserts; specific baseline grid, text width, leading and trim dimensions not published. No claim of 50:50 image ratio.",
+  "editorialIdea": "Short interview or letter-style books: give each exchange a clear typographic role, alternate brief message pages and generous white space, and place rare visual documents as deliberate interludes rather than padding. For affordable production, replace loose inserts with printed full/half pages. Keep original content unchanged.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "swiss-graphic-design-histories",
+  "title": "Swiss Graphic Design Histories",
+  "publisher": "Scheidegger & Spiess",
+  "designer": "Simone Farner, Naima Schalcher",
+  "year": 2021,
+  "dimensionsMm": [
+    170,
+    240
+  ],
+  "pageCount": 688,
+  "module": "MARGIN_NOTE_GRID",
+  "tags": [
+    "인터뷰",
+    "문화예술",
+    "그리드형",
+    "여백형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "evidence": "Swiss Federal Office of Culture: The Most Beautiful Swiss Books 2021 (awarded 2022). Jury specifically praises shifting vertical title/text alignment, varying upper margins, keyword-based navigation, playful grids and careful image editing. Designer and editor sites state four volumes in slipcase, 17×24 cm, 688 pages; some distributor listings instead report 814 pages, so verify edition before production.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/swiss-graphic-design-histories-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/swiss-graphic-design-histories-4",
+  "designerUrl": "https://www.farnerschalcher.ch/",
+  "authorGalleryUrl": "https://www.davidefornari.eu/swiss-graphic-design-histories/",
+  "openAccessInfoUrl": "https://www.davidefornari.eu/swiss-graphic-design-histories/",
+  "previewStatus": "Official award and editor photo galleries available. Editor states Open Access under CC BY-NC-ND 4.0, which does not authorize commercial adaptation. Direct book PDF download endpoint and editable source were not independently confirmed.",
+  "typefaces": [
+    {
+      "name": "Original print font (family not publicly verified)",
+      "status": "CHECK",
+      "note": "No reliable original typeface name or commercial license found in official jury/designer descriptions."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "SIL OFL 1.1, usable in commercial print with license compliance."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "SIL OFL 1.1, optional Korean reading face."
+    }
+  ],
+  "palette": "White soft covers, small black typography and distinct accent title colors by volume; neutral interiors with archival image tones. General palette ADAPT.",
+  "layoutNotes": "Three text-and-image volumes plus glossary/index booklet. Cover titles occupy different vertical positions; internal text areas align to corresponding heights, producing intentionally variable top whitespace. Keywords form a navigational grid. Image and essay sections vary in density. Exact type size, leading and grid measurements unpublished; image ratio not quantified.",
+  "editorialIdea": "For essay/interview collections, assign a consistent keyword navigator, move the chapter opener's title height between thematic parts, and align the text block to that position while retaining a stable reading width. Give archival images separate spacious pages and an index; on 140×210 mm choose single-column body over forced multi-column layout.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO",
+    "openAccess": "CHECK — CC BY-NC-ND 4.0: attribution, noncommercial, no derivatives; verify third-party image rights."
+  }
+},
+{
+  "id": "sophie-taeuber-arp-briefe-1905-1942",
+  "title": "Sophie Taeuber-Arp. Briefe 1905–1942",
+  "publisher": "NIMBUS. Kunst und Bücher AG",
+  "designer": "Hubertus Design — Kerstin Landis, Romy Strasser, Jonas Voegeli",
+  "year": 2021,
+  "pageCount": 1832,
+  "volumes": 3,
+  "imageCount": 100,
+  "dimensionsMmApprox": [
+    185,
+    259
+  ],
+  "module": "ARCHIVE_VS_PRESENT",
+  "tags": [
+    "회고",
+    "문화예술",
+    "여백형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "evidence": "Swiss Federal Office of Culture: The Most Beautiful Swiss Books 2021 (awarded 2022). Jury praises carefully restrained design of nearly 500 letters with scholarly annotations, photos inserted between letters and end-of-volume essays; orderly yet not monotonous. Publisher confirms 3 volumes, 1,832 pp, 100 illustrations, ISBN 978-3-03850-080-3.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/sophie-taeuber-arp-briefe-1905-1942-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/sophie-taeuber-arp-briefe-1905-1942-4",
+  "publisherUrl": "https://www.nimbusbooks.ch/content/newsletter-42021-%E2%80%93-neues-aus-dem-verlag",
+  "previewStatus": "Official award page has cover/interior photographs, not an editable production file. 185×259 mm approximate trade-listing dimensions (unconfirmed by publisher); do not treat as verified trim spec. No full public PDF independently verified.",
+  "typefaces": [
+    {
+      "name": "Original body typeface (unpublished)",
+      "status": "CHECK",
+      "note": "No verified family or license in jury or publisher records."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "SIL OFL 1.1, commercial print use subject to license."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "note": "For caption, date and archival notes; OFL 1.1."
+    }
+  ],
+  "palette": "White half-linen volumes with restrained different-color cloth spines/covers; black text and neutral historical photographs; general palette ADAPT.",
+  "layoutNotes": "Consistent letter blocks, scholarly notes and end essays across three volumes; photographs appear between letters, not at a fixed 50:50 ratio. Controlled hierarchy and repetition without monotony; exact body width, leading, margins and grid dimensions unpublished.",
+  "editorialIdea": "For memoir and collected letters, establish three text levels (original letter / editor's context / source notes), add occasional photographs at narrative transitions, and separate interpretive essays at chapter ends. Maintain readable 1-column body and consistent date/sender metadata; protect manuscript and image captions from automatic rewriting.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
 }
 ];
 
