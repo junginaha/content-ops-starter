@@ -1136,6 +1136,187 @@ export const designReferences = [
     "text": "NO",
     "editableOriginal": "NO"
   }
+},
+{
+  "id": "les-deserteuses-johana-blanc",
+  "title": "Les déserteuses",
+  "publisher": "Éditions Clinamen",
+  "designer": "Elorah Connil",
+  "year": 2023,
+  "dimensionsMm": [
+    110,
+    165
+  ],
+  "pageCount": 251,
+  "imageCount": 0,
+  "module": "SINGLE_STRONG_RULE",
+  "tags": [
+    "짧은글",
+    "에세이",
+    "문화예술",
+    "여백형",
+    "내지"
+  ],
+  "evidence": "Swiss Federal Office of Culture: The Most Beautiful Swiss Books 2023 (awarded 2024). Jury explicitly praises eight consistently designed chapters mixing letters, long quotations, art-historical explanations and fictional text, warm serif typography and a smaller loose erratum page. Official 2023 awards catalogue, pp. 22–23, records 251 pp, 0 images, 110×165 mm, Adobe Caslon Pro.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/les-deserteuses-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/les-deserteuses-4",
+  "cataloguePdfUrl": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/SaBtNIDsBLcY/THE%20MOST%20BEAUTIFUL%20SWISS%20BOOKS%202023%20%28awarded%202024%29.pdf",
+  "publisherUrl": "https://editions-clinamen.com/en/",
+  "previewStatus": "Official award page provides actual cover and interior photos. Official award catalogue PDF is a publicly viewable catalogue, not the complete book or an editable source. Publisher mentions a PDF download but the exact file link was not independently verified. No directly verified standalone JPG/PNG/PDF of the complete book.",
+  "typefaces": [
+    {
+      "name": "Adobe Caslon Pro",
+      "status": "CHECK",
+      "source": "https://helpx.adobe.com/fonts/web/font-licensing/font-licensing.html",
+      "note": "Exact original family verified in official awards catalogue. Adobe Fonts permits print and protected PDF embedding for licensed desktop work, but its license does NOT authorize embedding font software in an ooOS app or allowing customers to select the font in a generator; check actual font source and intended use."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/LICENSE",
+      "note": "SIL OFL 1.1; substitute for Korean running text, commercial print allowed with license compliance."
+    }
+  ],
+  "palette": "Warm red-orange cover with dark lettering, cream/off-white paper, black serif text; occasional small ornamental marks. General palette ADAPT, do not reuse cover artwork.",
+  "layoutNotes": "Eight consistently treated chapters, multiple text genres (letter, quotation, explanation, fictional prose) with stable typographic roles. Small 110×165 mm trim, deliberately sparse ornaments and one reduced-size loose erratum leaf create rhythm without photography. Precise baseline grid, body width, leading and margins not published; image count is officially zero, not 50:50.",
+  "editorialIdea": "For compact Korean short-essay collections, keep a restrained one-column reading width and one serif body face, distinguish letters/quotations/notes with modest indentation and weight, and repeat chapter templates. An optional smaller inserted text page can become a normal inset page for economical production. Do not pad a short manuscript with unrelated photos.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "journaux-de-guerre-1939-1944",
+  "title": "Journaux de guerre, 1939–1944. Les compagnies de fusiliers II/22 et I/222 aux frontières jurassiennes",
+  "publisher": "Société jurassienne d’émulation / Archives cantonales jurassiennes",
+  "designer": "Dimitri Jeannottat",
+  "year": 2023,
+  "dimensionsMm": [
+    150,
+    220
+  ],
+  "pageCount": 720,
+  "imageCount": 120,
+  "module": "REPEATABLE_CARD",
+  "tags": [
+    "회고",
+    "짧은글",
+    "문화예술",
+    "그리드형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "evidence": "Swiss Federal Office of Culture: The Most Beautiful Swiss Books 2023 (awarded 2024). Jury specifically commends a grey hardcover/red cloth spine, over 600 diary pages on thin grey stock, white-paper introduction/commentary, uniform serif size with two weights and varying indents, plus occasional soldier drawings. Official catalogue pp. 20–21 gives 720 pp, 120 images, 150×220 mm, JJannon and Monument Grotesk Mono.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/journaux-de-guerre-19391944-les-compagnies-de-fusiliers-ii22-et-i222-aux-frontieres-jurassiennes-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/journaux-de-guerre-19391944-les-compagnies-de-fusiliers-ii22-et-i222-aux-frontieres-jurassiennes-4",
+  "cataloguePdfUrl": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/SaBtNIDsBLcY/THE%20MOST%20BEAUTIFUL%20SWISS%20BOOKS%202023%20%28awarded%202024%29.pdf",
+  "previewStatus": "Official award gallery has cover/interior photos and official catalogue PDF has award spreads and technical specifications; neither is an editable original or verified complete-book PDF. Individual JPG endpoints were not independently verified.",
+  "typefaces": [
+    {
+      "name": "JJannon (Optimo)",
+      "status": "CHECK",
+      "source": "https://optimo.ch/typefaces/jjannon",
+      "note": "Original face confirmed by official award catalogue; commercial desktop/font embedding terms require purchased license and checking intended use."
+    },
+    {
+      "name": "Monument Grotesk Mono (Dinamo)",
+      "status": "CHECK",
+      "source": "https://abcdinamo.com/typefaces/monument-grotesk",
+      "note": "Original mono face confirmed; commercial font license and server/app use must be checked."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/LICENSE",
+      "note": "OFL 1.1 Korean running text substitute."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Sans/LICENSE",
+      "note": "OFL 1.1 for dates, labels and captions; original mono character may need a separately licensed or open mono face."
+    }
+  ],
+  "palette": "Grey cover, muted red clothback, gold-foil titling, white intro/endmatter, very thin grey diary stock, black text and monochrome drawings. General color strategy ADAPT; cloth and foil are optional physical production treatments.",
+  "layoutNotes": "720-page diary; 600+ pages in repeated dated record format. Serif of constant size, two weights, varied indentation/tabbing for event chronology; irregular illustrations interrupt repetitive entries. Different paper tones distinguish original diary from editorial apparatus. Exact body measure, baseline grid, margins and leading not published; 120 images is a count, not a percentage of page area.",
+  "editorialIdea": "For Korean memoirs, interview transcripts and meeting journals, use one repeatable date/time/text grid and stable body type, mark speakers and times with subtle weight/indent differences, place related drawings/photos near relevant entries, and distinguish archival original from editor commentary by background or section opener instead of duplicating expensive paper stocks.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "die-entstehung-des-heutigen-menschen-giedion",
+  "title": "Die Entstehung des heutigen Menschen. Ein unvollendetes Buchprojekt, 1929–1938",
+  "publisher": "gta Verlag ETH Zürich",
+  "designer": "Studio Krispin Heé — Krispin Heé, Tim Wetter",
+  "year": 2023,
+  "dimensionsMm": [
+    170,
+    242
+  ],
+  "pageCount": 666,
+  "imageCount": 191,
+  "module": "ARCHIVE_VS_PRESENT",
+  "tags": [
+    "문화예술",
+    "그리드형",
+    "이미지인터루드",
+    "여백형",
+    "내지"
+  ],
+  "evidence": "Swiss Federal Office of Culture: The Most Beautiful Swiss Books 2023 (awarded 2024), also a Bronze Medal at Stiftung Buchkunst international competition 2024. Jury praises three distinct text-status sections divided by heavy rough sheets, serif/sans hierarchy for footnotes and editorial notes, and three image groups distinguished by colored paper/backgrounds. Official catalogue pp. 14–15 gives 666 pp, 191 images, 170×242 mm, ABC Didotype and Times NR.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/die-entstehung-des-heutigen-menschen-ein-unvollendetes-buchprojekt-1929-1938-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/die-entstehung-des-heutigen-menschen-ein-unvollendetes-buchprojekt-1929-1938-4",
+  "internationalAwardUrl": "https://www.schweizerkulturpreise.ch/de/siegfried-giedion-die-entstehung-des-heutigen-menschen",
+  "cataloguePdfUrl": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/SaBtNIDsBLcY/THE%20MOST%20BEAUTIFUL%20SWISS%20BOOKS%202023%20%28awarded%202024%29.pdf",
+  "previewStatus": "Official Swiss award gallery has actual cover/interior photographs; official awards catalogue PDF contains sample spreads and production metadata, not complete book PDF or editable source. No separately verified public direct JPG/PNG.",
+  "typefaces": [
+    {
+      "name": "ABC Didotype (Dinamo; name as in official catalogue)",
+      "status": "CHECK",
+      "note": "Verified original name in official technical index, but precise commercial font product/edition and licensing route not independently verified."
+    },
+    {
+      "name": "Times NR (Monotype)",
+      "status": "CHECK",
+      "note": "Official technical index identifies Times NR, Monotype; exact version and PDF/app embedding rights need verification."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/LICENSE",
+      "note": "OFL 1.1 Korean body text substitute."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Sans/LICENSE",
+      "note": "OFL 1.1 for scholarly notes, running heads and captions."
+    }
+  ],
+  "palette": "Neutral cover with archival drawing, mostly black/neutral reading pages; three distinctly colored image sections visible along the book edge. Palette ADAPT; actual section hues not measured from calibrated source.",
+  "layoutNotes": "Three editorial-status blocks separated by thicker rough stock; primary author text distinguished from two editor-summarized sections. Serif and sans roles support running heads, footnotes, scholarly commentary. Three color-coded image interludes separate images from long-form reading. Exact baseline grid, text width, line spacing and image-area percentage not published; 191 illustrations in 666 pp.",
+  "editorialIdea": "For Korean memoirs/archives with original manuscript, interviews, documents and editor commentary, label original vs reconstruction explicitly, use two consistent typographic voices, keep main body readable, group related images in color-coded interludes or chapter-end sections, and preserve provenance. For POD, use printed section backgrounds rather than mixing specialty paper stocks.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
 }
 ];
 
