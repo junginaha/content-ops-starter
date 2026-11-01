@@ -1317,6 +1317,169 @@ export const designReferences = [
     "text": "NO",
     "editableOriginal": "NO"
   }
+},
+{
+  "id": "100-jahre-zoff",
+  "title": "100 Jahre Zoff. Die Geschichte der Zürcher Studierendenzeitung",
+  "publisher": "Hier und Jetzt Verlag",
+  "designer": "Farner Schalcher — Simone Farner, Naima Schalcher (with Daniela Spöck)",
+  "year": 2023,
+  "module": "ARCHIVE_VS_PRESENT",
+  "tags": [
+    "에세이",
+    "인터뷰",
+    "회고",
+    "문화예술",
+    "그리드형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "dimensionsMm": [
+    235,
+    315
+  ],
+  "pageCount": 352,
+  "imageCount": 230,
+  "evidence": "The Most Beautiful Swiss Books 2023, awarded 2024. Swiss Federal Office of Culture jury specifically praises an asymmetric single-column serif essay grid with occasional margin images, followed by a thinner-paper image archive with five categories and chronological order. Official 2023 award catalogue pp. 6–7 verifies 352 pp, 230 images, 235×315 mm, Rhymes Text Regular by Maxtype, offset print and thread-sewn softcover. Publisher independently lists 352 pp, 230 illustrations.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/100-jahre-zoff-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/100-jahre-zoff-4",
+  "cataloguePdfUrl": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/SaBtNIDsBLcY/THE%20MOST%20BEAUTIFUL%20SWISS%20BOOKS%202023%20%28awarded%202024%29.pdf",
+  "publisherUrl": "https://www.hierundjetzt.ch/fr/catalogue/100-jahre-zoff_2300039/",
+  "previewStatus": "Official jury page includes photos of real cover and interior; downloadable PDF is award catalogue excerpts, not full book or editable layout. Direct image endpoints and full-book PDF not verified.",
+  "typefaces": [
+    {
+      "name": "Rhymes Text Regular (Maxtype)",
+      "status": "CHECK",
+      "source": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/SaBtNIDsBLcY/THE%20MOST%20BEAUTIFUL%20SWISS%20BOOKS%202023%20%28awarded%202024%29.pdf",
+      "note": "Original face confirmed in official technical index. Retail/embedded-font and SaaS usage rights not cleared."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/LICENSE",
+      "note": "SIL OFL 1.1; Korean reading-text substitute. USE under OFL conditions."
+    }
+  ],
+  "palette": "Neutral off-white/grey pages with black serif text; folded dust jacket uses four differently tinted enlarged newspaper fragments. General colors ADAPT; original reproduced newspaper art CHECK/NO without rights.",
+  "layoutNotes": "Essay part: one asymmetric serif text column and small marginal image zone; archive part: large cropped/full-bleed images on thinner stock. Five archive categories and chronological order create navigation. Exact body width, leading and grid metrics not published; 230 images are a count, not an image-area percentage.",
+  "editorialIdea": "For a multi-author anniversary book or Korean community anthology: first run 1-column stories with occasional marginal ephemera; second create a separately indexed image archive (photos, letters, posters, covers). Preserve captions and provenance in an image index; allow affordable POD using common stock with distinct chapter openers.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "the-future-tense-perkins",
+  "title": "The Future Tense",
+  "publisher": "Fondation Fiminco",
+  "designer": "Nguyen Gobber — Hoang Nguyen, David Gobber",
+  "year": 2021,
+  "module": "PROGRESSIVE_TEXT",
+  "tags": [
+    "짧은글",
+    "에세이",
+    "시",
+    "여백형",
+    "그리드형",
+    "내지"
+  ],
+  "pageCount": 28,
+  "evidence": "The Most Beautiful Swiss Books 2021, awarded 2022. Swiss Federal Office of Culture jury specifically praises 28 pages without images, two English/French essays in shifting parallel/interlocking columns, serif/sans/mono hierarchy and abundant whitespace. Designer portfolio verifies original faces SangBleu Republic, Suisse Int’l and Suisse Int’l Mono and publication by Fondation Fiminco.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/the-future-tense-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/the-future-tense-4",
+  "designerPortfolioUrl": "https://nguyengobber.com/projects",
+  "designerAnalysisUrl": "https://nguyengobber.com/writings",
+  "previewStatus": "Official award page has cover/interior photos; designer portfolio and essay include actual spread views. No independently verified direct JPG/PNG, complete-book PDF or editable source. 28 pp from jury; trim size not verified.",
+  "typefaces": [
+    {
+      "name": "SangBleu Republic (Swiss Typefaces)",
+      "status": "CHECK",
+      "source": "https://www.swisstypefaces.com/",
+      "note": "Designer-confirmed original. Commercial foundry license needed for print and especially server-generated PDFs."
+    },
+    {
+      "name": "Suisse Int’l (Swiss Typefaces)",
+      "status": "CHECK",
+      "source": "https://www.swisstypefaces.com/",
+      "note": "Designer-confirmed original; commercial licensing not cleared."
+    },
+    {
+      "name": "Suisse Int’l Mono (Swiss Typefaces)",
+      "status": "CHECK",
+      "source": "https://www.swisstypefaces.com/",
+      "note": "Designer-confirmed original; commercial licensing not cleared."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/LICENSE",
+      "note": "SIL OFL 1.1; Korean essay text substitute, usable with license compliance."
+    }
+  ],
+  "palette": "Green-black cover, black thread binding, black type on light paper. Color scheme ADAPT; original artwork and editorial text NO without permission.",
+  "layoutNotes": "28 text-only pages; parallel English/French columns change widths and alignment, occasionally interweave. Large blank areas turn paragraph shapes into visual rhythm; serif English, bold sans French, mono footnotes. Designer explicitly relates paragraph shapes to cathedral floor plans and musical polyphony. Exact leading/measure/trim unpublished.",
+  "editorialIdea": "For 2–5 short essays or poetry, preserve readable text blocks but vary their vertical starting position and pairing across spreads; use controlled white space rather than decorative imagery. Keep experimental interlocking bilingual columns opt-in, not default for Korean long-form reading.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "grauzone-fanzine-2021",
+  "title": "GRAUZONE",
+  "publisher": "WRWTFWW Records",
+  "designer": "Nicolas Eigenheer",
+  "year": 2021,
+  "module": "ARCHIVE_VS_PRESENT",
+  "tags": [
+    "에세이",
+    "회고",
+    "문화예술",
+    "그리드형",
+    "글이미지50_50",
+    "내지"
+  ],
+  "pageCount": 80,
+  "evidence": "The Most Beautiful Swiss Books 2021, awarded 2022. Swiss Federal Office of Culture jury praises large readable multi-part essay and one to five high-contrast historical archival items per spread in a narrow monochrome fanzine. 80-page fanzine is included in the 2021 Grauzone 40th Anniversary Box Set according to the published box-set description; page count is for the fanzine, not album packaging.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/grauzone-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/grauzone-4",
+  "publisherInfoUrl": "https://oye-records.com/releases/grauzone-limited-40-years-anniversary-box-set",
+  "previewStatus": "Official jury gallery has photos of actual booklet spreads. Standalone editable source, complete PDF and individual image direct download links not verified. 80 pp refers to box-set fanzine; trim size not verified.",
+  "typefaces": [
+    {
+      "name": "Original typeface unidentified",
+      "status": "CHECK",
+      "note": "Official jury confirms comparatively large body text but does not name font; do not guess."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Sans/LICENSE",
+      "note": "SIL OFL 1.1 Korean body/caption substitute; USE with OFL compliance."
+    }
+  ],
+  "palette": "High-contrast black-and-white throughout; photocopy-style halftone and no unnecessary ornament. General monochrome palette ADAPT; original archive images NO without permission.",
+  "layoutNotes": "Slender portrait fanzine, 80 pp; a continuous multi-part historical essay in relatively large type, with 1–5 archival items per spread: photographs, letters, reviews, posters, cover sketches. High-contrast photocopy treatment gives diverse originals a common visual language. Exact text width, leading, image-area ratio and trim unpublished.",
+  "editorialIdea": "For a Korean artist memoir or oral-history book, use a stable large readable essay column and add 1–3 contextual photos/letters per spread; normalize tonal range, include captions/source references, and use an archival appendix when images overwhelm text.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
 }
 ];
 
