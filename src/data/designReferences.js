@@ -1446,7 +1446,7 @@ export const designReferences = [
     "회고",
     "문화예술",
     "그리드형",
-    "글이미지50_50",
+    "이미지인터루드",
     "내지"
   ],
   "pageCount": 80,
