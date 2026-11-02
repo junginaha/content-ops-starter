@@ -1480,6 +1480,126 @@ export const designReferences = [
     "text": "NO",
     "editableOriginal": "NO"
   }
+},
+{
+  "id": "parents-must-unite-fight-hackney-flashers",
+  "title": "Parents Must Unite + Fight. Hackney Flashers: Agitprop, Work, and Socialist Feminism in England",
+  "publisher": "Tombolo Presses",
+  "designer": "Charles Mazé & Coline Sunier",
+  "year": 2024,
+  "module": "ARCHIVE_VS_PRESENT",
+  "tags": [
+    "문화예술",
+    "글이미지50_50",
+    "그리드형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "dimensionsMm": [
+    220,
+    315
+  ],
+  "pageCount": 224,
+  "isbn": "979-10-96155-56-9",
+  "evidence": "The Most Beautiful Swiss Books 2024 (awarded 2025). Swiss Federal Office of Culture jury explicitly praises a 64-page cinematic sequence of historical image/text panels without commentary, followed by a yellow-paper scholarly essay and an archival plate section. Publisher confirms Axo (Abyme), 220×315mm, Munken Polar 120gsm and Canary Yellow 80gsm, 2024 first printing. Page count 224 independently confirmed by French retail bibliographic sources; trim dimensions from publisher supersede retailers' inconsistent 225×320mm listing.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/parents-must-unite-fight-hackney-flashers-agitprop-work-and-socialist-feminism-in-england-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/parents-must-unite-fight-hackney-flashers-agitprop-work-and-socialist-feminism-in-england-4",
+  "publisherUrl": "https://presses.t-o-m-b-o-l-o.eu/",
+  "cataloguePdfUrl": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/JMaQk2ymNLw2/ssb-25.pdf",
+  "previewStatus": "Official Swiss award gallery and publisher's publication page were opened and contain published-book photography. Awarded-books PDF opens but lists winners only; no verified complete-book PDF or editable source. Direct JPG/PNG from gallery not separately verified.",
+  "typefaces": [
+    {
+      "name": "Axo (ABYME; Charles Mazé)",
+      "status": "CHECK",
+      "source": "https://www.abyme.net/catalogue/axo/",
+      "note": "Publisher explicitly names Axo. Commercial font available under paid EULA. Foundry does not directly offer app/ePub licenses online and asks to contact for such usage; ooOS server/ebook rights not cleared."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Sans/LICENSE",
+      "note": "OFL 1.1 Korean captions and archival essays; USE with license compliance."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/LICENSE",
+      "note": "OFL 1.1 alternative for long-form Korean scholarly essay; USE with license compliance."
+    }
+  ],
+  "palette": "Black-white-yellow. Main body on white Munken Polar; 80gsm canary-yellow stock separates the scholarly essay. General black/white/yellow palette ADAPT; no right to reuse archival photo-panels.",
+  "layoutNotes": "Large 220×315mm hardback. First 64 pages pair historical images with text panels across spreads with no commentary. Separate scholarly essay printed on yellow stock; later archive plates and brief biographies. Single rounded monolinear Axo family ties headings and captions. Stable role distinctions, clear sequential narrative, no unverified exact line-height/body width/image-area percentage. Images and text are paired but exact 50:50 area unmeasured.",
+  "editorialIdea": "For community oral history, anthology or civic documentary: lead with 16–32pp image-and-caption sequence, then separate 1-column contextual essays using a restrained color-section opener; finish with archival facsimiles, rights credits and biographies. In low-cost POD replace yellow paper with limited yellow chapter backgrounds and check color/bleed. Use a 50:50 image/text layout option only when material supports it.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "pauline-julier-and-so-on-single-universe",
+  "title": "Pauline Julier. And So On, a Single Universe",
+  "publisher": "Scheidegger & Spiess",
+  "designer": "Julia Born",
+  "year": 2024,
+  "module": "DENSITY_SWITCH",
+  "tags": [
+    "문화예술",
+    "글이미지50_50",
+    "인터뷰",
+    "그리드형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "dimensionsMm": [
+    185,
+    260
+  ],
+  "pageCount": 204,
+  "imageCount": 157,
+  "isbn": "978-3-03942-217-3",
+  "evidence": "The Most Beautiful Swiss Books 2024 (awarded 2025). Federal Office of Culture jury praises alternating fluorescent-yellow/orange/red image spreads and white reading spreads containing four long texts, stable German-left/English-right bilingual grid, occasional mono and film-still foldouts. Artist's official page confirms 204 pages and 152 color plus five black-and-white images, published by Scheidegger & Spiess with Julia Born design. 185×260mm from bookshop bibliographic listing.",
+  "officialUrl": "https://www.schweizerkulturpreise.ch/en/pauline-julier-and-so-on-a-single-universe-4",
+  "galleryUrl": "https://www.schweizerkulturpreise.ch/en/pauline-julier-and-so-on-a-single-universe-4",
+  "artistUrl": "https://paulinejulier.com/works_detail/single-book",
+  "publisherInfoUrl": "https://press.uchicago.edu/ucp/books/book/distributed/P/bo246016192.html",
+  "cataloguePdfUrl": "https://www.schweizerkulturpreise.ch/dam/en/sd-web/JMaQk2ymNLw2/ssb-25.pdf",
+  "previewStatus": "Official award gallery was opened and includes photographs of real spreads; artist's page and distributor page opened. Awarded-books PDF is winner list only. Individual JPG/PNG endpoints, full-book PDF and editable production files not independently verified.",
+  "typefaces": [
+    {
+      "name": "Original bilingual serif/sans and occasional monospace (families unverified)",
+      "status": "CHECK",
+      "note": "Jury confirms use of a monospace variant in some chapters, but not exact font names; do not infer."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/LICENSE",
+      "note": "OFL 1.1; Korean main text substitute, USE under license."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Sans/LICENSE",
+      "note": "OFL 1.1; Korean caption, footnote and interview metadata substitute."
+    }
+  ],
+  "palette": "Fluorescent yellow, orange and red alternate with white reading spreads; occasional grayscale/cinematic image sections. General accent-palette and alternating section principle ADAPT. Fluorescent inks and one-side-colored stocks are not automatically reproduced by standard CMYK/POD.",
+  "layoutNotes": "Landscape-format art catalogue; jury describes alternating fluorescent image spreads and white long-text spreads. Bilingual reading grid: German wider column left, English narrower single column right; monospaced type in some chapters. Titles stand alone on double spreads with varied font sizes; middle film-still sequence uses foldouts. 204pp, 157 illustrations count (152 color, 5 b&w), but exact image-area ratio and leading unpublished.",
+  "editorialIdea": "For interview-and-essay with supporting images: offer alternating reading spreads and curated image interludes with a consistent caption index; keep one-column Korean essays on quiet white pages, put photos on accent-color sections. If bilingual, reserve one stable column per language; foldouts and fluorescent stock require manual print-production approval and POD-safe alternatives.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
 }
 ];
 
