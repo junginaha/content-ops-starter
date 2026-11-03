@@ -1600,7 +1600,27 @@ export const designReferences = [
     "text": "NO",
     "editableOriginal": "NO"
   }
-}
+},
+  {
+    id: 'the-house-of-dr-koolhaas-2025',
+    title: 'The House of Dr Koolhaas',
+    publisher: 'Park Books',
+    designer: 'John Morgan studio (John Morgan, Teresa Lima, Adrien Vasquez)',
+    year: 2025,
+    module: 'CLASSIC_READING',
+    tags: ['문화예술', '그리드형', '글이미지50_50', '내지'],
+    evidence: 'The Most Beautiful Swiss Books 2025 (awarded 2026); Swiss Federal Office of Culture jury review, published 2026-05-13',
+    officialUrl: 'https://www.schweizerkulturpreise.ch/en/the-house-of-dr-koolhaas-en',
+    previewUrl: 'https://www.schweizerkulturpreise.ch/en/the-house-of-dr-koolhaas-en',
+    isbn: '978-3-03860-407-5',
+    pages: 224,
+    formatMm: null,
+    typeface: { original: 'Unidentified serif; exact font not disclosed', status: 'CHECK', koreanSubstitute: 'Noto Serif CJK KR', substituteStatus: 'SUBSTITUTE/USE (SIL OFL 1.1)' },
+    palette: 'Glossy dark night-time cover with four-colour illustration; black-and-white interior; palette and general layout ADAPT.',
+    layoutNotes: 'Small paperback; one serif text column per page; 1–3 monochrome images on many pages, in two standardized widths, plus occasional full-page images. Exact leading, column width, margins and image-area ratio unpublished.',
+    editorialIdea: 'For Korean essay/architecture memoir: stable one-column reading pages, two allowed image widths and optional full-page image interludes. Avoid forced 50:50; assign photos by semantic relation to paragraphs.',
+    rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' }
+  }
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
