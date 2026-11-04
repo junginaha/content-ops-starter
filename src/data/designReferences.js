@@ -1620,8 +1620,7 @@ export const designReferences = [
     layoutNotes: 'Small paperback; one serif text column per page; 1–3 monochrome images on many pages, in two standardized widths, plus occasional full-page images. Exact leading, column width, margins and image-area ratio unpublished.',
     editorialIdea: 'For Korean essay/architecture memoir: stable one-column reading pages, two allowed image widths and optional full-page image interludes. Avoid forced 50:50; assign photos by semantic relation to paragraphs.',
     rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' }
-  }
-
+  },
   {
     "id": "ul-lim-deul-kandinsky-2025",
     "title": "울림들",
