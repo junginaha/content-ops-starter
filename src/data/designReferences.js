@@ -1621,6 +1621,168 @@ export const designReferences = [
     editorialIdea: 'For Korean essay/architecture memoir: stable one-column reading pages, two allowed image widths and optional full-page image interludes. Avoid forced 50:50; assign photos by semantic relation to paragraphs.',
     rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' }
   }
+
+  {
+    "id": "ul-lim-deul-kandinsky-2025",
+    "title": "울림들",
+    "author": "Wassily Kandinsky",
+    "translator": "도요와 호반새",
+    "publisher": "텍스트프레스",
+    "designer": "정동규",
+    "year": 2025,
+    "dimensionsMm": [
+      145,
+      225
+    ],
+    "pageCount": 128,
+    "isbn": "979-11-92023-05-2",
+    "module": "SECTION_OPENER",
+    "tags": [
+      "시",
+      "문화예술",
+      "글이미지50_50",
+      "이미지인터루드",
+      "한글조판"
+    ],
+    "evidence": "2026 서울국제도서전 〈한국에서 가장 아름다운 책〉 선정(BBDK). SIBF official notice; Kookje interview confirms designer and design rationale.",
+    "officialUrl": "https://sibf.or.kr/en/62/103",
+    "galleryUrl": "https://v.daum.net/v/20260614180502787",
+    "previewUrl": "https://image.yes24.com/goods/166393128/XL",
+    "previewStatus": "YES24 cover JPG preview verified; Kookje article embeds real cover/interior photographs. Direct interior JPG and editable source not verified; preview is not reuse permission.",
+    "typefaces": [
+      {
+        "name": "1970s vertical-set Hangul typeface; exact family undisclosed",
+        "status": "CHECK",
+        "note": "Designer states an older vertically composed Hangul type was reset horizontally to evoke an early-20th-century poetry book."
+      },
+      {
+        "name": "Noto Serif CJK KR",
+        "status": "SUBSTITUTE",
+        "source": "https://notofonts.github.io/noto-docs/website/use/",
+        "license": "SIL Open Font License 1.1"
+      }
+    ],
+    "palette": "Restrained monochrome: white/light paper, black woodcut and black typography. Cover JPG shows white field with black woodcut; exact paper tint and ink values are not published. General monochrome principle ADAPT.",
+    "layoutNotes": "38 short prose poems and 59 woodcuts. The Korean edition adapts the original rhythm to Korean horizontal composition while borrowing the feel of 1970s vertical Hangul type. The cover places the title high/right and lets a large black woodcut carry the page. Exact body measure, leading, margins and image-area ratio are unpublished.",
+    "editorialIdea": "For short poems, place one poem or a short sequence in a quiet text area and let a single image interrupt at a deliberate interval. Do not enlarge or pad the poem to fill pages; use section openings, image interludes and paper rhythm to create book length.",
+    "rights": {
+      "layout": "ADAPT",
+      "palette": "ADAPT",
+      "font": "CHECK",
+      "substituteFont": "USE",
+      "images": "CHECK",
+      "text": "CHECK",
+      "editableOriginal": "NO"
+    }
+  },
+  {
+    "id": "das-was-da-ist-konrad-staisch-2026",
+    "title": "Das, was da ist",
+    "author": "Konrad Staisch",
+    "publisher": "Ankerwechsel Verlag",
+    "designer": "Konrad Staisch",
+    "year": 2026,
+    "dimensionsMm": [
+      255,
+      180
+    ],
+    "pageCount": 112,
+    "isbn": "978-3-947596-24-9",
+    "module": "DENSITY_SWITCH",
+    "tags": [
+      "문화예술",
+      "짧은글",
+      "그리드형",
+      "내지",
+      "한글조판"
+    ],
+    "evidence": "Die Schönsten Deutschen Bücher 2026, category Ratgeber/Sachbücher. Stiftung Buchkunst jury specifically praises the open-spine binding, flat opening, paper changes, Circular type and hand-lettering.",
+    "officialUrl": "https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/das-was-da-ist/?view=list&year=2026",
+    "galleryUrl": "https://ankerwechsel.de/das-was-da-ist-schoenste-deutsche-buecher-2026/",
+    "previewUrl": "https://ankerwechsel.de/shop/das-was-da-ist/",
+    "previewStatus": "Publisher page shows the actual cover and a real interior spread (text, yellow information panel, hand-lettering and illustration). Direct spread JPG fetch was not verified; no editable source or full PDF preview confirmed.",
+    "typefaces": [
+      {
+        "name": "Circular Medium",
+        "foundry": "Lineto",
+        "status": "CHECK",
+        "source": "https://lineto.com/information/help/licence-user-rights/basic-licencing",
+        "license": "Commercial. Lineto desktop licence includes basic printed-book publication rights; web/app uses separate licensing. Confirm server-side ooOS PDF generation and client delivery with Lineto before deployment."
+      },
+      {
+        "name": "Noto Sans CJK KR",
+        "status": "SUBSTITUTE",
+        "source": "https://notofonts.github.io/noto-docs/website/use/",
+        "license": "SIL Open Font License 1.1"
+      }
+    ],
+    "palette": "Two-colour Pantone blue/red screenprint on 2 mm bookbinder board; interior alternates three paper stocks and uses a bright yellow information panel on the documented spread. Exact Pantone numbers are not disclosed. Palette and paper-transition principle ADAPT; screenprint and stock changes require production approval.",
+    "layoutNotes": "255×180 mm, 112 pages. Stiff paperback with printed open thread binding, designed to lie flat for hands-on use. The documented spread puts flowing body text and a yellow recycling-code panel on the left; the right uses hand-lettered text with a drawn chair. Three paper stocks and shifts between Circular Medium and hand-lettering provide density and rhythm. The jury identifies Circular Medium and hand-lettering; exact text measure and leading are not published.",
+    "editorialIdea": "For practical essays and culture books, keep the reading column stable but use one restrained information panel, hand-drawn note or diagram where it genuinely explains the text. Offer open-spine/lay-flat binding as a premium print option; simulate paper changes with section markers when POD cannot support multiple stocks.",
+    "rights": {
+      "layout": "ADAPT",
+      "palette": "ADAPT",
+      "font": "CHECK",
+      "substituteFont": "USE",
+      "images": "NO",
+      "text": "NO",
+      "editableOriginal": "NO"
+    }
+  },
+  {
+    "id": "unmittelbar-dringend-ungeduldig-elisabeth-langsch-2025",
+    "title": "Unmittelbar, dringend, ungeduldig. Die gestalterische Unerschrockenheit der Keramikerin Elisabeth Langsch",
+    "author": "Various",
+    "editor": "Susanna Koeberle, Sebastian Marbacher, Mara Tschudi",
+    "publisher": "Edition Hochparterre",
+    "designer": "Naima Schalcher",
+    "year": 2025,
+    "dimensionsMm": [
+      225,
+      155
+    ],
+    "pageCount": 272,
+    "isbn": "978-3-909928-95-8",
+    "module": "MULTI_TEXT_WIDTH",
+    "tags": [
+      "문화예술",
+      "인터뷰",
+      "글이미지50_50",
+      "이미지인터루드",
+      "그리드형"
+    ],
+    "evidence": "The Most Beautiful Swiss Books 2025 (announced 2026); Honorary Appreciation, Best Book Design from All over the World 2026. Swiss Federal Office of Culture and Stiftung Buchkunst publish detailed jury/design statements.",
+    "officialUrl": "https://www.schweizerkulturpreise.ch/en/unmittelbar2-en",
+    "awardUrl": "https://www.stiftung-buchkunst.de/en/best-book-design-from-all-over-the-world/the-awardees/detail/unmittelbar-dringend-ungeduldig/",
+    "galleryUrl": "https://www.schweizerkulturpreise.ch/en/unmittelbar2-en",
+    "previewUrl": "https://www.schweizerkulturpreise.ch/en/unmittelbar2-en",
+    "previewStatus": "Official Federal Office of Culture page contains actual cover/interior gallery images. Direct JPG download and editable source were not verified; gallery access is not reuse permission.",
+    "typefaces": [
+      {
+        "name": "Clean sans-serif; exact family undisclosed",
+        "status": "CHECK",
+        "note": "The official jury describes the typography as clean sans-serif but does not identify the family."
+      },
+      {
+        "name": "Noto Sans CJK KR",
+        "status": "SUBSTITUTE",
+        "source": "https://notofonts.github.io/noto-docs/website/use/",
+        "license": "SIL Open Font License 1.1"
+      }
+    ],
+    "palette": "Colourful dust jacket and ceramic-object colours; interior image sections are richly coloured and often full-bleed. Exact swatches are not published. Use colour sequencing as ADAPT, not literal reproduction.",
+    "layoutNotes": "225×155 mm, 272 pages, 250 photos. Four illustrated essays and a conversation are interwoven with image sequences, a works catalogue and biography. In essay sections, object-shaped cut-outs sit beside unusually large sans-serif text that flows irregularly around them; separate image sections run full-bleed and include fold-outs. This is an image-rich artist monograph, not a default literary template; use selectively for visual-arts books. Exact leading and text measures are unpublished.",
+    "editorialIdea": "For artist interviews or visual-arts essays, allow a few cut-out images to interrupt the text while retaining a protected minimum measure for readability. Separate long visual sequences from essay pages; reserve fold-outs for premium production rather than making them a standard POD dependency.",
+    "rights": {
+      "layout": "ADAPT",
+      "palette": "ADAPT",
+      "font": "CHECK",
+      "substituteFont": "USE",
+      "images": "NO",
+      "text": "NO",
+      "editableOriginal": "NO"
+    }
+  }
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
