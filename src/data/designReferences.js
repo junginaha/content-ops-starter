@@ -1728,60 +1728,7 @@ export const designReferences = [
       "editableOriginal": "NO"
     }
   },
-  {
-    "id": "unmittelbar-dringend-ungeduldig-elisabeth-langsch-2025",
-    "title": "Unmittelbar, dringend, ungeduldig. Die gestalterische Unerschrockenheit der Keramikerin Elisabeth Langsch",
-    "author": "Various",
-    "editor": "Susanna Koeberle, Sebastian Marbacher, Mara Tschudi",
-    "publisher": "Edition Hochparterre",
-    "designer": "Naima Schalcher",
-    "year": 2025,
-    "dimensionsMm": [
-      225,
-      155
-    ],
-    "pageCount": 272,
-    "isbn": "978-3-909928-95-8",
-    "module": "MULTI_TEXT_WIDTH",
-    "tags": [
-      "문화예술",
-      "인터뷰",
-      "글이미지50_50",
-      "이미지인터루드",
-      "그리드형"
-    ],
-    "evidence": "The Most Beautiful Swiss Books 2025 (announced 2026); Honorary Appreciation, Best Book Design from All over the World 2026. Swiss Federal Office of Culture and Stiftung Buchkunst publish detailed jury/design statements.",
-    "officialUrl": "https://www.schweizerkulturpreise.ch/en/unmittelbar2-en",
-    "awardUrl": "https://www.stiftung-buchkunst.de/en/best-book-design-from-all-over-the-world/the-awardees/detail/unmittelbar-dringend-ungeduldig/",
-    "galleryUrl": "https://www.schweizerkulturpreise.ch/en/unmittelbar2-en",
-    "previewUrl": "https://www.schweizerkulturpreise.ch/en/unmittelbar2-en",
-    "previewStatus": "Official Federal Office of Culture page contains actual cover/interior gallery images. Direct JPG download and editable source were not verified; gallery access is not reuse permission.",
-    "typefaces": [
-      {
-        "name": "Clean sans-serif; exact family undisclosed",
-        "status": "CHECK",
-        "note": "The official jury describes the typography as clean sans-serif but does not identify the family."
-      },
-      {
-        "name": "Noto Sans CJK KR",
-        "status": "SUBSTITUTE",
-        "source": "https://notofonts.github.io/noto-docs/website/use/",
-        "license": "SIL Open Font License 1.1"
-      }
-    ],
-    "palette": "Colourful dust jacket and ceramic-object colours; interior image sections are richly coloured and often full-bleed. Exact swatches are not published. Use colour sequencing as ADAPT, not literal reproduction.",
-    "layoutNotes": "225×155 mm, 272 pages, 250 photos. Four illustrated essays and a conversation are interwoven with image sequences, a works catalogue and biography. In essay sections, object-shaped cut-outs sit beside unusually large sans-serif text that flows irregularly around them; separate image sections run full-bleed and include fold-outs. This is an image-rich artist monograph, not a default literary template; use selectively for visual-arts books. Exact leading and text measures are unpublished.",
-    "editorialIdea": "For artist interviews or visual-arts essays, allow a few cut-out images to interrupt the text while retaining a protected minimum measure for readability. Separate long visual sequences from essay pages; reserve fold-outs for premium production rather than making them a standard POD dependency.",
-    "rights": {
-      "layout": "ADAPT",
-      "palette": "ADAPT",
-      "font": "CHECK",
-      "substituteFont": "USE",
-      "images": "NO",
-      "text": "NO",
-      "editableOriginal": "NO"
-    }
-  }
+
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
