@@ -1699,7 +1699,8 @@ export const designReferences = [
     "officialUrl": "https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/das-was-da-ist/?view=list&year=2026",
     "galleryUrl": "https://ankerwechsel.de/das-was-da-ist-schoenste-deutsche-buecher-2026/",
     "previewUrl": "https://ankerwechsel.de/shop/das-was-da-ist/",
-    "previewStatus": "Publisher page shows the actual cover and a real interior spread (text, yellow information panel, hand-lettering and illustration). Direct spread JPG fetch was not verified; no editable source or full PDF preview confirmed.",
+    "coverJpgUrl": "https://ankerwechsel.de/wp-content/uploads/presse/Cover_Das-was-da-ist_Konrad-Staisch_Ankerwechsel.jpg",
+    "previewStatus": "Publisher product page and actual spread article verified; publisher direct cover JPG verified. Direct interior spread JPG, editable source and full book PDF preview were not verified.",
     "typefaces": [
       {
         "name": "Circular Medium",
@@ -1716,7 +1717,7 @@ export const designReferences = [
       }
     ],
     "palette": "Two-colour Pantone blue/red screenprint on 2 mm bookbinder board; interior alternates three paper stocks and uses a bright yellow information panel on the documented spread. Exact Pantone numbers are not disclosed. Palette and paper-transition principle ADAPT; screenprint and stock changes require production approval.",
-    "layoutNotes": "255×180 mm, 112 pages. Stiff paperback with printed open thread binding, designed to lie flat for hands-on use. The documented spread puts flowing body text and a yellow recycling-code panel on the left; the right uses hand-lettered text with a drawn chair. Three paper stocks and shifts between Circular Medium and hand-lettering provide density and rhythm. The jury identifies Circular Medium and hand-lettering; exact text measure and leading are not published.",
+    "layoutNotes": "255×180 mm, 112 pages. Stiff paperback with printed open thread binding, designed to lie flat for hands-on use. The documented spread puts flowing body text and a yellow recycling-code panel on the left; the right uses hand-lettered text with a drawn chair. Three stocks are named in the official production specification: Circle Offset White, Enviro Value and Fedrigoni Arcoprint Milk. Shifts between Circular Medium and hand-lettering provide density and rhythm. The jury identifies Circular Medium and hand-lettering; exact text measure and leading are not published.",
     "editorialIdea": "For practical essays and culture books, keep the reading column stable but use one restrained information panel, hand-drawn note or diagram where it genuinely explains the text. Offer open-spine/lay-flat binding as a premium print option; simulate paper changes with section markers when POD cannot support multiple stocks.",
     "rights": {
       "layout": "ADAPT",
