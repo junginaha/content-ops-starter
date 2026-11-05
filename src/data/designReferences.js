@@ -1748,14 +1748,15 @@ export const designReferences = [
     officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/constructive-disobedience/',
     galleryUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/constructive-disobedience/',
     publisherUrl: 'https://birkhauser.com/en/book/9783035628302',
-    previewStatus: 'Official Stiftung Buchkunst award page opens and documents the design; Birkhäuser publisher page opens with book details and a cover-download control. An actual interior spread image was returned from the Stiftung domain in image search, but its direct JPG endpoint returned a cache miss on open. No complete public PDF or editable source verified.',
+    previewUrl: 'https://api.pageplace.de/preview/DT0400.9783035628302_A50350626/preview-9783035628302_A50350626.pdf',
+    previewStatus: 'Official Stiftung Buchkunst award page opens with the jury assessment and production credits. A public Birkhäuser/De Gruyter reading-sample PDF opens and contains actual interior pages and spreads. It is a partial reading preview, not the complete book or an editable source.',
     typefaces: [
       {
         name: 'Neue Haas Grotesk Text Medium and Bold',
         foundry: 'Commercial Type / Christian Schwartz',
         status: 'CHECK',
         source: 'https://commercialtype.com/catalog/neue_haas_grotesk_text',
-        license: 'Desktop license covers printed books and non-editable documents, but automated document production requires a separate server license. Commercial Type EULA also restricts use with generative or other AI services. Do not use in ooOS automated AI PDF generation without written permission and the correct license.'
+        license: 'Commercial Type offers a separate Automated Document Production Server License for automatic document generation. Its EULA also contains an AI-services/programming restriction; the explanatory note narrows this to use of font data/letterforms as AI training data and says some AI-generated HTML references are outside the prohibition. Whether ooOS AI-assisted layout/PDF generation is covered is not explicit. Obtain written clarification and the correct server license before use.'
       },
       {
         name: 'Total Text',
