@@ -1731,67 +1731,7 @@ export const designReferences = [
   },
 
 
-  {
-    id: 'neue-erschoepfungsgeschichten-2024',
-    title: 'Neue Erschöpfungsgeschichten',
-    author: 'Holm-Uwe Burgemann (editor); Tanasgol Sabbagh, Heike Geißler, Enis Maci, Eva von Redecker, Moshtari Hilal, Sinthujan Varatharajah, Judith Schalansky',
-    publisher: 'PRÄPOSITION',
-    designer: 'Studio Daniel Zenker / Daniel Zenker; artwork Ruth Roxane Eckrich; custom type Laucke Siebein',
-    year: 2024,
-    dimensionsMm: [120, 180],
-    pageCount: 224,
-    pageCountNote: 'Stiftung Buchkunst and PRÄPOSITION metadata list 224 pages; Klingspor Museum product page lists 218 pages. Discrepancy retained rather than silently reconciled.',
-    isbn: '978-3-00-080088-7',
-    module: 'PROGRESSIVE_TEXT',
-    tags: ['에세이', '짧은글', '여백형', '타이포그래피', '내지'],
-    evidence: 'Die Schönsten Deutschen Bücher 2025 / Stiftung Buchkunst, category Allgemeine Literatur. Jury specifically praises Mimesis, the two-colour scheme, unusual folio placement, refined essay setting, and the balance of type density and white space.',
-    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/neue-erschoepfungsgeschichten/',
-    galleryUrl: 'https://www.offenbach.de/microsite/klingspor_museum/modulinhalte/shop/produkt-katalog/produkte/neue-erschoepfungsgeschichten.php',
-    publisherGalleryUrl: 'https://www.praeposition.com/shop',
-    designerUrl: 'https://zenkerdaniel.de/en/projects/neue-erschoepfungsgeschichten',
-    previewStatus: 'Klingspor Museum product page opens and provides a cover-image zoom, not a full interior gallery. PRÄPOSITION shop search index displays multiple book images, but direct page opening returned a cache miss in this run. No full-book PDF or editable source verified.',
-    typefaces: [
-      {
-        name: 'Mimesis Regular',
-        foundry: 'Laucke Siebein/Type',
-        status: 'CHECK',
-        source: 'https://type.studio-laucke-siebein.com/mimesis',
-        license: 'Commercial license. Offline/Print license is scoped to one brand; each client needs its own license. The EULA prohibits public-server placement and embedding that exposes the font to end users. Obtain written clearance for ooOS server-side PDF generation before use.'
-      },
-      {
-        name: 'Oracle Triple Book',
-        foundry: 'Dinamo Typefaces',
-        status: 'CHECK',
-        source: 'https://abcdinamo.com/typefaces/oracle',
-        license: 'Commercial license. Dinamo requires the commissioning client to own the license; each client needs its own license. Fonts may not be put on public servers or embedded in a way that exposes them to end users. Confirm server workflow and any subcontractor scope.'
-      },
-      {
-        name: 'Shinka Mono Regular',
-        foundry: 'Aeiou Tools',
-        status: 'CHECK',
-        source: 'https://aeiou.tools/eula',
-        license: 'Commercial license. EULA is scoped to one brand/client and prohibits public-server uploads. It also restricts use of the fonts for AI training, fine-tuning, validation or development. Obtain written clearance for ooOS generation.'
-      },
-      {
-        name: 'Noto Sans CJK KR',
-        status: 'SUBSTITUTE',
-        source: 'https://notofonts.github.io/noto-docs/website/use/',
-        license: 'SIL Open Font License 1.1; suitable Korean sans-serif substitute when OFL conditions are observed.'
-      }
-    ],
-    palette: 'Pantone 804U Neon Orange and Pantone 874U Bronze Metallic on subtly tinted blue-white paper; fine-linen cover. Palette and two-colour contrast ADAPT; spot colours and paper stock require print-vendor confirmation.',
-    layoutNotes: 'Compact 120×180 mm, 224 pages per Stiftung Buchkunst. Strong central axis, assertive text area, unusually positioned folios, varied essay-specific setting, and deliberate alternation of type density and white space. Exact body measure, leading and margin dimensions are not published. Klingspor Museum lists 218 pages, so page-count discrepancy remains flagged.',
-    editorialIdea: 'For a multi-author short-essay collection, keep a consistent central axis and page-number system while varying only a small set of essay-opening and body-text patterns. Use white space to let individual sentences land; do not inflate length with arbitrary blank pages. Use a licensed Korean sans-serif substitute in ooOS until custom-font server rights are confirmed.',
-    rights: {
-      layout: 'ADAPT',
-      palette: 'ADAPT',
-      font: 'CHECK',
-      substituteFont: 'USE',
-      images: 'NO',
-      text: 'NO',
-      editableOriginal: 'NO'
-    }
-  },
+
   {
     id: 'constructive-disobedience-2025',
     title: 'Constructive Disobedience: An Experimental Methodology in Architecture',
