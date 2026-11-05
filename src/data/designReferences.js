@@ -1800,7 +1800,7 @@ export const designReferences = [
     officialUrl: 'https://www.lisawinstanley.com/post/posters-with-purpose-wins-aiga-50-books-50-covers',
     galleryUrl: 'https://draw-down.com/products/posters-with-purpose-in-conversation-with-3-poster-design-masters',
     designerUrl: 'https://www.lisawinstanley.com/post/posters-with-purpose-wins-aiga-50-books-50-covers',
-    previewStatus: 'Draw Down product page opens and lists 22 product-image entries; designer project page opens with cover, endpapers, debossed hard cover, fold-out/perforated posters and bilingual interior spreads. Direct JPG links returned cache misses in this run. No full public PDF or editable source verified. Designer states 150 pages; a specialist design-press article reports 156 pages, so the 150-page figure follows the designer and bookseller product record.',
+    previewStatus: 'Draw Down product page opens and lists 22 product-image entries; designer project page opens with cover, endpapers, debossed hard cover, fold-out/perforated posters and bilingual interior spreads. Direct JPG links returned cache misses in this run. No full public PDF or editable source verified. Designer and bookseller product records both list 150 pages.',
     typefaces: [
       {
         name: 'Display and body typefaces not identified in public project credits',
