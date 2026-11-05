@@ -1730,6 +1730,162 @@ export const designReferences = [
     }
   },
 
+
+  {
+    id: 'neue-erschoepfungsgeschichten-2024',
+    title: 'Neue Erschöpfungsgeschichten',
+    author: 'Holm-Uwe Burgemann (editor); Tanasgol Sabbagh, Heike Geißler, Enis Maci, Eva von Redecker, Moshtari Hilal, Sinthujan Varatharajah, Judith Schalansky',
+    publisher: 'PRÄPOSITION',
+    designer: 'Studio Daniel Zenker / Daniel Zenker; artwork Ruth Roxane Eckrich; custom type Laucke Siebein',
+    year: 2024,
+    dimensionsMm: [120, 180],
+    pageCount: 224,
+    pageCountNote: 'Stiftung Buchkunst and PRÄPOSITION metadata list 224 pages; Klingspor Museum product page lists 218 pages. Discrepancy retained rather than silently reconciled.',
+    isbn: '978-3-00-080088-7',
+    module: 'PROGRESSIVE_TEXT',
+    tags: ['에세이', '짧은글', '여백형', '타이포그래피', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2025 / Stiftung Buchkunst, category Allgemeine Literatur. Jury specifically praises Mimesis, the two-colour scheme, unusual folio placement, refined essay setting, and the balance of type density and white space.',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/neue-erschoepfungsgeschichten/',
+    galleryUrl: 'https://www.offenbach.de/microsite/klingspor_museum/modulinhalte/shop/produkt-katalog/produkte/neue-erschoepfungsgeschichten.php',
+    publisherGalleryUrl: 'https://www.praeposition.com/shop',
+    designerUrl: 'https://zenkerdaniel.de/en/projects/neue-erschoepfungsgeschichten',
+    previewStatus: 'Klingspor Museum product page opens and provides a cover-image zoom, not a full interior gallery. PRÄPOSITION shop search index displays multiple book images, but direct page opening returned a cache miss in this run. No full-book PDF or editable source verified.',
+    typefaces: [
+      {
+        name: 'Mimesis Regular',
+        foundry: 'Laucke Siebein/Type',
+        status: 'CHECK',
+        source: 'https://type.studio-laucke-siebein.com/mimesis',
+        license: 'Commercial license. Offline/Print license is scoped to one brand; each client needs its own license. The EULA prohibits public-server placement and embedding that exposes the font to end users. Obtain written clearance for ooOS server-side PDF generation before use.'
+      },
+      {
+        name: 'Oracle Triple Book',
+        foundry: 'Dinamo Typefaces',
+        status: 'CHECK',
+        source: 'https://abcdinamo.com/typefaces/oracle',
+        license: 'Commercial license. Dinamo requires the commissioning client to own the license; each client needs its own license. Fonts may not be put on public servers or embedded in a way that exposes them to end users. Confirm server workflow and any subcontractor scope.'
+      },
+      {
+        name: 'Shinka Mono Regular',
+        foundry: 'Aeiou Tools',
+        status: 'CHECK',
+        source: 'https://aeiou.tools/eula',
+        license: 'Commercial license. EULA is scoped to one brand/client and prohibits public-server uploads. It also restricts use of the fonts for AI training, fine-tuning, validation or development. Obtain written clearance for ooOS generation.'
+      },
+      {
+        name: 'Noto Sans CJK KR',
+        status: 'SUBSTITUTE',
+        source: 'https://notofonts.github.io/noto-docs/website/use/',
+        license: 'SIL Open Font License 1.1; suitable Korean sans-serif substitute when OFL conditions are observed.'
+      }
+    ],
+    palette: 'Pantone 804U Neon Orange and Pantone 874U Bronze Metallic on subtly tinted blue-white paper; fine-linen cover. Palette and two-colour contrast ADAPT; spot colours and paper stock require print-vendor confirmation.',
+    layoutNotes: 'Compact 120×180 mm, 224 pages per Stiftung Buchkunst. Strong central axis, assertive text area, unusually positioned folios, varied essay-specific setting, and deliberate alternation of type density and white space. Exact body measure, leading and margin dimensions are not published. Klingspor Museum lists 218 pages, so page-count discrepancy remains flagged.',
+    editorialIdea: 'For a multi-author short-essay collection, keep a consistent central axis and page-number system while varying only a small set of essay-opening and body-text patterns. Use white space to let individual sentences land; do not inflate length with arbitrary blank pages. Use a licensed Korean sans-serif substitute in ooOS until custom-font server rights are confirmed.',
+    rights: {
+      layout: 'ADAPT',
+      palette: 'ADAPT',
+      font: 'CHECK',
+      substituteFont: 'USE',
+      images: 'NO',
+      text: 'NO',
+      editableOriginal: 'NO'
+    }
+  },
+  {
+    id: 'constructive-disobedience-2025',
+    title: 'Constructive Disobedience: An Experimental Methodology in Architecture',
+    author: 'Edited by Matthias Ballestrem, Katharina Benjamin and Helga Blocksdorf',
+    publisher: 'Birkhäuser',
+    designer: 'hla.studio / Tobias Dahl and Patrick Martin',
+    year: 2025,
+    dimensionsMm: [230, 300],
+    pageCount: 296,
+    isbn: '978-3-0356-2829-6',
+    module: 'DENSITY_SWITCH',
+    tags: ['문화예술', '교양서', '그리드형', '이미지인터루드', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2025 / Stiftung Buchkunst, category Fachbücher. Jury praises the two-tone colour concept, pink section pages, coated/uncoated paper changes, one typeface used in varied weights and sizes, oversized chapter dividers, highlighted references, and hollow spine.',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/constructive-disobedience/',
+    galleryUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/constructive-disobedience/',
+    publisherUrl: 'https://birkhauser.com/en/book/9783035628302',
+    previewStatus: 'Official Stiftung Buchkunst award page opens and documents the design; Birkhäuser publisher page opens with book details and a cover-download control. An actual interior spread image was returned from the Stiftung domain in image search, but its direct JPG endpoint returned a cache miss on open. No complete public PDF or editable source verified.',
+    typefaces: [
+      {
+        name: 'Neue Haas Grotesk Text Medium and Bold',
+        foundry: 'Commercial Type / Christian Schwartz',
+        status: 'CHECK',
+        source: 'https://commercialtype.com/catalog/neue_haas_grotesk_text',
+        license: 'Desktop license covers printed books and non-editable documents, but automated document production requires a separate server license. Commercial Type EULA also restricts use with generative or other AI services. Do not use in ooOS automated AI PDF generation without written permission and the correct license.'
+      },
+      {
+        name: 'Total Text',
+        foundry: 'hla.studio / Patrick Martin',
+        status: 'CHECK',
+        source: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/constructive-disobedience/',
+        license: 'Named in the official production credits; public retail license terms were not located. Do not assume a transferable license.'
+      },
+      {
+        name: 'Noto Sans CJK KR',
+        status: 'SUBSTITUTE',
+        source: 'https://notofonts.github.io/noto-docs/website/use/',
+        license: 'SIL Open Font License 1.1; Korean substitute for the restrained grotesk system.'
+      }
+    ],
+    palette: 'Black cover with soft neon-pink screenprint; pink interior section pages and pink reference highlights. Exact Pantone value is not disclosed. Colour logic ADAPT; screenprint, spot ink and stock transitions require print-vendor approval.',
+    layoutNotes: 'Large 230×300 mm, 296 pages, with 96 black-and-white and 104 colour illustrations listed by Birkhäuser. The jury describes one typeface in multiple cuts and sizes, oversized chapter lettering across spreads, pink reference highlights in body text, and alternating coated/uncoated stocks. Hollow spine improves opening. Exact body width, leading and grid measurements are not published.',
+    editorialIdea: 'For cultural and educational books, use one robust type family with disciplined weight/size changes; mark sections with a single restrained spot colour; highlight citations consistently; alternate text-heavy spreads with drawings or images. For POD, simulate paper changes digitally and treat hollow-spine binding as a premium production option.',
+    rights: {
+      layout: 'ADAPT',
+      palette: 'ADAPT',
+      font: 'CHECK',
+      substituteFont: 'USE',
+      images: 'NO',
+      text: 'NO',
+      editableOriginal: 'NO'
+    }
+  },
+  {
+    id: 'posters-with-purpose-2025',
+    title: 'Posters with Purpose: In Conversation with 3 Poster Design Masters',
+    author: 'Lisa Winstanley; interviews with Ryan Slone, Rikke Hansen and Byoungil Sun',
+    publisher: 'Design Ethics and Visual Integrity Lab (DEVIL), Nanyang Technological University',
+    designer: 'Lisa Winstanley (art director and lead designer); Cammie Toh Su Qi',
+    year: 2025,
+    dimensionsMm: [240, 305],
+    pageCount: 150,
+    module: 'DENSITY_SWITCH',
+    tags: ['인터뷰', '문화예술', '글이미지50_50', '이미지인터루드', '그리드형'],
+    evidence: 'AIGA 50 Books | 50 Covers 2025 Winner, confirmed by the designer and specialist bookseller; the designer reports selection from 536 entries across 29 countries and inclusion in the permanent AIGA collection at Columbia University.',
+    officialUrl: 'https://www.lisawinstanley.com/post/posters-with-purpose-wins-aiga-50-books-50-covers',
+    galleryUrl: 'https://draw-down.com/products/posters-with-purpose-in-conversation-with-3-poster-design-masters',
+    designerUrl: 'https://www.lisawinstanley.com/post/posters-with-purpose-wins-aiga-50-books-50-covers',
+    previewStatus: 'Draw Down product page opens and lists 22 product-image entries; designer project page opens with cover, endpapers, debossed hard cover, fold-out/perforated posters and bilingual interior spreads. Direct JPG links returned cache misses in this run. No full public PDF or editable source verified. Designer states 150 pages; a specialist design-press article reports 156 pages, so the 150-page figure follows the designer and bookseller product record.',
+    typefaces: [
+      {
+        name: 'Display and body typefaces not identified in public project credits',
+        status: 'CHECK',
+        license: 'No exact family name or license terms verified; do not infer from appearance.'
+      },
+      {
+        name: 'Noto Sans CJK KR',
+        status: 'SUBSTITUTE',
+        source: 'https://notofonts.github.io/noto-docs/website/use/',
+        license: 'SIL Open Font License 1.1; possible Korean substitute after layout testing.'
+      }
+    ],
+    palette: 'Neon-orange and purple folded dust jacket; white cloth hard cover with blind-debossed three-part motif. Colour and layered-cover principle ADAPT; foil/deboss and folded jacket require separate print/bindery feasibility and cost checks.',
+    layoutNotes: 'Large 240×305 mm, 150 pages per designer and bookseller. Three interview chapters are treated as layers in a palimpsest; selected poster works are folded and perforated for removal; one featured chapter is bilingual Korean/English. Exact text measure, leading, grid and poster-to-text area ratio are not published.',
+    editorialIdea: 'For interview collections, maintain one stable interview grid while giving each interviewee a distinct visual chapter identity. Use removable/fold-out artwork only in a premium edition; for standard print-on-demand, test a bound-in gatefold or a separate insert before promising it.',
+    rights: {
+      layout: 'ADAPT',
+      palette: 'ADAPT',
+      font: 'CHECK',
+      substituteFont: 'USE',
+      images: 'NO',
+      text: 'NO',
+      editableOriginal: 'NO'
+    }
+  },
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
