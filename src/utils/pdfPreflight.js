@@ -212,12 +212,26 @@ export function evaluatePrintPdf(report, {
     }
   ];
 
+  // A browser-side regex scan is only an advisory check. It cannot prove
+  // complete PDF page-tree integrity, embedded fonts, image DPI, color profile,
+  // overprint, or bleed on every page. Never label such a file press-ready.
+  const unresolvedProductionChecks = [
+    '전체 페이지 PDF 구조 파서 검증',
+    '모든 글꼴 임베딩 및 누락 글리프 확인',
+    '이미지 실효 해상도 및 색상 공간 검증',
+    '전체 페이지 TrimBox/BleedBox 및 실제 도련 내용 검증',
+    '인쇄소 지정 PDF/X, ICC 프로파일, 출력 조건 검증'
+  ];
   const blockers = checks.filter((check) => !check.passed);
+  const blockersText = blockers.map((check) => check.detail);
 
   return {
-    ready: blockers.length === 0,
+    ready: false,
+    advisoryPassed: blockers.length === 0,
+    status: blockers.length ? 'needs-fixes' : 'needs-professional-preflight',
     checks,
-    blockers: blockers.map((check) => check.detail),
+    unresolvedProductionChecks,
+    blockers: [...blockersText, ...unresolvedProductionChecks],
     target: {
       expectedPages: hasExpected ? expected : null,
       trimWidthMm: Number(trimWidthMm),
