@@ -1826,6 +1826,68 @@ export const designReferences = [
       editableOriginal: 'NO'
     }
   },
+
+  {
+    id: 'prototyp-1928-33-2025',
+    title: 'Prototyp 1928–33: Schule der Arbeit',
+    author: 'Ute Richter',
+    publisher: 'Verbrecher Verlag',
+    designer: 'Nelly Nakahara and Gerrit Brocks',
+    year: 2025,
+    dimensionsMm: [165, 216],
+    pageCount: 128,
+    pageCountNote: 'Stiftung Buchkunst lists 128 pages; publisher shop lists 120 pages. The discrepancy is retained.',
+    imageCount: '64 black-and-white illustrations (publisher listing)',
+    isbn: '978-3-95732-617-1',
+    module: 'ARCHIVE_VS_PRESENT',
+    tags: ['회고', '문화예술', '그리드형', '이미지인터루드', '아카이브', '내지'],
+    evidence: 'Die Schönsten Deutschen Bücher 2025 / Stiftung Buchkunst, category Ratgeber-Sachbücher. Jury specifically praises monochrome text-image composition, open spine, neon thread binding, ragged-right text columns, bold quotations as a second reading layer, and the dense wide text area.',
+    officialUrl: 'https://www.stiftung-buchkunst.de/die-schoensten-deutschen-buecher/die-praemierten/prototyp-1928-33/',
+    galleryUrl: 'https://www.verbrecherverlag.de/shop/projekt-1928-33/',
+    publisherUrl: 'https://www.verbrecherverlag.de/shop/projekt-1928-33/',
+    previewUrl: 'https://www.verbrecherverlag.de/wp-content/uploads/2024/11/Leseprobe-Richter-Projekt-1928-33.pdf',
+    previewStatus: 'Publisher product page opens and links to a public PDF reading sample. The PDF opens and shows actual interior spreads with archival photos, source notes, documents, architectural drawings and bold quotations. This is a partial reading sample, not the complete book and not an editable original.',
+    typefaces: [
+      {
+        name: 'New Century Schoolbook',
+        foundry: 'Linotype / Monotype',
+        status: 'CHECK',
+        source: 'https://www.myfonts.com/collections/new-century-schoolbook-font-linotype',
+        license: 'Commercial typeface. MyFonts lists Desktop, Company Desktop and Electronic Document license types; a standard desktop license is not sufficient to assume server-side automated book production or electronic-book embedding. Confirm the correct company and publication/server license before use.'
+      },
+      {
+        name: 'ABC Walter Alte',
+        foundry: 'Dinamo Typefaces / Omnigroup',
+        status: 'CHECK',
+        source: 'https://abcdinamo.com/typefaces/walter',
+        license: 'Commercial license. Dinamo requires the commissioning client to own the license; each client needs its own license. Fonts may not be put on public servers or embedded in a way that exposes them to end users. Confirm server workflow and subcontractor scope for ooOS.'
+      },
+      {
+        name: 'Noto Serif CJK KR',
+        status: 'SUBSTITUTE',
+        source: 'https://notofonts.github.io/noto-docs/website/use/',
+        license: 'SIL Open Font License 1.1; suitable Korean serif substitute when OFL conditions are observed.'
+      },
+      {
+        name: 'Noto Sans CJK KR',
+        status: 'SUBSTITUTE',
+        source: 'https://notofonts.github.io/noto-docs/website/use/',
+        license: 'SIL Open Font License 1.1; suitable Korean sans-serif substitute for archival labels and bold quotation hierarchy.'
+      }
+    ],
+    palette: 'Monochrome black-and-white interior and white cover material, interrupted by a neon-coloured sewn thread. Monochrome system and single accent principle ADAPT; neon thread and exposed-spine binding require bindery feasibility confirmation.',
+    layoutNotes: '165×216 mm. Stiftung Buchkunst lists 128 pages; publisher lists 120. The publisher lists 64 black-and-white illustrations. Open-spine sewn softcover; monochrome text-image compositions; ragged-right columns on text-heavy spreads; bold quotations form a second reading layer; wide type area nearly reaches the gutter. Captions and source references preserve archival provenance. Exact margins and leading are not published.',
+    editorialIdea: 'For memoirs, oral histories and research-led essays, combine one stable body-text grid with archival images, source captions and bold first-person quotations. Let original documents remain visually distinct rather than polishing them into generic illustrations. Use an open-spine binding only when the print run and bindery justify it.',
+    rights: {
+      layout: 'ADAPT',
+      palette: 'ADAPT',
+      font: 'CHECK',
+      substituteFont: 'USE',
+      images: 'NO',
+      text: 'NO',
+      editableOriginal: 'NO'
+    }
+  },
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
