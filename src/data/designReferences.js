@@ -1888,7 +1888,202 @@ export const designReferences = [
       text: 'NO',
       editableOriginal: 'NO'
     }
-  },
+  },,
+{
+  "id": "o-que-faz-falta-2025",
+  "title": "O que faz falta — 50 years of Portuguese architecture in democracy",
+  "author": "Jorge Figueira; Ana Neiva (curators/editors)",
+  "publisher": "Casa da Arquitectura — Centro Português de Arquitectura",
+  "designer": "Ana Resende Studio + The Royal Studio — Ana Resende, João Castro, Rita Constante, Eunice Bastos",
+  "year": 2025,
+  "dimensionsMm": [
+    241,
+    320
+  ],
+  "dimensionsNote": "AIGA lists 9.5 × 12.6 inches (approx. 241 × 320 mm).",
+  "pageCount": 340,
+  "pageCountNote": "AIGA lists 340 pages; some retail records list 352. Verify the exact edition's colophon before production.",
+  "isbn": "978-989-350923-4",
+  "binding": "Swiss binding, softcover",
+  "paper": "Fedrigoni Arena Rough White, cover and text",
+  "module": "DENSITY_SWITCH",
+  "tags": [
+    "문화예술",
+    "교양서",
+    "에세이",
+    "그리드형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "evidence": "AIGA 50 Books | 50 Covers 2025 — Book Winner. Casa da Arquitectura confirms the selection and design credits; the AIGA jury describes its literary-critical narrative, index-like technical content, non-linear sequencing and final 'book within the book'.",
+  "officialUrl": "https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79120",
+  "galleryUrl": "https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79120",
+  "publisherUrl": "https://www.casadaarquitectura.pt/en/noticias/o-que-faz-falta-distinguido-entre-os-50-livros-de-2025-com-melhor-design-pela-aiga-2026-08-10/",
+  "previewUrl": null,
+  "previewStatus": "The official AIGA winner page opens and lists a six-image project gallery. Individual image assets were blocked in this run; no direct JPG/PNG download, public PDF sample or editable original was verified.",
+  "typefaces": [
+    {
+      "name": "Original typeface family not disclosed in AIGA credits",
+      "status": "CHECK",
+      "license": "No family name or license terms verified; do not infer from appearance."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://notofonts.github.io/noto-cjk/",
+      "license": "SIL Open Font License 1.1; Korean serif substitute."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://notofonts.github.io/noto-cjk/",
+      "license": "SIL Open Font License 1.1; Korean sans-serif substitute for captions and navigation."
+    }
+  ],
+  "palette": "AIGA documents the paper and the book's pop/material character but does not publish a precise palette or Pantone values. Do not infer a fixed color scheme from the award; palette status CHECK. The non-linear section rhythm and material contrast can be adapted independently.",
+  "layoutNotes": "The 340-page book combines six essays with 50 architectural works. The AIGA jury describes index-like presentation for technical information, a fluid non-linear sequence across decades and projects, and a final textual/visual essay section treated as a 'book within the book', visible in the cut of the book block. Swiss binding and Fedrigoni Arena Rough White are specified. Exact body width, alignment, leading, grid measurements and image-area ratio are not disclosed.",
+  "editorialIdea": "For a cultural essay or research book, keep the main reading grid stable, present project facts in repeatable index-like modules, and reserve a distinct final section for a second narrative layer. In ooOS, simulate the nested-book effect with section architecture and page-color/folio cues; do not promise a physical cut or Swiss binding in standard POD.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "CHECK",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "hybrid-curiosity-in-all-things-2025",
+  "title": "Hybrid: Curiosity in All Things",
+  "author": "Hybrid Design",
+  "editor": "Hybrid Design; publisher/editor Victionary",
+  "publisher": "Victionary",
+  "designer": "Hybrid Design",
+  "year": 2025,
+  "dimensionsMm": [
+    178,
+    235
+  ],
+  "dimensionsNote": "Victionary lists 178 × 235 mm; Counter-Print lists 190 × 247 mm. Use the publisher's 178 × 235 mm specification provisionally and verify the physical edition.",
+  "pageCount": 640,
+  "pageCountNote": "Victionary lists 640 pages; Counter-Print lists 644. Confirm the exact edition before production.",
+  "isbn": "978-988-70660-0-2",
+  "binding": "Full-colour hardcover; two cover colourways",
+  "module": "REPEATABLE_CARD",
+  "tags": [
+    "에세이",
+    "문화예술",
+    "글이미지50_50",
+    "그리드형",
+    "이미지인터루드",
+    "내지"
+  ],
+  "evidence": "AIGA 50 Books | 50 Covers 2025 — Book Winner. The official AIGA project description says each section pairs an essay with projects and organizes the book around ideas and influences rather than client or category.",
+  "officialUrl": "https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79109",
+  "galleryUrl": "https://www.creativeboom.com/news/hybrid-distils-25-years-of-curiosity-craft-and-cultural-obsession-into-debut-book/",
+  "publisherUrl": "https://victionary.com/products/hybrid-curiosity-in-all-things",
+  "previewUrl": "https://media.creativeboom.com/527e6d5a-65a1-488b-8103-63705f268b5d/conversions/18bedfde885eae400d5614c8d5251acd3dc85aed-medium.webp",
+  "previewStatus": "Creative Boom's professional design feature opens and displays actual interior spreads, including pages 012–013 and 160–161. The previewUrl is a direct medium-size WEBP of the actual 012–013 spread; it is a public preview, not a reusable asset or editable original. Victionary's official product gallery also opens, but its dynamic image URLs did not resolve as direct downloads in this run.",
+  "typefaces": [
+    {
+      "name": "Original typeface families not disclosed in AIGA or Victionary public credits",
+      "status": "CHECK",
+      "license": "No exact family names or license terms verified."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://notofonts.github.io/noto-cjk/",
+      "license": "SIL Open Font License 1.1; Korean sans-serif substitute."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://notofonts.github.io/noto-cjk/",
+      "license": "SIL Open Font License 1.1; Korean serif substitute where a more literary voice is needed."
+    }
+  ],
+  "palette": "Victionary offers black and white cover colourways; the interior is full colour. Verified spreads use a white page field, oversized black numerals, orange/red diagram lines, yellow and multicolour project imagery, small captions and coloured ribbon markers. General colour and hierarchy principles ADAPT; no exact spot-colour values are published.",
+  "layoutNotes": "AIGA says sections pair essays with projects and are grouped by ideas/influences rather than client/category. The verified 012–013 spread uses a large left-page title and photograph, with a diagram and two narrow text columns on the right. The 160–161 spread combines a large numeral, several project images and short captions. White space and strong scale contrast organize a dense 640-page full-colour book. Exact body measure, leading and baseline grid are unpublished.",
+  "editorialIdea": "For a long essay collection or creative memoir, repeat a small number of page archetypes: essay opener, reflective text spread, image/project spread and short caption index. Let each section's idea—not the contributor's name alone—determine its sequence. Use oversized numerals sparingly to signal section transitions.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+},
+{
+  "id": "95-ways-to-step-on-the-world-2026",
+  "title": "95 Ways to Step on the World",
+  "author": "Gabriel Krauze",
+  "publisher": "Topsafe (AIGA entry lists Gabriel Krauze as publisher)",
+  "designer": "Zak Group — book and cover designer Ladina Doerig; creative director Zak Kyes",
+  "year": 2026,
+  "dimensionsMm": [
+    111,
+    161
+  ],
+  "pageCount": 80,
+  "isbn": "978-1-0369-7223-3",
+  "binding": "Paperback",
+  "paper": "Munken Print Cream 80 gsm",
+  "illustrationCount": 10,
+  "module": "PROGRESSIVE_TEXT",
+  "tags": [
+    "짧은글",
+    "회고",
+    "여백형",
+    "한글조판",
+    "표지",
+    "내지"
+  ],
+  "evidence": "AIGA 50 Books | 50 Covers 2025 — Cover Winner (not Book Winner). The AIGA project description specifically documents the type-rich interior approach, blackletter reference, paper/format choice and die-cut cover construction.",
+  "officialUrl": "https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79145",
+  "galleryUrl": "https://www.legrandj.eu/products/gabriel-krauze-95-ways-to-step-on-the-world",
+  "publisherUrl": "https://topsafe.co/products/95-ways-to-step-on-the-world-gabriel-krauze",
+  "previewUrl": null,
+  "previewStatus": "The AIGA award page opens. Le Grand Jeu's product gallery opens and contains seven images; three clicked images show actual interior spreads (opening/eye reveal, two-column text spread and a black page with white type) but are served as 100×100 thumbnails. No full-resolution direct JPG/PNG, public PDF or editable original was verified.",
+  "typefaces": [
+    {
+      "name": "Carol Gothic",
+      "foundry": "ParaType",
+      "designer": "Alexander Lubovenko and Alexandra Korolkova",
+      "status": "CHECK",
+      "source": "https://fonts.adobe.com/fonts/carol-gothic",
+      "license": "Adobe Fonts states its library is cleared for commercial design projects and PDF embedding; MyFonts distinguishes flat non-editable desktop output from paid electronic-document use. For ooOS cloud/server-generated PDFs or editable templates, obtain written confirmation of the correct license before use."
+    },
+    {
+      "name": "HAL Timezone",
+      "foundry": "HAL Typefaces",
+      "status": "CHECK",
+      "source": "https://type.hanli.eu/timezone/",
+      "license": "Official foundry identifies the family and styles, but public commercial/server licensing terms were not located. Ask the foundry before use."
+    },
+    {
+      "name": "Noto Sans CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://notofonts.github.io/noto-cjk/",
+      "license": "SIL Open Font License 1.1; practical Korean body-text substitute, not a visual match for the original blackletter display style."
+    }
+  ],
+  "palette": "Cobalt-blue cover with die-cut eye apertures; the first page reveals a halftone image. Interior stock is Munken Print Cream 80 gsm. Cobalt/cream/black contrast can be adapted; die-cut and halftone reveal require separate prepress and bindery approval.",
+  "layoutNotes": "A compact 111 × 161 mm, 80-page experimental semi-autobiographical text collection with 10 illustrations. AIGA describes a type-rich layout using blackletter inspired by tattoo lettering, with Carol Gothic and HAL Timezone. The verified product thumbnails show a two-column text spread, an opening reveal and a black page with white type. Exact body width, leading, margin and baseline grid are unpublished. The award is specifically in the Cover category.",
+  "editorialIdea": "For short, fragmented writing, use a compact trim size and a deliberately limited typographic system. A strong display face can signal the author's voice, while body pages remain consistent; occasional dark pages or image reveals can punctuate the sequence. Treat this as an experimental contrast case, not a default minimalist template.",
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  }
+}
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
