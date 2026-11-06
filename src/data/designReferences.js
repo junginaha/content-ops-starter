@@ -1888,7 +1888,7 @@ export const designReferences = [
       text: 'NO',
       editableOriginal: 'NO'
     }
-  },,
+  },
 {
   "id": "o-que-faz-falta-2025",
   "title": "O que faz falta — 50 years of Portuguese architecture in democracy",
