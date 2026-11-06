@@ -1890,62 +1890,66 @@ export const designReferences = [
     }
   },
 {
-  "id": "o-que-faz-falta-2025",
-  "title": "O que faz falta — 50 years of Portuguese architecture in democracy",
-  "author": "Jorge Figueira; Ana Neiva (curators/editors)",
-  "publisher": "Casa da Arquitectura — Centro Português de Arquitectura",
-  "designer": "Ana Resende Studio + The Royal Studio — Ana Resende, João Castro, Rita Constante, Eunice Bastos",
+  "id": "on-the-edges-graphic-design-az-2025",
+  "title": "On the Edges of Graphic Design from A—Z—∞",
+  "author": "Edited by Anja Lutz and Soraya Guimarães Hoepfner; introduction by Jason Grant; conversation with Freek Lomme",
+  "publisher": "Set Margins' publications",
+  "designer": "Anja Lutz // Art Books",
   "year": 2025,
   "dimensionsMm": [
-    241,
-    320
+    120,
+    165
   ],
-  "dimensionsNote": "AIGA lists 9.5 × 12.6 inches (approx. 241 × 320 mm).",
-  "pageCount": 340,
-  "pageCountNote": "AIGA lists 340 pages; some retail records list 352. Verify the exact edition's colophon before production.",
-  "isbn": "978-989-350923-4",
-  "binding": "Swiss binding, softcover",
-  "paper": "Fedrigoni Arena Rough White, cover and text",
-  "module": "DENSITY_SWITCH",
+  "pageCount": 548,
+  "isbn": "978-90-835795-1-1",
+  "binding": "Swiss binding, open back, one flap",
+  "paper": "Pergraphica Classic Rough 100 gsm; Magno Gloss 150 gsm; cover Pergraphica Classic Rough 300 gsm",
+  "edition": 2500,
+  "colorImageCount": 500,
+  "blackWhiteImageCount": 24,
+  "module": "REPEATABLE_CARD",
   "tags": [
     "문화예술",
-    "교양서",
     "에세이",
+    "짧은글",
     "그리드형",
     "이미지인터루드",
-    "내지"
+    "내지",
+    "소형판형"
   ],
-  "evidence": "AIGA 50 Books | 50 Covers 2025 — Book Winner. Casa da Arquitectura confirms the selection and design credits; the AIGA jury describes its literary-critical narrative, index-like technical content, non-linear sequencing and final 'book within the book'.",
-  "officialUrl": "https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79120",
-  "galleryUrl": "https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79120",
-  "publisherUrl": "https://www.casadaarquitectura.pt/en/noticias/o-que-faz-falta-distinguido-entre-os-50-livros-de-2025-com-melhor-design-pela-aiga-2026-08-10/",
-  "previewUrl": null,
-  "previewStatus": "The official AIGA winner page opens and lists a six-image project gallery. Individual image assets were blocked in this run; no direct JPG/PNG download, public PDF sample or editable original was verified.",
+  "evidence": "AIGA 50 Books | 50 Covers 2025 Winner, Book category. The official AIGA winners gallery lists the title as a Book selection; Set Margins confirms designer, typeface and production details. Slanted's professional design feature provides actual interior spreads.",
+  "officialUrl": "https://50books50covers.secure-platform.com/a/gallery?roundId=417",
+  "galleryUrl": "https://www.slanted.de/on-the-edges-of-graphic-design-from-a-z-%E2%88%9E/",
+  "publisherUrl": "https://www.setmargins.press/books/on-the-edges-of-graphic-design-from-a-z-%E2%88%9E/",
+  "previewUrl": "https://www.slanted.de/wp-content/uploads/2025/10/slanted_blog_a-z-8_book_3-1024x704.jpg",
+  "previewStatus": "Slanted's page opens with eight book photographs, including actual spreads 36–37, 90–91, 140–141 and 172–173. The previewUrl is a direct 1024×704 JPG of spread 36–37. It is a public preview, not a reusable asset or editable original. No complete public PDF or editable source was verified.",
   "typefaces": [
     {
-      "name": "Original typeface family not disclosed in AIGA credits",
+      "name": "Relative",
+      "foundry": "Colophon Foundry",
       "status": "CHECK",
-      "license": "No family name or license terms verified; do not infer from appearance."
-    },
-    {
-      "name": "Noto Serif CJK KR",
-      "status": "SUBSTITUTE",
-      "source": "https://notofonts.github.io/noto-cjk/",
-      "license": "SIL Open Font License 1.1; Korean serif substitute."
+      "source": "https://www.myfonts.com/collections/relative-font-colophon-foundry",
+      "license": "MyFonts separates Desktop, Web, App and Electronic Document licenses. The listed Desktop license does not permit server installation, web/app embedding, font sharing, or e-book embedding; it also excludes commercial print environments. ooOS server-generated PDFs and commercial print-production workflows require written confirmation and the correct license. Do not assume a standard desktop license is sufficient."
     },
     {
       "name": "Noto Sans CJK KR",
       "status": "SUBSTITUTE",
       "source": "https://notofonts.github.io/noto-cjk/",
-      "license": "SIL Open Font License 1.1; Korean sans-serif substitute for captions and navigation."
+      "license": "SIL Open Font License 1.1; Korean sans-serif substitute."
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "source": "https://notofonts.github.io/noto-cjk/",
+      "license": "SIL Open Font License 1.1; Korean serif substitute for literary essay sections."
     }
   ],
-  "palette": "AIGA documents the paper and the book's pop/material character but does not publish a precise palette or Pantone values. Do not infer a fixed color scheme from the award; palette status CHECK. The non-linear section rhythm and material contrast can be adapted independently.",
-  "layoutNotes": "The 340-page book combines six essays with 50 architectural works. The AIGA jury describes index-like presentation for technical information, a fluid non-linear sequence across decades and projects, and a final textual/visual essay section treated as a 'book within the book', visible in the cut of the book block. Swiss binding and Fedrigoni Arena Rough White are specified. Exact body width, alignment, leading, grid measurements and image-area ratio are not disclosed.",
-  "editorialIdea": "For a cultural essay or research book, keep the main reading grid stable, present project facts in repeatable index-like modules, and reserve a distinct final section for a second narrative layer. In ooOS, simulate the nested-book effect with section architecture and page-color/folio cues; do not promise a physical cut or Swiss binding in standard POD.",
+  "palette": "Verified spreads use a bright yellow outer frame and section labels, white pages, black text and full-colour graphic material. Publisher specifies full colour and two paper stocks. Yellow/black/white hierarchy and page-edge markers ADAPT; exact Pantone values are not published. Swiss binding and stock changes require printer/bindery approval.",
+  "layoutNotes": "Compact 120×165 mm, 548 pages, 500 colour images and 24 black-and-white images. Part A—Z uses alphabetical, cross-referenced entries for more than 100 activities, projects and events; the second —∞ part contains contributions from 36 international designers imagining the discipline's future. The verified 36–37 spread pairs a left-page explanatory text with a dense right-page typographic/artifact grid, held together by yellow labels and a clear page frame. Spread 172–173 uses an oversized typographic quotation across a generous white field. Exact body measure, leading and baseline grid are unpublished.",
+  "editorialIdea": "For a short-text anthology or cultural reference book, create a repeatable index entry with title, concise context, contributor, date and cross-reference. A second part can hold longer invited essays. Keep the body measure stable; use a single yellow marker system for navigation and reserve oversized type for occasional statement spreads. This is a practical model for making many short entries feel like a substantial book without padding.",
   "rights": {
     "layout": "ADAPT",
-    "palette": "CHECK",
+    "palette": "ADAPT",
     "font": "CHECK",
     "substituteFont": "USE",
     "images": "NO",
