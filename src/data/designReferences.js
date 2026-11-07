@@ -2087,7 +2087,53 @@ export const designReferences = [
     "text": "NO",
     "editableOriginal": "NO"
   }
-}
+},
+  {
+    id: 'hybrid-curiosity-in-all-things',
+    title: 'Hybrid: Curiosity in All Things',
+    author: 'Hybrid Design',
+    publisher: 'Victionary',
+    designer: 'Hybrid Design',
+    year: 2025,
+    dimensionsMm: [178, 235],
+    pageCount: 640,
+    module: 'DENSITY_SWITCH',
+    tags: ['에세이', '문화예술', '글이미지50_50', '그리드형', '내지'],
+    evidence: 'AIGA 50 Books | 50 Covers 2025 — Book Winner. AIGA project description documents the essay-and-project pairing and idea-led editorial structure.',
+    officialUrl: 'https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79109',
+    galleryUrl: 'https://victionary.com/products/hybrid-curiosity-in-all-things',
+    interiorGalleryUrl: 'https://www.creativeboom.com/news/hybrid-distils-25-years-of-curiosity-craft-and-cultural-obsession-into-debut-book/',
+    previewUrl: 'https://media.creativeboom.com/527e6d5a-65a1-488b-8103-63705f268b5d/conversions/18bedfde885eae400d5614c8d5251acd3dc85aed-medium.webp',
+    previewStatus: 'Public medium-resolution WEBP preview of the 012–013 spread; not an editable source or a reuse license. Full editable original not verified.',
+    typefaces: [{ name: 'Unpublished in accessible credits', status: 'CHECK' }, { name: 'Noto Sans CJK KR / Noto Serif CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1' }],
+    palette: 'White ground, oversized black numerals, orange/red diagrams, yellow accents and multicolour project imagery. Colour hierarchy may be adapted; source imagery may not be reused without permission.',
+    layoutNotes: 'Essay and project case studies are paired by theme. The verified 012–013 spread combines a large heading and image on the left with diagrams and narrow text columns on the right. Exact body width, leading and baseline grid are unpublished.',
+    editorialIdea: 'Pair each short essay with one relevant project, artwork or diagram. Keep the body grid stable and vary only the image scale, section opener and caption density.',
+    rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' }
+  },
+  {
+    id: '95-ways-to-step-on-the-world',
+    title: '95 Ways to Step on the World',
+    author: 'Gabriel Krauze',
+    publisher: 'Topsafe',
+    designer: 'Zak Group; book and cover design Ladina Doerig; creative director Zak Kyes',
+    year: 2026,
+    dimensionsMm: [111, 161],
+    pageCount: 80,
+    module: 'PROGRESSIVE_TEXT',
+    tags: ['짧은글', '회고', '여백형', '표지', '내지'],
+    evidence: 'AIGA 50 Books | 50 Covers 2025 — Cover Winner (not Book Winner). AIGA project description documents the type-rich interior and blackletter-inspired typographic system.',
+    officialUrl: 'https://50books50covers.secure-platform.com/a/gallery/rounds/417/details/79145',
+    galleryUrl: 'https://www.legrandj.eu/products/gabriel-krauze-95-ways-to-step-on-the-world',
+    interiorGalleryUrl: 'https://www.legrandj.eu/products/gabriel-krauze-95-ways-to-step-on-the-world',
+    previewUrl: null,
+    previewStatus: 'Product gallery contains five images; three verified thumbnails show actual interior pages. No full-resolution direct JPG/PNG, public PDF or editable original verified.',
+    typefaces: [{ name: 'Carol Gothic', foundry: 'ParaType', status: 'CHECK', source: 'https://fonts.adobe.com/fonts/carol-gothic' }, { name: 'HAL Timezone', foundry: 'HAL Typefaces', status: 'CHECK', source: 'https://type.hanli.eu/timezone/' }, { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1' }],
+    palette: 'Cobalt-blue cover, cream interior paper, black typography and a die-cut eye aperture. Colour contrast can be adapted; die-cut and halftone reveal require separate prepress and bindery approval.',
+    layoutNotes: 'Compact 111 × 161 mm, 80-page experimental autobiographical text collection with 10 illustrations. Verified thumbnails show a two-column text spread and a black page with white type. Exact body width, leading, margins and baseline grid are unpublished.',
+    editorialIdea: 'Use a compact trim size and a deliberately limited typographic system for fragmented short writing. Keep body pages consistent and reserve dark pages or image reveals for occasional punctuation.',
+    rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' }
+  }
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
