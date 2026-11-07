@@ -2051,7 +2051,7 @@ export const designReferences = [
   "galleryUrl": "https://www.legrandj.eu/products/gabriel-krauze-95-ways-to-step-on-the-world",
   "publisherUrl": "https://topsafe.co/products/95-ways-to-step-on-the-world-gabriel-krauze",
   "previewUrl": null,
-  "previewStatus": "The AIGA award page opens. Le Grand Jeu's product gallery opens and contains seven images; three clicked images show actual interior spreads (opening/eye reveal, two-column text spread and a black page with white type) but are served as 100×100 thumbnails. No full-resolution direct JPG/PNG, public PDF or editable original was verified.",
+  "previewStatus": "The AIGA award page opens. Le Grand Jeu's product gallery opens and contains five product images; three clicked images show actual interior spreads (opening/eye reveal, two-column text spread and a black page with white type) but are served as 100×100 thumbnails. No full-resolution direct JPG/PNG, public PDF or editable original was verified.",
   "typefaces": [
     {
       "name": "Carol Gothic",
