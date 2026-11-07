@@ -2156,7 +2156,7 @@ export const designReferences = [
       { name: 'Noto Sans CJK KR / Noto Serif CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1', source: 'https://github.com/notofonts/noto-cjk/blob/main/Sans/README-third_party.md' }
     ],
     palette: 'Cover: warm brown paper with fluorescent magenta spiral lettering/foil. Interior previews: predominantly black, white and restrained gray. The two-colour cover relationship and monochrome interior contrast can be adapted; exact colour values are not published.',
-    layoutNotes: '126 × 188 mm, 354 pages. AIGA describes different setting logics for the essay-led first part and illustrated catalogue second part. Verified pages 40–41 use a visual bibliography/diagram on the left and a compact text area on the right; pages 10–11 contrast a single-column autobiographical text page with a punctuation-based visual field. Exact body width, leading and baseline grid are not published.',
+    layoutNotes: '126 × 188 mm, 354 pages. The publisher gives 126 × 188 mm; AIGA lists 5.25 × 7.75 inches, so retain the publisher specification and remeasure a physical copy before production. AIGA describes different setting logics for the essay-led first part and illustrated catalogue second part. Verified pages 40–41 use a visual bibliography/diagram on the left and a compact text area on the right; pages 10–11 contrast a single-column autobiographical text page with a punctuation-based visual field. Exact body width, leading and baseline grid are not published.',
     editorialIdea: 'For short essays or collected fragments, keep the main reading column stable and use a second page role for diagrams, references, marginal prompts or visual indexes. Build page count through useful navigation and cataloguing rather than stretched text.',
     rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' },
     verifiedAt: '2026-11-08'
@@ -2202,13 +2202,15 @@ export const designReferences = [
     pageCount: 400,
     module: 'DENSITY_SWITCH',
     tags: ['에세이', '문화예술', '글이미지50_50', '이미지인터루드', '내지'],
-    evidence: 'AIGA 50 Books | 50 Covers 2024 — Book Winner. Eye magazine review by Rick Poynor describes it as an inventive, purposeful interweaving of text and imagery. The official publisher provides actual interior spread previews.',
-    officialUrl: 'https://50books50covers.secure-platform.com/a/gallery/rounds/414/details/75256',
+    evidence: 'Professional design review: Eye magazine founder Rick Poynor describes the book as an inventive and purposeful interweaving of text and imagery. The designer’s project page and official publisher provide actual interior spread previews. AIGA search indexing also labels it a 2024 Book Winner, but the individual AIGA detail page did not open in this verification.',
+    officialUrl: 'https://www.eyemagazine.com/review/article/images-do-the-talking',
+    awardUrl: 'https://50books50covers.secure-platform.com/a/gallery/rounds/414/details/75256',
+    awardUrlStatus: 'AIGA search result identifies Book Winner; individual detail page access was not verified.',
     galleryUrl: 'https://inventorypress.bigcartel.com/product/seeing-making-room-for-thought',
     interiorGalleryUrl: 'https://www.in-fo.co/form-content/seeing-making-room-for-thought',
     reviewUrl: 'https://www.eyemagazine.com/review/article/images-do-the-talking',
     previewUrl: 'https://assets.bigcartel.com/product_images/376945573/SeeingMaking3.png',
-    previewStatus: 'Verified public PNG preview of actual pages 320–321, with archival images and short captions. Other official publisher previews show the cover and additional interior spreads. Preview images are not editable files or a reuse licence; no editable original or public PDF verified.',
+    previewStatus: 'Verified public PNG preview of actual pages 320–321, with archival images and short captions. Other official publisher previews show the cover and additional interior spreads. Preview images are not editable files or a reuse licence; no editable original or public PDF verified. The AIGA detail page was not accessible in this check; the Eye review and publisher/designer pages were opened.',
     typefaces: [
       { name: 'Arial; Basilea; Imago; Brush Script; Century Schoolbook Monospace; Compacta; Eurostile; Garamond Classico; Neue Haas Grotesk; Minion; Neue moderne Grotesk; Schneidler; Times New Roman; Univers', status: 'CHECK', license: 'AIGA lists these families; exact per-spread use and current licence holder/terms must be checked family by family.' },
       { name: 'Noto Sans CJK KR / Noto Serif CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1', source: 'https://github.com/notofonts/noto-cjk/blob/main/Sans/README-third_party.md' }
