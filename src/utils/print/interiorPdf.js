@@ -10,12 +10,18 @@ import {
   setCharacterSpacing,
   setFillingCmykColor,
   rectangle,
-  fill
+  fill,
+  cmyk
 } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { breakLine, justifyLine } from './koreanLineBreak';
 import { parseBookStructure, structureCanonicalText, canonicalChars, nfc } from './bookStructure';
-import { resolveDesign } from './designProfiles';
+import { resolveDesign, FONT_FAMILIES } from './designProfiles';
+
+// Tints of the single K plate. Decorative marks and running feet sit lighter than the text.
+export const NO_LIGATURES = { liga: false, clig: false, dlig: false, hlig: false };
+
+const TINT = { text: 1, foot: 0.62, label: 0.55, rule: 0.45, ring: 0.5 };
 
 export { TRIM_PRESETS } from './presets';
 
@@ -56,10 +62,17 @@ export async function createFontContext(fonts, { text = '', needSans = false } =
   doc.registerFontkit(fontkit);
   const pdfFonts = {};
   const glyphFonts = {};
+  const bySource = new Map();
   const embed = async (key, bytes) => {
+    // One file serving two roles (고운바탕 Bold as ExtraBold) is embedded once.
+    const same = bySource.get(bytes);
+    if (same) { pdfFonts[key] = pdfFonts[same]; glyphFonts[key] = glyphFonts[same]; return; }
+    bySource.set(bytes, key);
     const padded = padFontBytes(bytes);
     // subset:false — pdf-lib's CJK subsetting drops glyphs; full embedding renders reliably.
-    pdfFonts[key] = await doc.embedFont(padded, { subset: false });
+    // Ligatures off: pdf-lib records a ligature glyph (e.g. "ff" in Gowun Batang) with the wrong
+    // advance, which pushes the rest of the word into the next word gap.
+    pdfFonts[key] = await doc.embedFont(padded, { subset: false, features: NO_LIGATURES });
     glyphFonts[key] = fontkit.create(padded);
   };
   await embed('regular', fonts.regular);
@@ -122,7 +135,7 @@ export function layoutInterior(ctx, input, design) {
   const {
     title = '', author = '', publisher = '', isbn = '', price = '', firstEdition = '', registration = '', contact = '',
     trimWidthMm = 140, trimHeightMm = 210, bleedMm = 3, pageMultiple = 4, includeToc = true, includeCopyright = true,
-    structure
+    structure, art = []
   } = input;
   const { runsFor, widthOf, measureFor, pdfFonts, roleKey } = ctx;
   const W = mm(trimWidthMm);
@@ -158,7 +171,9 @@ export function layoutInterior(ctx, input, design) {
 
   const stats = {
     splitWords: 0, letterSpacedLines: 0, maxLetterSpacingEm: 0, orphansAvoided: 0, widowsAvoided: 0,
-    shortPages: 0, runtPages: 0, overflowLines: 0, blankPagesForRecto: 0, paddingPages: 0, listItems: 0
+    shortPages: 0, runtPages: 0, overflowLines: 0, blankPagesForRecto: 0, paddingPages: 0, listItems: 0,
+    // Source lines (as the author broke them) that did not fit the measure and gained a break.
+    wrappedSourceLines: 0, partPages: 0, artPlaced: 0
   };
   const placed = [];
   const usedChars = {};
@@ -169,7 +184,7 @@ export function layoutInterior(ctx, input, design) {
 
   const pages = [];
   const newPage = (kind, extra = {}) => {
-    const p = { kind, items: [], rules: [], runningHead: false, folio: false, chapterTitle: '', ...extra };
+    const p = { kind, items: [], rules: [], art: [], runningHead: false, folio: false, chapterTitle: '', ...extra };
     pages.push(p);
     return p;
   };
@@ -182,10 +197,10 @@ export function layoutInterior(ctx, input, design) {
     });
   };
   const textWidth = (fontKey, value, fontSize, tc = 0) => widthOf(fontKey, value, fontSize) + tc * Math.max(0, charCount(value) - 1);
-  const put = (pg, value, fontKey, fontSize, y, align = 'left', { tc = 0, x = 0 } = {}) => {
+  const put = (pg, value, fontKey, fontSize, y, align = 'left', { tc = 0, x = 0, k = TINT.text } = {}) => {
     const w = textWidth(fontKey, value, fontSize, tc);
     const px = align === 'center' ? (textW - w) / 2 : align === 'right' ? textW - w : x;
-    addItem(pg, { font: fontKey, size: fontSize, x: px, y, text: value, tc });
+    addItem(pg, { font: fontKey, size: fontSize, x: px, y, text: value, tc, ...(k !== TINT.text ? { k } : {}) });
   };
   const breakFor = (value, fontKey, fontSize, width) => {
     const run = (w) => breakLine(value, { width: w, indent: 0, measure: measureFor(fontKey, fontSize), spaceWidth: fontSize * design.spaceEm, looseRatio: 2 });
@@ -283,8 +298,10 @@ export function layoutInterior(ctx, input, design) {
     }
     let i = 0;
     while (i < lines.length) {
-      if (!page || cursor >= LPP) startBodyPage();
-      const remaining = LPP - cursor;
+      // The cursor can sit between grid lines (paragraph gaps of a quarter line), so the room
+      // left is counted in whole lines.
+      if (!page || cursor > LPP - 1 + 1e-6) startBodyPage();
+      const remaining = Math.floor(LPP - cursor + 1e-6);
       const left = lines.length - i;
       let take = Math.min(left, remaining);
       if (take < left) {
@@ -308,7 +325,76 @@ export function layoutInterior(ctx, input, design) {
     }
   };
 
-  const rule = (pg, x, y, w, thicknessPt) => pg.rules.push({ x, y, w, h: thicknessPt });
+  const rule = (pg, x, y, w, thicknessPt, k = TINT.text) => pg.rules.push({ x, y, w, h: thicknessPt, ...(k !== TINT.text ? { k } : {}) });
+  const record = (value) => placed.push(String(value).replace(/\s+/g, ''));
+  // Chapters that belong to a part, for the part page's contents list (decoration, not recorded).
+  const partMembers = new Map();
+  {
+    let currentPart = null;
+    structure.chapters.forEach((c) => {
+      if (c.part) { currentPart = c; partMembers.set(c, []); return; }
+      if (currentPart && !c.untitled && !c.named) partMembers.get(currentPart).push(c);
+      else if (c.named) currentPart = null;
+    });
+  }
+  let artCursor = 0;
+  const nextArt = () => (art.length ? art[(artCursor++) % art.length] : null);
+  let chapterOrdinal = 0;
+
+  // Part page: decorative numeral, the label and title exactly as written, a hairline and the
+  // chapters of the part. Everything printed from the manuscript is recorded; the numeral and
+  // the contents list are design repeats and are not.
+  const openPart = (chapter) => {
+    const sink = Math.max(3, Math.round(LPP * 0.15));
+    let li = sink;
+    const digits = (String(chapter.label).match(/\d+/) || [''])[0];
+    if (digits) {
+      put(page, digits, 'regular', size * 4.6, baselineAt(li + 1), 'left');
+      li += 3.4;
+    }
+    if (chapter.label) {
+      put(page, chapter.label, F.head, size * 0.8, baselineAt(li), 'left', { tc: size * 0.18, k: TINT.label });
+      record(chapter.label);
+      li += 2;
+    }
+    const hs = size * 1.55;
+    const step = (hs * 1.55) / lead;
+    breakFor(chapter.title || '', F.head, hs, textW * 0.9).forEach((t) => {
+      if (!t) return;
+      put(page, t, F.head, hs, baselineAt(li), 'left');
+      record(t);
+      li += step;
+    });
+    li += 0.6;
+    rule(page, 0, baselineAt(li), textW * 0.72, 0.4, TINT.rule);
+    li += 1.4;
+    const listSize = size * 0.82;
+    (partMembers.get(chapter) || []).forEach((c) => {
+      if (li > LPP - 4) return;
+      breakFor(c.title || c.label, 'regular', listSize, textW * 0.9).forEach((t) => {
+        put(page, t, 'regular', listSize, baselineAt(li), 'left', { k: TINT.foot });
+        li += (listSize * 1.7) / lead;
+      });
+    });
+    // Up to three small illustrations along the foot of the page.
+    if (art.length >= 3) {
+      const h = Math.min(mm(22), (LPP - li - 1) * lead);
+      if (h > mm(10)) {
+        const picks = [0, 1, 2].map((n) => art[n]);
+        const widths = picks.map((a, n) => (n === 1 ? h : h * 0.74) * (a.width / a.height));
+        const gap = mm(4);
+        let x = (textW - widths.reduce((s, w) => s + w, 0) - gap * 2) / 2;
+        const baseY = baselineAt(LPP - 1) - size * 0.2;
+        picks.forEach((a, n) => {
+          const ih = n === 1 ? h : h * 0.74;
+          page.art.push({ type: 'image', art: a, x, y: baseY, w: widths[n], h: ih });
+          x += widths[n] + gap;
+        });
+        stats.artPlaced += 3;
+      }
+    }
+    stats.partPages += 1;
+  };
 
   const openChapter = (chapter) => {
     const style = design.opener.style;
@@ -316,7 +402,53 @@ export function layoutInterior(ctx, input, design) {
     let li = sink;
     const label = chapter.label || '';
     const titleText = chapter.title || '';
-    const record = (value) => placed.push(String(value).replace(/\s+/g, ''));
+
+    if (style === 'moon') {
+      // Ordinal (design element) only on numbered body chapters, never on 시작하며·마치며 etc.
+      if (design.opener.autoNumber && !chapter.named && !label) {
+        chapterOrdinal += 1;
+        put(page, String(chapterOrdinal).padStart(2, '0'), 'regular', size * 0.82, baselineAt(li), 'left', { tc: size * 0.28, k: TINT.label });
+        li += 1.6;
+      } else if (label) {
+        put(page, label, F.head, size * 0.82, baselineAt(li), 'left', { tc: size * 0.2, k: TINT.label });
+        record(label);
+        li += 1.6;
+      }
+      const hs = size * 1.4;
+      const step = (hs * 1.62) / lead;
+      breakFor(titleText, F.head, hs, textW * 0.92).forEach((t) => {
+        if (!t) return;
+        put(page, t, F.head, hs, baselineAt(li), 'left');
+        record(t);
+        li += step;
+      });
+      // The moon: a thin ring, and the vessel beneath it. They never overlap, so an opaque
+      // illustration needs no transparency and the ring never crosses the drawing.
+      // Diagonal: the moon high on the outer side, the vessel low on the inner side. The vessel's
+      // box starts below the ring, so the two never overlap.
+      const floorY = baselineAt(LPP - 1) - size * 0.3;
+      const room = baselineAt(li + 1.2) - floorY;
+      const a = nextArt();
+      const r = Math.min(textW * 0.23, room * (a ? 0.21 : 0.34));
+      if (r > mm(8)) {
+        const cx = textW * 0.66;
+        const cy = baselineAt(li + 1.8) - r - mm(2);
+        page.art.push({ type: 'ring', cx, cy, r, k: TINT.ring, w: 0.45 });
+        if (a) {
+          const top = cy - r - mm(1.5);
+          const space = top - floorY;
+          let iw = textW * 0.44;
+          let ih = iw * (a.height / a.width);
+          if (ih > space) { ih = space; iw = ih * (a.width / a.height); }
+          if (ih > mm(12)) {
+            page.art.push({ type: 'image', art: a, x: textW * 0.36 - iw / 2, y: top - ih, w: iw, h: ih });
+            stats.artPlaced += 1;
+          }
+        }
+      }
+      cursor = LPP; // full-page opener: the text begins on the next page
+      return;
+    }
 
     if (style === 'numeral') {
       if (label) {
@@ -409,6 +541,7 @@ export function layoutInterior(ctx, input, design) {
       if (chapterIndex > 0) stats.blankPagesForRecto += 1;
     }
     const opener = !chapter.untitled;
+    const partPage = !!(chapter.part && design.parts);
     page = newPage('body', {
       runningHead: chapter.untitled && !!design.runningHead,
       folio: chapter.untitled || poem,
@@ -418,9 +551,44 @@ export function layoutInterior(ctx, input, design) {
     cursor = 0;
     const chapterOpenPage = page;
     chapterStarts.push({ chapter, pageNumber: pages.length });
-    if (opener) openChapter(chapter);
+    // Bibliography / endnotes: smaller type on a tighter sub-grid with a hanging indent. Entries wrap
+    // freely (they are references, not the author's lines), so they are not counted as broken lines.
+    const notesMode = !!(design.parts && chapter.named && /^(참고\s?문헌|미주)/.test(chapter.title || ''));
+    if (partPage) {
+      openPart(chapter);
+      cursor = LPP;
+    } else if (notesMode) {
+      // A plain heading, no illustration: the references start on the same page.
+      const sink = Math.max(3, Math.round(LPP * design.opener.sink));
+      put(page, chapter.title, F.head, size * 1.25, baselineAt(sink), 'left');
+      record(chapter.title);
+      cursor = sink + 2.5;
+    } else if (opener) openChapter(chapter);
 
     let first = true;
+    let prevType = null;
+    if (notesMode) {
+      const ns = size * 0.8;
+      const step = (ns * 1.5) / lead;
+      const measureNote = measureFor(F.body, ns);
+      const hang = ns * 1.5;
+      chapter.blocks.forEach((block) => {
+        const text = block.type === 'p' ? block.lines.join(' ') : block.text;
+        const lines = breakLine(text, { width: textW, indent: 0, hangIndent: hang, measure: measureNote, spaceWidth: ns * design.spaceEm });
+        if (cursor > 0 && cursor < LPP) cursor += 0.35;
+        lines.forEach((line) => {
+          if (!page || cursor > LPP - 1 + 1e-6) startBodyPage();
+          let x = line.indent;
+          line.words.forEach((word) => {
+            addItem(page, { font: F.body, size: ns, x, y: baselineAt(cursor), text: word, tc: 0 });
+            x += measureNote(word) + ns * design.spaceEm;
+          });
+          placed.push(line.words.join(''));
+          cursor += step;
+        });
+      });
+      return;
+    }
     chapter.blocks.forEach((block) => {
       if (block.type === 'p') {
         const typeset = [];
@@ -431,32 +599,55 @@ export function layoutInterior(ctx, input, design) {
         const hang = isList ? measureBody(marker[1]) + spaceW : hangW;
         block.lines.forEach((value, idx) => {
           const subMarker = isList && idx > 0 ? value.match(LIST_MARKER_RE) : null;
-          breakLine(value, {
+          const broken = breakLine(value, {
             width: textW,
             indent: isList ? (idx === 0 || subMarker ? 0 : hang) : (idx === 0 ? indentW : 0),
             hangIndent: isList ? (subMarker ? measureBody(subMarker[1]) + spaceW : hang) : (poem ? hangW : 0),
             measure: measureBody,
             spaceWidth: spaceW
-          }).forEach((line) => typeset.push(line));
+          });
+          if (broken.length > 1) stats.wrappedSourceLines += broken.length - 1;
+          broken.forEach((line) => typeset.push(line));
         });
         if (design.stanzaGapLines && !first && cursor > 0 && cursor < LPP) cursor += design.stanzaGapLines;
+        // Paragraph breath between consecutive paragraphs (not after a heading, not at a page top).
+        if (design.paragraphGapLines && prevType === 'p' && cursor > 0 && cursor < LPP) cursor += design.paragraphGapLines;
         placeLines(typeset, { align: isList ? 'justify' : design.align }, { keepTogether: poem });
         first = false;
+        prevType = 'p';
         return;
       }
       if (block.type === 'section') {
         const secSize = size * (design.section?.scale || 1.05);
         const secFont = F.section;
-        const lines = breakLine(block.text, { width: textW * 0.9, indent: 0, measure: measureFor(secFont, secSize), spaceWidth: secSize * design.spaceEm });
+        const after = design.section?.after ?? 1;
+        const secBreak = (w, loose) => breakLine(block.text, { width: w, indent: 0, measure: measureFor(secFont, secSize), spaceWidth: secSize * design.spaceEm, ...(loose ? { looseRatio: 2 } : {}) });
+        let lines = secBreak(textW * 0.9, design.section?.balance);
+        if (design.section?.balance && lines.length > 1) {
+          // Word boundaries only, and two lines of similar length rather than a long line and a stub.
+          let lo = textW * 0.45;
+          let hi = textW * 0.9;
+          for (let n = 0; n < 14; n += 1) {
+            const mid = (lo + hi) / 2;
+            if (secBreak(mid, true).length > lines.length) lo = mid; else hi = mid;
+          }
+          lines = secBreak(hi, true);
+        }
         const before = cursor > 0 ? 1 : 0;
-        if (!page || cursor + before + lines.length + 1 + 2 > LPP) startBodyPage();
-        if (cursor > 0) cursor += 1;
+        // Keep the heading with at least two lines of its text.
+        if (!page || Math.ceil(cursor + before) + lines.length + after + 2 > LPP) startBodyPage();
+        if (cursor > 0) cursor = Math.ceil(cursor + 1 - 1e-6);
+        if (design.section?.style === 'rule-left') {
+          // Short hairline above the heading, clear of the cap height.
+          rule(page, 0, baselineAt(cursor) + secSize * 0.82 + 5, mm(9), 0.4, TINT.rule);
+        }
         lines.forEach((line) => {
           placeTypesetLine({ ...line, last: true }, cursor, { fontKey: secFont, fontSize: secSize, align: design.section?.style === 'center' ? 'center' : 'left' });
           cursor += 1;
         });
-        cursor += 1;
+        cursor += after;
         first = false;
+        prevType = 'section';
         return;
       }
       // scene break: printed exactly as written, centred
@@ -532,6 +723,25 @@ export function layoutInterior(ctx, input, design) {
     const number = index + 1;
     const recto = number % 2 === 1;
     if (pg.kind !== 'body' || pg.chapterOpen) return;
+    if (design.runningHead?.position === 'foot' && design.folio === 'foot-outside') {
+      // One quiet line at the outer foot: "14   책 제목" on the left page, "장 제목   15" on the right.
+      if (!pg.runningHead && !pg.folio) return;
+      const num = String(number);
+      const head = pg.runningHead ? (recto ? pg.chapterTitle : bookTitle) : '';
+      const fs = size * 0.72;
+      const y = bottom * 0.46;
+      const gap = mm(3.5);
+      const numW = textWidth(F.run, num, fs);
+      const opts = { k: TINT.foot };
+      if (recto) {
+        put(pg, num, F.run, fs, y, 'right', opts);
+        if (head) put(pg, head, F.run, fs, y, 'left', { ...opts, x: textW - numW - gap - textWidth(F.run, head, fs) });
+      } else {
+        put(pg, num, F.run, fs, y, 'left', opts);
+        if (head) put(pg, head, F.run, fs, y, 'left', { ...opts, x: numW + gap });
+      }
+      return;
+    }
     if (pg.runningHead && design.runningHead) {
       const mode = recto ? design.runningHead.recto : design.runningHead.verso;
       const headText = mode === 'author' ? (nfc(author) || bookTitle) : mode === 'chapter' ? pg.chapterTitle : bookTitle;
@@ -567,6 +777,16 @@ export async function renderInterior(ctx, layout, { title = '', author = '', ble
   doc.setCreationDate(stamp);
   doc.setModificationDate(stamp);
 
+  // Illustrations are embedded once and reused on every page that shows them.
+  const embedded = new Map();
+  const embedArt = async (a) => {
+    if (!embedded.has(a)) embedded.set(a, a.type === 'png' ? await doc.embedPng(a.bytes) : await doc.embedJpg(a.bytes));
+    return embedded.get(a);
+  };
+  for (const logical of layout.pages) {
+    for (const piece of logical.art || []) if (piece.type === 'image') await embedArt(piece.art);
+  }
+
   layout.pages.forEach((logical, index) => {
     const recto = (index + 1) % 2 === 1;
     const left = recto ? inner : outer;
@@ -574,10 +794,25 @@ export async function renderInterior(ctx, layout, { title = '', author = '', ble
     pdfPage.setMediaBox(0, 0, W + 2 * B, H + 2 * B);
     pdfPage.setBleedBox(0, 0, W + 2 * B, H + 2 * B);
     pdfPage.setTrimBox(B, B, W, H);
-    if (!logical.items.length && !logical.rules.length) return;
+    const art = logical.art || [];
+    if (!logical.items.length && !logical.rules.length && !art.length) return;
 
+    // Art first, so text always sits on top.
+    art.forEach((piece) => {
+      if (piece.type === 'ring') {
+        pdfPage.drawCircle({
+          x: B + left + piece.cx, y: B + piece.cy, size: piece.r,
+          borderColor: cmyk(0, 0, 0, piece.k ?? 1), borderWidth: piece.w || 0.5
+        });
+      } else if (piece.type === 'image') {
+        pdfPage.drawImage(embedded.get(piece.art), { x: B + left + piece.x, y: B + piece.y, width: piece.w, height: piece.h });
+      }
+    });
+
+    let currentK = 1;
     const ops = [setFillingCmykColor(0, 0, 0, 1)];
-    logical.rules.forEach((r) => ops.push(rectangle(B + left + r.x, B + r.y, r.w, r.h), fill()));
+    const tint = (k = 1) => { if (k !== currentK) { ops.push(setFillingCmykColor(0, 0, 0, k)); currentK = k; } };
+    logical.rules.forEach((r) => { tint(r.k ?? 1); ops.push(rectangle(B + left + r.x, B + r.y, r.w, r.h), fill()); });
     if (logical.items.length) {
       const keys = {};
       const keyFor = (fontKey) => {
@@ -587,6 +822,7 @@ export async function renderInterior(ctx, layout, { title = '', author = '', ble
       ops.push(beginText());
       let currentTc = 0;
       logical.items.forEach((item) => {
+        tint(item.k ?? 1);
         ops.push(setFontAndSize(keyFor(item.font), item.size));
         if (item.tc !== currentTc) { ops.push(setCharacterSpacing(item.tc)); currentTc = item.tc; }
         ops.push(setTextMatrix(1, 0, 0, 1, B + left + item.x, B + item.y));
@@ -631,6 +867,7 @@ export async function buildInteriorPdf({
   density = 'standard',
   optimize = true,
   fonts,
+  openerArt = [],
   generatedAt = new Date().toISOString()
 } = {}) {
   if (!String(manuscript || '').trim()) throw new Error('조판할 원고가 없습니다.');
@@ -639,9 +876,11 @@ export async function buildInteriorPdf({
   const base = resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density });
   const needSans = base.headingFont === 'sans' || base.runningHead?.font === 'sans' || base.section?.font === 'sans';
   const ctx = await createFontContext(fonts, { text: `${manuscript}${title}${author}${publisher}`, needSans });
+  const art = (openerArt || []).filter((a) => a?.bytes && a.width > 0 && a.height > 0 && (a.type === 'png' || a.type === 'jpg'));
 
-  const input = { title, author, publisher, isbn, price, firstEdition, registration, contact, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, includeToc, includeCopyright, structure };
-  const deltas = optimize ? [0, -0.04, 0.04] : [0];
+  const input = { title, author, publisher, isbn, price, firstEdition, registration, contact, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, includeToc, includeCopyright, structure, art };
+  // Author-locked leading is never traded for page count.
+  const deltas = optimize && !base.lockLeading ? [0, -0.04, 0.04] : [0];
   const candidates = deltas.map((leadingDelta) => {
     const design = resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density, leadingDelta });
     const layout = layoutInterior(ctx, input, design);
@@ -689,7 +928,12 @@ export async function buildInteriorPdf({
       opener: design.opener.style,
       runningHead: design.runningHead ? `${design.runningHead.verso}/${design.runningHead.recto}` : 'none',
       folio: design.folio,
-      headingFont: ctx.sansAvailable && design.headingFont === 'sans' ? '나눔고딕' : '나눔명조',
+      headingFont: ctx.sansAvailable && design.headingFont === 'sans' ? '나눔고딕' : (FONT_FAMILIES[fonts.family]?.label || '나눔명조'),
+      bodyFont: FONT_FAMILIES[fonts.family]?.label || '나눔명조',
+      fontRequested: FONT_FAMILIES[design.fontFamily || 'nanum']?.label,
+      fontSubstituted: (design.fontFamily || 'nanum') !== (fonts.family || 'nanum'),
+      paragraphGapPt: design.paragraphGapLines ? Math.round(design.paragraphGapLines * design.leading * 100) / 100 : 0,
+      leadingLocked: !!design.lockLeading,
       candidates: candidates.map((c) => ({
         leadingRatio: c.design.leadingRatio,
         linesPerPage: c.layout.geometry.LPP,
@@ -722,7 +966,7 @@ export async function buildInteriorPdf({
         fallbackChars,
         embedding: 'full (CID TrueType, Identity-H)',
         license: [
-          'SIL Open Font License 1.1 (Nanum Myeongjo',
+          `SIL Open Font License 1.1 (${fonts.family === 'gowun' ? 'Gowun Batang' : 'Nanum Myeongjo'}`,
           ctx.sansAvailable ? '; Nanum Gothic' : '',
           ctx.pdfFonts.fallback ? '; ooOS Fallback Serif from Noto Serif KR' : '',
           ')'
@@ -737,7 +981,7 @@ export async function buildInteriorPdf({
       toc: layout.tocPageCount,
       copyright: includeCopyright
     },
-    chapters: layout.chapterStarts.map((s) => ({ label: s.chapter.label, title: s.chapter.untitled ? '' : s.chapter.title, startPage: s.pageNumber })),
+    chapters: layout.chapterStarts.map((s) => ({ label: s.chapter.label, title: s.chapter.untitled ? '' : s.chapter.title, startPage: s.pageNumber, ...(s.chapter.part ? { part: true } : {}) })),
     stats: layout.stats,
     missingGlyphs,
     completeness: {

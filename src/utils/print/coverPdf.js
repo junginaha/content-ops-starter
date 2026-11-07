@@ -24,7 +24,7 @@ import {
   closePath
 } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { padFontBytes, PT_PER_MM } from './interiorPdf';
+import { padFontBytes, PT_PER_MM, NO_LIGATURES } from './interiorPdf';
 import { nfc } from './bookStructure';
 import { typeOn, cmykLuminance } from './coverGenome';
 
@@ -343,15 +343,18 @@ export async function buildCoverPdf({
 
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
+  const embedOpts = { subset: false, features: NO_LIGATURES };
+  const bold = await doc.embedFont(padFontBytes(fonts.bold), embedOpts);
   const f = {
-    regular: await doc.embedFont(padFontBytes(fonts.regular), { subset: false }),
-    bold: await doc.embedFont(padFontBytes(fonts.bold), { subset: false }),
-    extraBold: await doc.embedFont(padFontBytes(fonts.extraBold), { subset: false })
+    regular: await doc.embedFont(padFontBytes(fonts.regular), embedOpts),
+    bold,
+    // 고운바탕 has no ExtraBold: the loader passes the same Bold file, embedded once.
+    extraBold: fonts.extraBold === fonts.bold ? bold : await doc.embedFont(padFontBytes(fonts.extraBold), embedOpts)
   };
   const useSans = !guide && style === 'practical' && fonts.sansBold && fonts.sansExtraBold;
   if (useSans) {
-    f.sansBold = await doc.embedFont(padFontBytes(fonts.sansBold), { subset: false });
-    f.sansExtraBold = await doc.embedFont(padFontBytes(fonts.sansExtraBold), { subset: false });
+    f.sansBold = await doc.embedFont(padFontBytes(fonts.sansBold), embedOpts);
+    f.sansExtraBold = await doc.embedFont(padFontBytes(fonts.sansExtraBold), embedOpts);
   }
   const glyph = fontkit.create(padFontBytes(fonts.extraBold));
   const page = doc.addPage([totalW, totalH]);

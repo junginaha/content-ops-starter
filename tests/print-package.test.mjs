@@ -147,7 +147,11 @@ const GENRE_SAMPLES = {
   essay: () => ['01. 오래된 책방에서', ...Array.from({ length: 20 }, (_, i) => `나는 오래된 책방을 좋아한다. 나는 그 냄새 속에서 조금 느려진다. ${i}`)].join('\n\n'),
   humanities: () => ['제1장 시간과 도시', ...Array.from({ length: 12 }, (_, i) => `근대 도시의 형성은 단순히 인구의 집중으로 설명되지 않는다. 철도와 전신, 표준시의 도입은 시간에 대한 감각 자체를 바꾸어 놓았다. 그렇다면 출근 시간은 언제부터 당연해졌는가? 이 질문은 공간(空間)의 역사와 이어진다. ${i}`), '## 해석의 경쟁', '여기서 중요한 것은 기술이 아니라 해석이다.', '제2장 광장', '광장은 새로운 질서를 익히게 하는 장치였다.'].join('\n\n'),
   practical: () => ['제1장 현금 흐름', '## 1-1. 첫 3개월', ...Array.from({ length: 6 }, (_, i) => [`1. 초판 부수는 사전 주문 ${i * 10}건을 기준으로 정합니다.`, '2. 인쇄 견적은 최소 3곳에서 받습니다.', `정가 18,000원 도서를 1,000부 인쇄하면 제작비는 약 350만 원입니다. ${i}`].join('\n\n')), '## 1-2. 반품률', '- 반품률 15~20%를 계산에 넣습니다.'].join('\n\n'),
-  poetry: () => ['# 첫차', '새벽 첫차는\n아무도 기다리지 않는 사람을\n가장 먼저 태운다', '창에 맺힌 숨이\n이름을 쓰다 말고\n흘러내린다', '# 종점', '나는 내리지 않고\n종점까지 간다'].join('\n\n')
+  poetry: () => ['# 첫차', '새벽 첫차는\n아무도 기다리지 않는 사람을\n가장 먼저 태운다', '창에 맺힌 숨이\n이름을 쓰다 말고\n흘러내린다', '# 종점', '나는 내리지 않고\n종점까지 간다'].join('\n\n'),
+  // 짧게 끊어 쓴 경어체 산문 + 소제목 + 머리말: 시가 아니라 행 보존 산문(breath)
+  breath: () => ['시작하며', '아침 일곱 시.\n아직 거리가 깨기 전입니다.\n그 시간에 책상 앞에 앉는 사람들이 있습니다.', '제1부 아침의 습관', '# 이불을 먼저 정리합니다',
+    ...Array.from({ length: 4 }, (_, i) => [`## 작은 약속 ${i + 1}`, '눈을 뜨면\n이불부터 반듯하게 폅니다.\n하루의 첫 약속을 지키는 일입니다.', '작은 약속을 지키면\n큰 약속도 지킬 수 있습니다.']).flat(),
+    '마치며', '여기까지 읽어 주셔서\n고맙습니다.'].join('\n\n')
 };
 
 test('design analysis recommends the matching genre', async () => {
@@ -171,7 +175,7 @@ test('each genre profile produces a lossless, print-candidate interior with its 
     assert.equal(r.interior.completeness.match, true, `${genre} text loss`);
     seen.add(`${r.design.opener}|${r.interior.layout.leadingPt}|${r.design.folio}|${r.design.headingFont}`);
   }
-  assert.equal(seen.size, 5, 'five distinct typographic systems');
+  assert.equal(seen.size, Object.keys(GENRE_SAMPLES).length, 'one distinct typographic system per genre');
 });
 
 test('structure: 나가며 is a heading and a leading title line is not set as body', () => {

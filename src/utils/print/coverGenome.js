@@ -159,8 +159,12 @@ export function pickExcerpt(structure, { title = '' } = {}) {
  * @param {string} [input.layout]  force a composition
  * @param {string} [input.palette] force a palette key
  */
+// Profiles without compositions of their own borrow a sibling's (여백형 에세이 → 에세이).
+export const COVER_GENRE_ALIAS = { breath: 'essay' };
+const coverGenre = (key) => COVER_GENRE_ALIAS[key] || key;
+
 export function deriveCoverGenome({ manuscript = '', title = '', analysis, genre, layout, palette } = {}) {
-  const g = COVER_PALETTES[genre] ? genre : (COVER_PALETTES[analysis?.genre] ? analysis.genre : 'humanities');
+  const g = COVER_PALETTES[coverGenre(genre)] ? coverGenre(genre) : (COVER_PALETTES[coverGenre(analysis?.genre)] ? coverGenre(analysis.genre) : 'humanities');
   const m = analysis?.metrics || {};
   const structure = parseBookStructure(manuscript, { title });
   const seed = fnv1a(`${nfc(title)}\n${nfc(manuscript)}`);

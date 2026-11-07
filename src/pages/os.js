@@ -19,8 +19,8 @@ import { evaluatePrintPdf, inspectPdfBytes, inspectPdfFile } from '../utils/pdfP
 import { DEFAULT_PRINT_OPTIONS, PRINT_HUMAN_GATES, TRIM_PRESETS } from '../utils/print/presets';
 import { analyzeForDesign } from '../utils/print/designAnalysis';
 import { parseBookStructure } from '../utils/print/bookStructure';
-import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
-import { COVER_LAYOUTS, COVER_PALETTES } from '../utils/print/coverGenome';
+import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans, profileFontFamily } from '../utils/print/designProfiles';
+import { COVER_LAYOUTS, COVER_PALETTES, COVER_GENRE_ALIAS } from '../utils/print/coverGenome';
 import { createPrintJobTicket } from '../utils/printJobTicket';
 import { recommendDesignProfiles } from '../data/designReferences';
 
@@ -160,6 +160,7 @@ export default function OneDayBooksOS() {
   const [printPkgError, setPrintPkgError] = useState('');
   const [printPkgBuilding, setPrintPkgBuilding] = useState(false);
   const [coverImageFile, setCoverImageFile] = useState(null);
+  const [openerArtFiles, setOpenerArtFiles] = useState([]);
   const [photoAssets, setPhotoAssets] = useState([]);
   const [photoError, setPhotoError] = useState('');
   const [snapshots, setSnapshots] = useState([]);
@@ -670,7 +671,8 @@ export default function OneDayBooksOS() {
         includeFallback: printModule.needsFallbackFont(
           `${source}${project.title}${project.author}${printOptions.publisher}${printOptions.subtitle}`
         ),
-        includeSans: profileUsesSans(chosenProfile)
+        includeSans: profileUsesSans(chosenProfile),
+        family: profileFontFamily(chosenProfile)
       });
       const frontImage = coverImageFile
         ? { bytes: new Uint8Array(await coverImageFile.arrayBuffer()) }
@@ -684,6 +686,9 @@ export default function OneDayBooksOS() {
         options: printOptions,
         fonts,
         frontImage,
+        openerArt: DESIGN_PROFILES[chosenProfile]?.opener?.style === 'moon'
+          ? await Promise.all(openerArtFiles.map(async (file) => ({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) })))
+          : [],
         photoAssets: await Promise.all(photoAssets.map(async (asset) => ({
           name: asset.name,
           chapter: asset.chapter,
@@ -1292,11 +1297,17 @@ export default function OneDayBooksOS() {
                       </label>
                       <label>
                         <span>판면 밀도</span>
-                        <select value={printOptions.density} onChange={(e) => updatePrintOption('density', e.target.value)}>
-                          {DENSITY_OPTIONS.map((option) => (
-                            <option key={option.key} value={option.key}>{option.label}</option>
-                          ))}
-                        </select>
+                        {DESIGN_PROFILES[chosenProfile]?.lockLeading ? (
+                          <select value="locked" disabled title="이 편집디자인은 작가 승인 행간·여백을 고정합니다">
+                            <option value="locked">고정 (작가 승인 행간·여백)</option>
+                          </select>
+                        ) : (
+                          <select value={printOptions.density} onChange={(e) => updatePrintOption('density', e.target.value)}>
+                            {DENSITY_OPTIONS.map((option) => (
+                              <option key={option.key} value={option.key}>{option.label}</option>
+                            ))}
+                          </select>
+                        )}
                       </label>
                       <label>
                         <span>표지 구도</span>
@@ -1310,17 +1321,34 @@ export default function OneDayBooksOS() {
                       <label>
                         <span>표지 색</span>
                         <select
-                          value={(COVER_PALETTES[chosenProfile] || []).some((p) => p.key === printOptions.coverPalette) ? printOptions.coverPalette : 'auto'}
+                          value={(COVER_PALETTES[COVER_GENRE_ALIAS[chosenProfile] || chosenProfile] || []).some((p) => p.key === printOptions.coverPalette) ? printOptions.coverPalette : 'auto'}
                           onChange={(e) => updatePrintOption('coverPalette', e.target.value)}
                         >
                           <option value="auto">원고 분석으로 결정</option>
-                          {(COVER_PALETTES[chosenProfile] || []).map((palette) => (
+                          {(COVER_PALETTES[COVER_GENRE_ALIAS[chosenProfile] || chosenProfile] || []).map((palette) => (
                             <option key={palette.key} value={palette.key}>{palette.label}</option>
                           ))}
                         </select>
                       </label>
                     </div>
                     <div className="file-info">{DESIGN_PROFILES[chosenProfile].label} — {DESIGN_PROFILES[chosenProfile].summary}</div>
+                    {DESIGN_PROFILES[chosenProfile]?.opener?.style === 'moon' && (
+                      <label className="print-pdf-input">
+                        <span>도비라 삽화 (선택 · 회색 PNG/JPG · 흰 배경 · 여러 장)</span>
+                        <input
+                          className="file"
+                          type="file"
+                          multiple
+                          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                          onChange={(e) => setOpenerArtFiles(Array.from(e.target.files || []))}
+                        />
+                        <small>
+                          {openerArtFiles.length
+                            ? `${openerArtFiles.length}장 — 장 도비라에 순서대로 들어가고, 부 표제지에는 앞의 3장이 작게 들어갑니다.`
+                            : '없으면 달(가는 원)만 그립니다. 내지가 먹 1도라 컬러 이미지는 받지 않습니다.'}
+                        </small>
+                      </label>
+                    )}
                   </div>
                 )}
 
@@ -1397,6 +1425,14 @@ export default function OneDayBooksOS() {
                     </select>
                   </label>
                 </div>
+
+                <label>
+                  <span>표지 후가공</span>
+                  <select value={printOptions.finishing || ''} onChange={(e) => updatePrintOption('finishing', e.target.value)}>
+                    <option value="">없음 (무광·유광 코팅만)</option>
+                    <option value="foil">박 (금박·은박) — 박 규칙을 인쇄지시서에 넣음</option>
+                  </select>
+                </label>
 
                 <label className="print-pdf-input">
                   <span>앞표지 이미지 (선택 · JPG/PNG · 300ppi 이상)</span>
