@@ -24,7 +24,9 @@ export const DEFAULT_PRINT_OPTIONS = {
   coverPaper: '',
   designProfile: 'auto',
   density: 'standard',
-  optimize: true
+  optimize: true,
+  // '' | 'foil' — 박 후가공을 쓰면 인쇄지시서에 박 규칙이 붙고 검수 경고가 뜬다.
+  finishing: ''
 };
 
 export const PRINT_HUMAN_GATES = [

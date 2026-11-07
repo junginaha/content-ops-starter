@@ -19,7 +19,8 @@ export const GENRES = {
   essay: '에세이',
   humanities: '인문·교양',
   practical: '실용·경제',
-  poetry: '시'
+  poetry: '시',
+  breath: '여백형 에세이'
 };
 
 export function analyzeForDesign(manuscript = '', { title = '' } = {}) {
@@ -58,17 +59,25 @@ export function analyzeForDesign(manuscript = '', { title = '' } = {}) {
     sectionsPerChapter: round(structure.stats.chapters ? structure.stats.sections / structure.stats.chapters : structure.stats.sections, 1),
     hanjaPer1k: round(per1k((text.match(/[一-鿿]/g) || []).length), 1),
     latinPer1k: round(per1k((text.match(/[A-Za-z]+/g) || []).length), 1),
-    nonfictionFrame: structure.chapters.some((ch) => /^(들어가며|나가며|마치며|맺으며|머리말|맺음말|들어가는 말|나가는 말|여는 글|닫는 글)$/.test(ch.title || ''))
+    nonfictionFrame: structure.chapters.some((ch) => /^(들어가며|나가며|시작하며|마치며|맺으며|머리말|맺음말|들어가는 말|나가는 말|여는 글|닫는 글)$/.test(ch.title || ''))
   };
 
   // Scores: each signal adds weight with a stated reason.
-  const s = { fiction: 0, essay: 0, humanities: 1, practical: 0, poetry: 0 };
-  const why = { fiction: [], essay: [], humanities: ['산문 기본형'], practical: [], poetry: [] };
+  const s = { fiction: 0, essay: 0, humanities: 1, practical: 0, poetry: 0, breath: 0 };
+  const why = { fiction: [], essay: [], humanities: ['산문 기본형'], practical: [], poetry: [], breath: [] };
   const add = (genre, w, reason) => { s[genre] += w; why[genre].push(reason); };
 
   if (m.multiLineRatio >= 0.4 && m.avgLineChars <= 28) add('poetry', 4, `행갈이 문단 ${Math.round(m.multiLineRatio * 100)}% · 평균 행 ${m.avgLineChars}자`);
   if (m.shortLineRatio >= 0.6) add('poetry', 2, `짧은 행(24자 이하) ${Math.round(m.shortLineRatio * 100)}%`);
   if (m.avgParagraphChars < 120 && m.multiLineRatio >= 0.3) add('poetry', 1, `짧은 연 구성(문단 평균 ${m.avgParagraphChars}자)`);
+
+  // 행 보존 산문: 시처럼 짧게 끊었지만 소제목·경어체·머리말 구성이 있는 산문(에세이·자기계발).
+  // 시로 분류하면 한 편씩 새 쪽에 앉혀 책이 망가진다 — 소제목이나 경어체가 있으면 산문이다.
+  const lineBroken = m.multiLineRatio >= 0.4 && m.avgLineChars <= 28;
+  const proseFrame = [m.sectionsPerChapter >= 1, m.formalEndingRatio >= 0.25, m.nonfictionFrame].filter(Boolean).length;
+  if (lineBroken && proseFrame >= 2 && m.pastNarrativeRatio < 0.35) {
+    add('breath', 9, `짧게 끊은 행(평균 ${m.avgLineChars}자) + 산문 구성(장당 소제목 ${m.sectionsPerChapter}개 · 경어체 ${Math.round(m.formalEndingRatio * 100)}%${m.nonfictionFrame ? ' · 머리말/맺음말' : ''})`);
+  }
 
   if (m.dialogueRatio >= 0.12) add('fiction', 3, `대화 문단 ${Math.round(m.dialogueRatio * 100)}%`);
   else if (m.dialogueRatio >= 0.06) add('fiction', 1, `대화 문단 ${Math.round(m.dialogueRatio * 100)}%`);

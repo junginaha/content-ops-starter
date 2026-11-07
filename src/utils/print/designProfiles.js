@@ -95,8 +95,47 @@ export const DESIGN_PROFILES = {
     section: { style: 'left', font: 'serif', scale: 1 },
     titlePage: 'center',
     cover: 'poetry'
+  },
+  // 행 보존 산문(짧은 행으로 끊어 쓴 경어체 에세이·자기계발). 『돈의 면접』 일반판 개편(2026-11)에서 나온 규칙:
+  // 작가가 끊은 행·행간·단락 간격은 고정값으로 잠그고(최적화가 행간을 바꾸지 않음), 디자인은 여백과
+  // 부 표제지·달 도비라·헤어라인으로만 한다. 먹 1도 기준.
+  breath: {
+    key: 'breath',
+    label: '여백형 에세이',
+    summary: '행 보존·여백형 — 작가 행갈이와 행간 고정, 넓은 여백, 부 표제지·달 도비라, 면주는 아래 바깥',
+    bodyScale: 1,
+    // 140mm 판형 기준 11pt / 18pt. 행간은 저자 승인 값이라 잠근다.
+    fixedType: { bodyPt: 11, leadingPt: 18 },
+    lockLeading: true,
+    leading: 18 / 11,
+    indentEm: 0,
+    align: 'left',
+    stanzaGapLines: 0,
+    // 단락 사이 4.5pt(=행간의 1/4). 줄 격자는 유지하고 반 줄보다 작은 숨만 둔다.
+    paragraphGapLines: 0.25,
+    // 140×210 기준 위 24 · 아래 22 · 안 22 · 바깥 18mm (판형이 바뀌면 비율로 따라감)
+    margins: { top: 24 / 210, bottom: 22 / 210, inner: 22 / 140, outer: 18 / 140 },
+    opener: { style: 'moon', sink: 0.14, recto: true, fullPage: true, autoNumber: true },
+    parts: true,
+    headingFont: 'serif',
+    runningHead: { verso: 'title', recto: 'chapter', font: 'serif', position: 'foot' },
+    folio: 'foot-outside',
+    section: { style: 'rule-left', font: 'serif', scale: 1.05, after: 0, balance: true },
+    titlePage: 'left',
+    fontFamily: 'gowun',
+    cover: 'essay'
   }
 };
+
+// Serif families the print engine can load. 'gowun' has no ExtraBold; the loader maps Bold to that role.
+export const FONT_FAMILIES = {
+  nanum: { key: 'nanum', label: '나눔명조', license: 'SIL Open Font License 1.1 (Nanum Myeongjo)' },
+  gowun: { key: 'gowun', label: '고운바탕', license: 'SIL Open Font License 1.1 (Gowun Batang)' }
+};
+
+export function profileFontFamily(profileKey) {
+  return DESIGN_PROFILES[profileKey]?.fontFamily || 'nanum';
+}
 
 export const DENSITY_OPTIONS = [
   { key: 'airy', label: '여유', leadingDelta: 0.06, marginScale: 1.06 },
@@ -113,19 +152,24 @@ export function resolveDesign(profileKey = 'humanities', trimWidthMm = 140, trim
   const w = Number(trimWidthMm);
   const h = Number(trimHeightMm);
   const sizeBase = w <= 130 ? 9.5 : w >= 170 ? 10.5 : 10;
-  const bodySize = Math.round(sizeBase * base.bodyScale * 100) / 100;
-  const leadingRatio = Math.round((base.leading + dens.leadingDelta + leadingDelta) * 1000) / 1000;
+  const fixed = base.fixedType;
+  const bodySize = fixed ? fixed.bodyPt : Math.round(sizeBase * base.bodyScale * 100) / 100;
+  // Locked profiles keep the author-approved leading: density and the optimiser may not move it.
+  const leading = fixed && base.lockLeading
+    ? fixed.leadingPt
+    : Math.round(bodySize * (base.leading + dens.leadingDelta + leadingDelta) * 100) / 100;
+  const leadingRatio = Math.round((leading / bodySize) * 1000) / 1000;
   return {
     ...base,
-    density: dens.key,
+    density: base.lockLeading ? 'locked' : dens.key,
     bodySize,
     leadingRatio,
-    leading: Math.round(bodySize * leadingRatio * 100) / 100,
+    leading,
     marginsMm: {
-      top: r1(h * base.margins.top * dens.marginScale),
-      bottom: r1(h * base.margins.bottom * dens.marginScale),
-      inner: r1(w * base.margins.inner * dens.marginScale),
-      outer: r1(w * base.margins.outer * dens.marginScale)
+      top: r1(h * base.margins.top * (base.lockLeading ? 1 : dens.marginScale)),
+      bottom: r1(h * base.margins.bottom * (base.lockLeading ? 1 : dens.marginScale)),
+      inner: r1(w * base.margins.inner * (base.lockLeading ? 1 : dens.marginScale)),
+      outer: r1(w * base.margins.outer * (base.lockLeading ? 1 : dens.marginScale))
     },
     spaceEm: 0.28,
     maxLetterSpacingEm: 0.06

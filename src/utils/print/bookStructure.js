@@ -3,7 +3,11 @@
 // Nothing is rewritten: text is only Unicode-normalized (NFC) so Hangul renders as syllables.
 
 const CHAPTER_RE = /^(제\s*\d+\s*[장부편화]|chapter\s+\d+|part\s+\d+)\s*[.:：\-–—]?\s*(.*)$/i;
-const NAMED_RE = /^(프롤로그|에필로그|들어가며|나가며|나오며|마치며|맺으며|끝내며|들어가는 말|나가는 말|마치는 글|나오는 글|맺음말|머리말|서문|여는 글|닫는 글|작가의 말|저자의 말|감사의 말|추천의 글|부록)(\s*[.:：\-–—]\s*(.*))?$/;
+// A part ("제1부", "1부 …", "Part 1") groups chapters. It stays in `chapters` (so every existing
+// profile prints it exactly as before) and is flagged `part: true` for profiles with part pages.
+const PART_LABEL_RE = /^(제\s*\d+\s*부|part\s+\d+)$/i;
+const BARE_PART_RE = /^(\d{1,2}\s*부)\s+(.+)$/;
+const NAMED_RE = /^(프롤로그|에필로그|들어가며|나가며|나오며|시작하며|시작하는 글|마치며|맺으며|끝내며|들어가는 말|나가는 말|마치는 글|나오는 글|맺음말|머리말|서문|여는 글|닫는 글|작가의 말|저자의 말|감사의 말|추천의 글|부록|참고문헌|참고 문헌|미주)(\s*[.:：\-–—]\s*(.*))?$/;
 const NUMBERED_RE = /^(\d{1,2})[.)]\s+(.+)$/;
 // Bare chapter numerals common in fiction: "1", "12", "IV", "Ⅲ".
 const BARE_NUMERAL_RE = /^(\d{1,3}|[IVX]{1,6}|[Ⅰ-Ⅻ])$/;
@@ -26,13 +30,15 @@ function classifyHeading(line) {
     const inner = md[2].trim();
     const ch = inner.match(CHAPTER_RE);
     if (level === 'chapter' && ch) return { level, label: ch[1].replace(/\s+/g, ''), title: ch[2].trim() };
-    return { level, label: '', title: inner };
+    return { level, label: '', title: inner, named: level === 'chapter' && NAMED_RE.test(inner) };
   }
   if (line.length > 60) return null;
   const ch = line.match(CHAPTER_RE);
   if (ch) return { level: 'chapter', label: ch[1].replace(/\s+(?=\d)|(?<=\d)\s+/g, ''), title: ch[2].trim() };
+  const bare = line.length <= 40 && !SENTENCE_END_RE.test(line) ? line.match(BARE_PART_RE) : null;
+  if (bare) return { level: 'chapter', label: bare[1].replace(/\s+/g, ''), title: bare[2].trim() };
   const named = line.match(NAMED_RE);
-  if (named) return { level: 'chapter', label: '', title: line.trim() };
+  if (named) return { level: 'chapter', label: '', title: line.trim(), named: true };
   if (BARE_NUMERAL_RE.test(line)) return { level: 'chapter', label: line, title: '' };
   const num = line.match(NUMBERED_RE);
   if (num && line.length <= 40 && !SENTENCE_END_RE.test(line)) {
@@ -57,6 +63,7 @@ export function parseBookStructure(manuscript = '', { title = '' } = {}) {
   let paragraphCount = 0;
   let sectionCount = 0;
   let breakCount = 0;
+  let partCount = 0;
   let titleLineDropped = false;
   const squash = (v) => nfc(v).replace(/\s+/g, '');
 
@@ -88,16 +95,20 @@ export function parseBookStructure(manuscript = '', { title = '' } = {}) {
       }
       const heading = classifyHeading(single);
       if (heading && heading.level === 'chapter') {
+        const isPart = PART_LABEL_RE.test(heading.label) || /^\d{1,2}부$/.test(heading.label);
         current = {
           id: `ch-${chapters.length + 1}`,
           label: heading.label,
           title: heading.title,
           heading: single,
           untitled: false,
+          ...(isPart ? { part: true } : {}),
+          ...(heading.named ? { named: true } : {}),
           sourceIndex,
           blocks: []
         };
         chapters.push(current);
+        if (isPart) partCount += 1;
         return;
       }
       if (heading && heading.level === 'section') {
@@ -130,6 +141,7 @@ export function parseBookStructure(manuscript = '', { title = '' } = {}) {
       sections: sectionCount,
       sceneBreaks: breakCount,
       chapters: titledChapters.length,
+      parts: partCount,
       nfcNormalized: nfcChanged,
       titleLineDropped
     },

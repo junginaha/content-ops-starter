@@ -2133,6 +2133,29 @@ export const designReferences = [
     layoutNotes: 'Compact 111 × 161 mm, 80-page experimental autobiographical text collection with 10 illustrations. Verified thumbnails show a two-column text spread and a black page with white type. Exact body width, leading, margins and baseline grid are unpublished.',
     editorialIdea: 'Use a compact trim size and a deliberately limited typographic system for fragmented short writing. Keep body pages consistent and reserve dark pages or image reveals for occasional punctuation.',
     rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' }
+  },
+  {
+    id: 'money-interview-general-edition',
+    title: '돈의 면접 — 일반판 개편 (ooOS 내부 제작 사례)',
+    author: '박은규',
+    publisher: '19호실출판사',
+    designer: 'ooOS breath 프로필',
+    year: 2026,
+    dimensionsMm: [140, 210],
+    pageCount: 168,
+    module: 'PROGRESSIVE_TEXT',
+    tags: ['에세이', '자기계발', '짧은글', '여백형', '행보존', '내지', '표지', '후가공교훈'],
+    evidence: 'ooOS 내부 제작 사례(2026-11). 한정판(금박) 결과물 검수 → 일반판 표지·내지 전면 개편 샘플로 확정한 규칙. 외부 수상 레퍼런스가 아님.',
+    officialUrl: null,
+    galleryUrl: null,
+    interiorGalleryUrl: null,
+    previewUrl: null,
+    previewStatus: '내부 샘플 PDF만 있음(공개 이미지 없음).',
+    typefaces: [{ name: '고운바탕 Gowun Batang', status: 'USE', license: 'SIL Open Font License 1.1', source: 'https://github.com/google/fonts/tree/main/ofl/gowunbatang' }],
+    palette: '먹 1도 내지(본문 K100, 면주 K62, 장식선 K45, 달 원 K50). 표지는 미색 바탕 + 먹 + 가는 금색 원 하나. 금색은 인쇄 별색/CMYK로만 쓰고 그림과 겹치는 박은 쓰지 않는다.',
+    layoutNotes: '작가가 끊은 행·행간(11/18pt)·단락 간격(+4.5pt)은 잠금. 140×210 기준 여백 위 24 · 아래 22 · 안 22 · 바깥 18mm. 부 표제지(장식 숫자 + 부 이름 그대로 + 헤어라인 + 소속 장 목록), 장 도비라는 홀수쪽 전면(번호 · 제목 · 달 원 · 달항아리 삽화가 겹치지 않게 위아래 배치), 본문은 다음 짝수쪽부터. 소제목 위 9mm 헤어라인, 면주와 쪽번호는 아래 바깥 한 줄.',
+    editorialIdea: '짧게 끊어 쓴 경어체 산문은 시로 다루지 말고 행 보존 산문으로 다룬다. 디자인은 여백과 반복되는 하나의 모티프(달 원)로만 하고 본문 조판 수치는 작가 승인값을 잠근다. 교훈: 그림 위에 같은 모양의 박을 겹치면 0.5~1mm 핀 오차가 그대로 보인다 — 박 아래에는 인쇄를 두지 않는다.',
+    rights: { layout: 'USE', palette: 'USE', font: 'USE', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' }
   }
 ];
 
