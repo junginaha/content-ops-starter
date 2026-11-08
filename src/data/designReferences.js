@@ -2221,6 +2221,73 @@ export const designReferences = [
     rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' },
     verifiedAt: '2026-11-08'
   }
+,
+  {
+    id: 'picalso-sophie-calle',
+    title: 'Picalso',
+    author: 'Sophie Calle',
+    publisher: 'Atelier EXB',
+    designer: 'SpMillot, Paris',
+    year: 2023,
+    isbn: '9782365113809 (French edition) / 9782365113885 (English edition)',
+    dimensionsMm: [170, 218.5],
+    pageCount: 196,
+    imageCount: 53,
+    module: 'DENSITY_SWITCH',
+    tags: ['문화예술', '에세이', '회고', '여백형', '이미지인터루드', '표지', '내지'],
+    evidence: 'Stiftung Buchkunst 2026 · Gold Medal. The official jury specifically praises the alternating Bible and creative papers, kraft dust jacket with white UV title, red type across the rough-cardboard softcover, blue essay paper, generous text-block whitespace, vignettes and fragmentary diaristic typesetting.',
+    officialUrl: 'https://www.stiftung-buchkunst.de/en/best-book-design-from-all-over-the-world/the-awardees/detail/picalso/',
+    publisherUrl: 'https://exb.fr/en/catalogue/603-picalso.html',
+    galleryUrl: 'https://exb.fr/en/catalogue/603-picalso.html',
+    interiorGalleryUrl: 'https://exb.fr/en/catalogue/603-picalso.html',
+    coverUrl: 'https://exb.fr/img/p/1/3/7/7/0/13770.jpg',
+    previewUrl: 'https://exb.fr/img/p/1/3/7/7/1/13771.jpg',
+    previewStatus: 'Official publisher gallery has 12 product images, including the cover and actual interior spreads. Direct JPGs for the cover and several spreads were opened and verified. No public full-book PDF or editable source was verified. Preview images are not reuse permission.',
+    typefaces: [
+      { name: 'Not disclosed in the accessible official credits or jury statement', status: 'CHECK' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1; Korean body-text fallback, not a visual match for the original', source: 'https://github.com/notofonts/noto-cjk/blob/main/Serif/README-third_party.md' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1; Korean labels and navigation fallback', source: 'https://github.com/notofonts/noto-cjk/blob/main/Sans/README-third_party.md' }
+    ],
+    palette: 'Natural kraft brown, warm cream, strong red cover typography, a restrained blue paper section for the essay, and white UV-varnished title lettering. The colour relationships and paper-role logic can be adapted; exact ink/foil/UV specifications and source imagery are not reusable assets.',
+    layoutNotes: '170 × 218.5 mm, 196 pages plus a folded insert, 53 images. Bible paper alternates with heavier creative stocks. Verified publisher spreads place a compact text block high on the right page with substantial surrounding whitespace; other spreads isolate a framed image, object or caption on a mostly empty page. The essay receives blue paper; vignettes and lists interrupt the diaristic narrative. Exact body width, leading, margins and baseline grid are not published.',
+    editorialIdea: 'For a short-essay or memoir collection, separate narrative, lists, encounters and documentary fragments by page role rather than inventing a new layout for every piece. Reserve blue or another single section colour for the essay/commentary layer; use object images as occasional evidence, not decoration. The paper alternation is a premium option, not a default for cost-sensitive print runs.',
+    rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' },
+    verifiedAt: '2026-11-09'
+  },
+  {
+    id: 'anthology-for-listening-vol-ii',
+    title: 'Anthology for Listening Vol. II',
+    author: 'Various contributors; edited by Lukas Quist Lund',
+    publisher: 'Bureau for Listening',
+    designer: 'Linn Henrichson',
+    year: 2024,
+    isbn: '9788797402993',
+    dimensionsMm: [270, 163],
+    thicknessMm: 33,
+    pageCount: 400,
+    editionSize: 400,
+    module: 'PROGRESSIVE_TEXT',
+    tags: ['짧은글', '시', '인터뷰', '문화예술', '여백형', '글이미지50_50', '이미지인터루드', '내지'],
+    evidence: 'Stiftung Buchkunst 2026 · Bronze Medal. The jury statement explicitly praises the limited number of images, typography-led reading experience, dynamic typesetting, exposed Swiss-brochure binding, silver inside flaps and the alignment between cover embossing and the first page.',
+    officialUrl: 'https://www.stiftung-buchkunst.de/en/best-book-design-from-all-over-the-world/the-awardees/detail/anthology-for-listening-vol-ii/?view=grid&year=2026',
+    publisherUrl: 'https://bureauforlistening.com/anthology-for-listening-vol-ii/',
+    galleryUrl: 'https://www.bladrbladr.net/shop/anthology-for-listening-vol-ii-by-bureau-for-listening',
+    interiorGalleryUrl: 'https://www.bladrbladr.net/shop/anthology-for-listening-vol-ii-by-bureau-for-listening',
+    previewUrl: 'https://bureauforlistening.com/wp-content/uploads/2025/04/Anthologyforlistening_vol_II.pdf',
+    representativeSpreadUrl: 'https://images.squarespace-cdn.com/content/v1/5a70c697a8b2b094c0eb621d/be9051b2-1dbc-4279-b1c1-d01109c5f32b/pag%2B2s.jpeg',
+    previewStatus: 'The publisher provides a publicly accessible full-book PDF (33 MB); the colophon states All rights reserved. Bladr provides a gallery with actual cover and interior spreads; direct JPGs for pages 22–23, 198–199, 286–287 and 386–387 were opened and verified. No editable original was found. Public access does not grant reproduction rights.',
+    typefaces: [
+      { name: 'Times Ten', foundry: 'Linotype / Monotype', status: 'CHECK', license: 'Paid commercial family. MyFonts Desktop licensing permits specified static print/PDF design uses but excludes e-book embedding, server installation, font sharing and commercial print environments; commercial electronic products require a separate Electronic Doc license. Confirm the exact publishing and ooOS automation scope before use.', source: 'https://www.myfonts.com/collections/times-ten-font-linotype/' },
+      { name: 'Scto Grotesk', foundry: 'Schick Toikka', status: 'CHECK', license: 'Paid commercial family with separate Desktop, Web, App and Corporate license classes. The standard Desktop license limits PDF embedding to secured read/print-only non-commercial documents; commercial products or server/app workflows require the appropriate upgraded license.', source: 'https://www.schick-toikka.com/licenses' },
+      { name: 'Noto Serif CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1; suitable Korean serif fallback subject to OFL conditions', source: 'https://github.com/notofonts/noto-cjk/blob/main/Serif/README-third_party.md' },
+      { name: 'Noto Sans CJK KR', status: 'SUBSTITUTE', license: 'SIL Open Font License 1.1; suitable Korean sans fallback subject to OFL conditions', source: 'https://github.com/notofonts/noto-cjk/blob/main/Sans/README-third_party.md' }
+    ],
+    palette: 'Warm cream paper, black ink and restrained grayscale images; silver-printed inside flaps and a black-painted exposed spine. The monochrome/cream relationship and silver as a quiet material accent can be adapted; metallic ink, embossing and exposed-spine production need printer/bindery tests.',
+    layoutNotes: '270 × 163 × 33 mm, 400 pages, 400 numbered copies. Swiss-brochure binding exposes a black-painted spine; the inner spine carries the contents, silver-printed flaps create a reveal, and the front-cover embossing aligns with the first page. Verified pages 22–23 use a list of prepositions dispersed vertically and horizontally across a mostly empty spread; pages 198–199 pair a grayscale image on the left with a narrow prose column on the right; pages 386–387 use a near-empty left page and sparse, scattered phrases on the right. Image count is limited; exact text widths, leading and baseline grid are not published.',
+    editorialIdea: 'For short writing, use a small set of page roles: stable prose, one-sided image-plus-text, sparse phrase/list spread and deliberate pause. Let a blank page carry reading time rather than inflating text. For image/text 50:50 projects, use one full-height image on one page and one controlled text column on the facing page. If QR codes link to sound or video, print a durable human-readable URL as a fallback.',
+    rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' },
+    verifiedAt: '2026-11-09'
+  }
 ];
 
 export function recommendDesignProfiles(analysis = {}) {
