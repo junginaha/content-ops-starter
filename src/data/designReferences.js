@@ -2287,10 +2287,331 @@ export const designReferences = [
     editorialIdea: 'For short writing, use a small set of page roles: stable prose, one-sided image-plus-text, sparse phrase/list spread and deliberate pause. Let a blank page carry reading time rather than inflating text. For image/text 50:50 projects, use one full-height image on one page and one controlled text column on the facing page. If QR codes link to sound or video, print a durable human-readable URL as a fallback.',
     rights: { layout: 'ADAPT', palette: 'ADAPT', font: 'CHECK', substituteFont: 'USE', images: 'NO', text: 'NO', editableOriginal: 'NO' },
     verifiedAt: '2026-11-09'
-  }
+  },
+{
+  "id": "the-four-seasons-of-country-life",
+  "title": "The Four Seasons of Country Life (田舎暮らしは季節模様)",
+  "author": "Kimiyo Nishiyama",
+  "publisher": "Mottainaissier (CHECK: 발행처 표기 미확인)",
+  "designer": "tegusu Inc. · Art Direction/Design Masaomi Fujita",
+  "year": 2015,
+  "yearStatus": "CHECK — 비핸스 게시 시기 추정값, 원 출간연도 미확인",
+  "format": "A5, 64쪽",
+  "module": "SINGLE_STRONG_RULE",
+  "collections": [
+    "essay-beauty"
+  ],
+  "tags": [
+    "에세이",
+    "에세이선별",
+    "표지따내기",
+    "계절",
+    "일본",
+    "표지",
+    "내지"
+  ],
+  "evidence": "Behance 큐레이션 선정(Featured), 평가 4,600건 이상·조회 8만 8천 회 이상(2026-11-18 확인). 시골살이를 계절 따라 쓴 에세이집.",
+  "officialUrl": "https://www.behance.net/gallery/32187471/The-four-seasons-ofBook-design",
+  "galleryUrl": "https://www.behance.net/gallery/32187471/The-four-seasons-ofBook-design",
+  "previewStatus": "2026-11-18 브라우저로 표지·책등·펼침 사진을 직접 확인함. 공개 이미지는 열람용이며 재사용 허락이 아님.",
+  "typefaces": [
+    {
+      "name": "원본 서체 미공개",
+      "status": "CHECK"
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "license": "SIL Open Font License 1.1",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/README-third_party.md"
+    }
+  ],
+  "palette": "흰 표지 바탕에 노랑 도트·민트 사선·다홍 체크·파랑 도트 네 가지 무늬가 사계절을 맡는다. 무늬 4종을 계절·장의 기호로 쓰는 원리는 응용 가능, 원본 무늬 파일은 재사용 불가.",
+  "layoutNotes": "흰 표지에 네모 창 네 개를 따내 안쪽 무늬 면이 보이게 했다. 책등에도 제목을 세로로 반복해 여러 권을 쌓았을 때 줄무늬처럼 보인다. 장식 없이 따내기 하나로 주제를 전달한다.",
+  "editorialIdea": "계절·장소·감각처럼 장이 몇 개로 나뉘는 에세이는 장마다 무늬 하나를 정하고, 표지 따내기(또는 인쇄로 흉내 낸 창)로 그 무늬를 보여 준다. 따내기는 제작 옵션(프리미엄)이며 기본값은 인쇄 창으로 대체한다.",
+  "borrow": "표지 따내기 하나로 주제를 말한다 — 프리미엄 에세이 표지 옵션",
+  "visuallyVerified": true,
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  },
+  "verifiedAt": "2026-11-18"
+},
+{
+  "id": "adce-essay-series-between-you-and-me",
+  "title": "ADC*E Essay Series \"Between you and me\"",
+  "author": "Art Directors Club of Europe 에세이 시리즈 (필자 CHECK)",
+  "publisher": "ADC*E — Art Directors Club of Europe",
+  "designer": "Folch Studio · Illustration Ángela Palacios",
+  "year": 2015,
+  "yearStatus": "CHECK — 비핸스 게시 시기 추정값",
+  "module": "SINGLE_STRONG_RULE",
+  "collections": [
+    "essay-beauty"
+  ],
+  "tags": [
+    "에세이",
+    "에세이선별",
+    "시리즈",
+    "선물형",
+    "파스텔용지",
+    "별색",
+    "표지",
+    "내지"
+  ],
+  "evidence": "Behance 큐레이션 선정(Featured), 평가 232건·조회 4,100회(2026-11-18 확인). 스튜디오 설명: 만지고 읽기 좋은 우아한 에세이 시리즈.",
+  "officialUrl": "https://www.behance.net/gallery/31580723/ADCE-Essay-Series-Between-you-and-me",
+  "galleryUrl": "https://www.behance.net/gallery/31580723/ADCE-Essay-Series-Between-you-and-me",
+  "previewStatus": "2026-11-18 브라우저로 케이스·표지·면지·본문 펼침을 직접 확인함. 공개 이미지는 열람용.",
+  "typefaces": [
+    {
+      "name": "원본 서체 미공개",
+      "status": "CHECK"
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "license": "SIL Open Font License 1.1",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/README-third_party.md"
+    }
+  ],
+  "palette": "살구색 면지·표지, 연회색 케이스, 회화풍 컬러 일러스트 표지, 흰 본문지에 주황 별색 책배 한 줄. 파스텔 종이 + 별색 한 줄의 관계는 응용 가능.",
+  "layoutNotes": "회색 케이스에 일러스트 표지 책을 넣는 선물형 구성. 본문은 넉넉한 여백에 흑백 인물 사진 한 장과 짧은 단으로 조용하게 짰고, 책배 가장자리에 주황 별색을 넣어 닫힌 상태에서도 색이 보인다.",
+  "editorialIdea": "선물용 에세이는 본문을 1단으로 조용하게 두고, 면지 색지 한 가지와 별색 한 가지(책배 또는 쪽 번호)만 정해 고급감을 낸다. 케이스는 옵션.",
+  "borrow": "파스텔 색지 + 별색 한 줄 — 선물용 에세이 패키지",
+  "visuallyVerified": true,
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  },
+  "verifiedAt": "2026-11-18"
+},
+{
+  "id": "zmysly-zmysly-essays",
+  "title": "Zmysły, zmysły… (Senses, senses…)",
+  "author": "Tadeusz Boy-Żeleński",
+  "publisher": "CHECK — 디자이너 포트폴리오 프로젝트(출판사 미표기)",
+  "designer": "Karolina Kaczmarek (Poznań)",
+  "year": 2021,
+  "yearStatus": "비핸스 게시일 2021-03-26 기준",
+  "module": "DENSITY_SWITCH",
+  "collections": [
+    "essay-beauty"
+  ],
+  "tags": [
+    "에세이",
+    "에세이선별",
+    "2도",
+    "빨강",
+    "인용인터루드",
+    "폴란드",
+    "표지",
+    "내지"
+  ],
+  "evidence": "Behance 큐레이션 선정(Featured), 평가 599건·조회 7,500회(2026-11-18 확인). 보이젤렌스키 에세이집의 북디자인.",
+  "officialUrl": "https://www.behance.net/gallery/115906399/Zmysly-Zmysly",
+  "galleryUrl": "https://www.behance.net/gallery/115906399/Zmysly-Zmysly",
+  "previewStatus": "2026-11-18 브라우저로 표지·차례·본문·인용 펼침을 직접 확인함. 공개 이미지는 열람용.",
+  "typefaces": [
+    {
+      "name": "원본 서체 미공개",
+      "status": "CHECK"
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "license": "SIL Open Font License 1.1",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/README-third_party.md"
+    }
+  ],
+  "palette": "하늘색 천 표지 + 빨강, 본문은 검정 + 빨강 2도. 책등·책배를 빨강으로 칠함. 2도 체계는 그대로 응용 가능.",
+  "layoutNotes": "표지에 빨간 제목을 반복해 찍었다. 차례는 빨간 선으로 짜고, 장 시작에 빨간 면을 둔다. 본문 1단 사이사이에 인용문을 큰 글씨·반투명 띠로 깐 펼침면을 넣어 리듬을 만든다.",
+  "editorialIdea": "글 위주 에세이에서 2도(먹 + 별색 1)만으로 차례·장 시작·인용 인터루드에 리듬을 준다. 인용 인터루드는 원고의 실제 문장만 쓰고, 장마다 1회 이하로 제한한다.",
+  "borrow": "2도(먹 + 빨강)만으로 리듬 — 인쇄비 대비 효과가 가장 큰 본문",
+  "visuallyVerified": true,
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  },
+  "verifiedAt": "2026-11-18"
+},
+{
+  "id": "diario-de-estudo",
+  "title": "Diário de Estudo",
+  "author": "André Pimentel Santos",
+  "publisher": "CHECK — 석사 논문 작업(출판사 없음)",
+  "designer": "André Pimentel Santos (Porto)",
+  "year": 2015,
+  "yearStatus": "비핸스 게시일 2015-05-13 기준",
+  "module": "MARGIN_NOTE_GRID",
+  "collections": [
+    "essay-beauty"
+  ],
+  "tags": [
+    "에세이",
+    "에세이선별",
+    "일기형",
+    "비주얼에세이",
+    "방주",
+    "양장",
+    "포르투갈",
+    "표지",
+    "내지"
+  ],
+  "evidence": "Behance 큐레이션 선정(Featured), 평가 590건·조회 5,500회(2026-11-18 확인). 작업 방법론을 일기 형식으로 기록한 비주얼 에세이.",
+  "officialUrl": "https://www.behance.net/gallery/26171127/Diario-de-Estudo",
+  "galleryUrl": "https://www.behance.net/gallery/26171127/Diario-de-Estudo",
+  "previewStatus": "2026-11-18 브라우저로 표지·본문 펼침·주석 배치를 직접 확인함. 공개 이미지는 열람용.",
+  "typefaces": [
+    {
+      "name": "원본 서체 미공개(세리프 본문)",
+      "status": "CHECK"
+    },
+    {
+      "name": "Noto Serif CJK KR",
+      "status": "SUBSTITUTE",
+      "license": "SIL Open Font License 1.1",
+      "source": "https://github.com/notofonts/noto-cjk/blob/main/Serif/README-third_party.md"
+    }
+  ],
+  "palette": "짙은 올리브색 천 + 크림색 본문지 + 흑백 사진. 색을 거의 쓰지 않는 절제.",
+  "layoutNotes": "올리브색 천 표지를 찢은 듯한 가장자리 아래로 흰 면이 드러나고 작은 사진 창이 있다. 본문은 세리프 1단, 바깥 여백에 작은 주석·출처를 두는 구조. 사진은 펼침 한쪽에 단독으로 둔다.",
+  "editorialIdea": "일기형 에세이는 날짜·짧은 메모·출처를 바깥 여백 방주로 빼고 본문 1단은 고요하게 유지한다. 사진은 장식이 아니라 기록 증거로 한 면에 하나만.",
+  "borrow": "일기형 에세이의 바깥 여백 방주 구조",
+  "visuallyVerified": true,
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  },
+  "verifiedAt": "2026-11-18"
+},
+{
+  "id": "unintentional-but-korean-essay",
+  "title": "의도하지 않았지만 (Unintentional, But)",
+  "author": "CHECK — 표지 표기 확인 필요",
+  "publisher": "Private Commission (개인 의뢰)",
+  "designer": "aram park",
+  "year": 2025,
+  "yearStatus": "CHECK — 프로젝트 표기 날짜 판독 재확인 필요",
+  "dimensionsMm": [
+    130,
+    200
+  ],
+  "module": "CLASSIC_READING",
+  "collections": [
+    "essay-beauty"
+  ],
+  "tags": [
+    "에세이",
+    "에세이선별",
+    "한국어",
+    "무료서체",
+    "선화",
+    "말풍선",
+    "표지",
+    "내지"
+  ],
+  "evidence": "디자이너 공개 포트폴리오. 한국어 에세이의 표지·내지·서체 사양을 함께 공개한 드문 사례(2026-11-18 확인).",
+  "officialUrl": "https://www.behance.net/gallery/251125713/Unintentional-Book-Cover-Editorial-Design-Project",
+  "galleryUrl": "https://www.behance.net/gallery/251125713/Unintentional-Book-Cover-Editorial-Design-Project",
+  "previewStatus": "2026-11-18 브라우저로 표지·띠지·본문 펼침 8면·서체 가이드를 직접 확인함. 공개 이미지는 열람용.",
+  "typefaces": [
+    {
+      "name": "가비아 마음결 (제목)",
+      "status": "CHECK",
+      "license": "무료 배포 서체로 알려짐 — 배포처 약관 확인 후 USE"
+    },
+    {
+      "name": "함초롬바탕 (차례·소제목)",
+      "status": "CHECK",
+      "license": "한컴 무료 배포 서체 — 약관 확인 후 USE"
+    },
+    {
+      "name": "제주명조 (본문)",
+      "status": "CHECK",
+      "license": "제주특별자치도 무료 배포 서체 — 약관 확인 후 USE"
+    },
+    {
+      "name": "마포다카포 (대화 말풍선)",
+      "status": "CHECK",
+      "license": "마포구 무료 배포 서체 — 약관 확인 후 USE"
+    }
+  ],
+  "palette": "구김 질감 흰 종이 + 먹 선화, 하단 검정 띠지, 본문 소제목에 민트 별색. 흰·검정·민트 3색 체계 응용 가능.",
+  "layoutNotes": "130×200mm. 흰 표지에 찻잔·스푼·주전자 선화를 세로로 놓고 하단 검정 띠지에 저자 사진과 추천 문구. 본문은 민트색 소제목 + 1단 본문, 짧은 문장은 가운데 정렬 펼침으로 쉬어 간다. 기존 선화 자산을 재활용하고 대화를 말풍선 레이아웃으로 처리.",
+  "editorialIdea": "한국어 에세이 기본 템플릿: 무료 서체 4종(제목·소제목·본문·대화)으로 역할을 나누고, 별색 1(민트 등)은 소제목에만. 짧은 문장 쉼표 면을 장마다 1회 이하로 둔다.",
+  "borrow": "무료 서체만으로 완성한 한국어 에세이 내지 — 원데이북스 표준 템플릿 후보",
+  "visuallyVerified": true,
+  "rights": {
+    "layout": "ADAPT",
+    "palette": "ADAPT",
+    "font": "CHECK",
+    "substituteFont": "USE",
+    "images": "NO",
+    "text": "NO",
+    "editableOriginal": "NO"
+  },
+  "verifiedAt": "2026-11-18"
+}
 ];
 
-export function recommendDesignProfiles(analysis = {}) {
+// 큐레이션 세트: 사람이 직접 화면으로 표지·내지를 확인하고 고른 레퍼런스 묶음.
+// 장르 키는 src/utils/print/designProfiles.js의 DESIGN_PROFILES 키와 같다.
+export const curatedCollections = {
+  'essay-beauty': {
+    label: '에세이 선별',
+    genres: ['essay'],
+    rule: '표지와 내지를 직접 화면으로 확인했고, 에세이 원고에 바로 옮길 원리가 있는 책만'
+  }
+};
+
+function referenceScore(ref, genre) {
+  let score = 0;
+  const collections = ref.collections || [];
+  if (genre && collections.some((key) => (curatedCollections[key]?.genres || []).includes(genre))) score += 4;
+  if (ref.visuallyVerified) score += 2;
+  if (genre === 'essay' && (ref.tags || []).includes('에세이')) score += 1;
+  return score;
+}
+
+export function rankReferences(refs = [], genre) {
+  return refs
+    .map((ref, index) => ({ ref, index, score: referenceScore(ref, genre) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((item) => item.ref);
+}
+
+export function curatedReferencesFor(genre, limit = 6) {
+  if (!genre) return [];
+  const keys = Object.keys(curatedCollections).filter((key) => curatedCollections[key].genres.includes(genre));
+  if (!keys.length) return [];
+  return designReferences
+    .filter((ref) => (ref.collections || []).some((key) => keys.includes(key)))
+    .slice(0, limit);
+}
+
+export function recommendDesignProfiles(analysis = {}, options = {}) {
+  const genre = options.genre || analysis.genre || '';
   const avgParagraphLength = analysis.paragraphCount
     ? Math.round((analysis.charCount || 0) / analysis.paragraphCount)
     : 0;
@@ -2318,7 +2639,7 @@ export function recommendDesignProfiles(analysis = {}) {
     .map((id) => {
       const module = layoutModules.find((item) => item.id === id);
       if (!module) return null;
-      return { ...module, references: refsByModule[id] || [] };
+      return { ...module, references: rankReferences(refsByModule[id] || [], genre) };
     })
     .filter(Boolean);
 }

@@ -22,7 +22,7 @@ import { parseBookStructure } from '../utils/print/bookStructure';
 import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
 import { COVER_LAYOUTS, COVER_PALETTES } from '../utils/print/coverGenome';
 import { createPrintJobTicket } from '../utils/printJobTicket';
-import { recommendDesignProfiles } from '../data/designReferences';
+import { curatedCollections, curatedReferencesFor, recommendDesignProfiles } from '../data/designReferences';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -306,10 +306,6 @@ export default function OneDayBooksOS() {
     qaCount === QA_GATES.length &&
     releaseReadiness.ready;
   const withinTarget = internalElapsed > 0 && internalElapsed <= 60 * 60 * 1000;
-  const designProfiles = useMemo(
-    () => recommendDesignProfiles(engineAnalysis || {}),
-    [engineAnalysis]
-  );
 
   function addPhotoFiles(files) {
     setPhotoError('');
@@ -367,6 +363,14 @@ export default function OneDayBooksOS() {
     const source = processedManuscript || manuscript;
     return source ? analyzeForDesign(source, { title: project.title }) : null;
   }, [processedManuscript, manuscript, project.title]);
+  const designProfiles = useMemo(
+    () => recommendDesignProfiles(engineAnalysis || {}, { genre: designAnalysis?.genre }),
+    [engineAnalysis, designAnalysis?.genre]
+  );
+  const curatedReferences = useMemo(
+    () => curatedReferencesFor(designAnalysis?.genre),
+    [designAnalysis?.genre]
+  );
   const photoChapters = useMemo(() => {
     const text = processedManuscript || manuscript;
     if (!text) return [];
@@ -1555,9 +1559,36 @@ export default function OneDayBooksOS() {
                       <strong>{profile.label}</strong>
                       <p>{profile.purpose}</p>
                       <small>{profile.rules.join(' · ')}</small>
+                      {profile.references.slice(0, 2).map((ref) => (
+                        <a key={ref.id} href={ref.galleryUrl || ref.officialUrl} target="_blank" rel="noopener noreferrer">
+                          {ref.title}
+                        </a>
+                      ))}
                     </div>
                   ))}
                 </div>
+                {curatedReferences.length > 0 && (
+                  <div className="curated-references">
+                    <div className="design-recommendation-head">
+                      <strong>{curatedCollections['essay-beauty'].label}</strong>
+                      <span>표지·내지 직접 확인</span>
+                    </div>
+                    <div className="reference-grid">
+                      {curatedReferences.map((ref) => (
+                        <div className="reference-card" key={ref.id}>
+                          <div className="reference-meta">{ref.designer}</div>
+                          <h3>{ref.title}</h3>
+                          <p>{ref.borrow || ref.editorialIdea}</p>
+                          <div className="reference-links">
+                            <a href={ref.galleryUrl || ref.officialUrl} target="_blank" rel="noopener noreferrer">
+                              표지·내지 보기 (View)
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="human-boundary">
@@ -2286,6 +2317,12 @@ export default function OneDayBooksOS() {
         .design-profile-card a {
           display: inline-block;
           margin-top: 8px;
+        }
+        .curated-references {
+          margin-top: 14px;
+        }
+        .design-profile-card a {
+          display: block;
         }
         .reference-tags {
           display: flex;
