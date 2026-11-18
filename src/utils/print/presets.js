@@ -24,6 +24,8 @@ export const DEFAULT_PRINT_OPTIONS = {
   coverPaper: '',
   designProfile: 'auto',
   density: 'standard',
+  accentStyle: 'none',
+  accentColor: 'red',
   optimize: true
 };
 

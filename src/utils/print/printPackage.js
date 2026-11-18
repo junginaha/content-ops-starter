@@ -190,6 +190,8 @@ export async function buildPrintPackage({
     designProfile,
     density: opts.density || 'standard',
     optimize: opts.optimize !== false,
+    accentStyle: opts.accentStyle || 'none',
+    accentColor: opts.accentColor || 'red',
     publisher: opts.publisher,
     manuscript,
     isbn: isbnText,

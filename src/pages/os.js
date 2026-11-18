@@ -19,10 +19,10 @@ import { evaluatePrintPdf, inspectPdfBytes, inspectPdfFile } from '../utils/pdfP
 import { DEFAULT_PRINT_OPTIONS, PRINT_HUMAN_GATES, TRIM_PRESETS } from '../utils/print/presets';
 import { analyzeForDesign } from '../utils/print/designAnalysis';
 import { parseBookStructure } from '../utils/print/bookStructure';
-import { DENSITY_OPTIONS, DESIGN_PROFILES, profileUsesSans } from '../utils/print/designProfiles';
+import { ACCENT_COLORS, ACCENT_STYLES, DENSITY_OPTIONS, DESIGN_PROFILES, REFERENCE_ACCENT_PRESETS, profileUsesSans } from '../utils/print/designProfiles';
 import { COVER_LAYOUTS, COVER_PALETTES } from '../utils/print/coverGenome';
 import { createPrintJobTicket } from '../utils/printJobTicket';
-import { recommendDesignProfiles } from '../data/designReferences';
+import { curatedCollections, curatedReferencesFor, recommendDesignProfiles } from '../data/designReferences';
 
 const STAGES = [
   { key: 'intake', label: '원고 접수', note: '원고와 저자 정보' },
@@ -306,10 +306,6 @@ export default function OneDayBooksOS() {
     qaCount === QA_GATES.length &&
     releaseReadiness.ready;
   const withinTarget = internalElapsed > 0 && internalElapsed <= 60 * 60 * 1000;
-  const designProfiles = useMemo(
-    () => recommendDesignProfiles(engineAnalysis || {}),
-    [engineAnalysis]
-  );
 
   function addPhotoFiles(files) {
     setPhotoError('');
@@ -367,6 +363,14 @@ export default function OneDayBooksOS() {
     const source = processedManuscript || manuscript;
     return source ? analyzeForDesign(source, { title: project.title }) : null;
   }, [processedManuscript, manuscript, project.title]);
+  const designProfiles = useMemo(
+    () => recommendDesignProfiles(engineAnalysis || {}, { genre: designAnalysis?.genre }),
+    [engineAnalysis, designAnalysis?.genre]
+  );
+  const curatedReferences = useMemo(
+    () => curatedReferencesFor(designAnalysis?.genre),
+    [designAnalysis?.genre]
+  );
   const photoChapters = useMemo(() => {
     const text = processedManuscript || manuscript;
     if (!text) return [];
@@ -1299,6 +1303,24 @@ export default function OneDayBooksOS() {
                         </select>
                       </label>
                       <label>
+                        <span>포인트 색</span>
+                        <select value={printOptions.accentStyle || 'none'} onChange={(e) => updatePrintOption('accentStyle', e.target.value)}>
+                          {ACCENT_STYLES.map((option) => (
+                            <option key={option.key} value={option.key}>{option.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      {printOptions.accentStyle && printOptions.accentStyle !== 'none' && (
+                        <label>
+                          <span>별색</span>
+                          <select value={printOptions.accentColor || 'red'} onChange={(e) => updatePrintOption('accentColor', e.target.value)}>
+                            {ACCENT_COLORS.map((option) => (
+                              <option key={option.key} value={option.key}>{option.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                      <label>
                         <span>표지 구도</span>
                         <select value={COVER_LAYOUTS[printOptions.coverLayout] ? printOptions.coverLayout : 'auto'} onChange={(e) => updatePrintOption('coverLayout', e.target.value)}>
                           <option value="auto">원고 분석으로 결정</option>
@@ -1555,9 +1577,53 @@ export default function OneDayBooksOS() {
                       <strong>{profile.label}</strong>
                       <p>{profile.purpose}</p>
                       <small>{profile.rules.join(' · ')}</small>
+                      {profile.references.slice(0, 2).map((ref) => (
+                        <a key={ref.id} href={ref.galleryUrl || ref.officialUrl} target="_blank" rel="noopener noreferrer">
+                          {ref.title}
+                        </a>
+                      ))}
                     </div>
                   ))}
                 </div>
+                {curatedReferences.length > 0 && (
+                  <div className="curated-references">
+                    <div className="design-recommendation-head">
+                      <strong>{curatedCollections['essay-beauty'].label}</strong>
+                      <span>표지·내지 직접 확인</span>
+                    </div>
+                    <div className="reference-grid">
+                      {curatedReferences.map((ref) => (
+                        <div className="reference-card" key={ref.id}>
+                          <div className="reference-meta">{ref.designer}</div>
+                          <h3>{ref.title}</h3>
+                          <p>{ref.borrow || ref.editorialIdea}</p>
+                          <div className="reference-links">
+                            <a href={ref.galleryUrl || ref.officialUrl} target="_blank" rel="noopener noreferrer">
+                              표지·내지 보기 (View)
+                            </a>
+                            {REFERENCE_ACCENT_PRESETS[ref.id] && (() => {
+                              const preset = REFERENCE_ACCENT_PRESETS[ref.id];
+                              const active = printOptions.accentStyle === preset.accentStyle && printOptions.accentColor === preset.accentColor;
+                              return (
+                                <button
+                                  type="button"
+                                  className="ghost reference-apply"
+                                  aria-pressed={active}
+                                  onClick={() => {
+                                    updatePrintOption('accentStyle', preset.accentStyle);
+                                    updatePrintOption('accentColor', preset.accentColor);
+                                  }}
+                                >
+                                  {active ? '적용됨 (Applied)' : '이 색 쓰기 (Apply)'}
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="human-boundary">
@@ -2286,6 +2352,22 @@ export default function OneDayBooksOS() {
         .design-profile-card a {
           display: inline-block;
           margin-top: 8px;
+        }
+        .curated-references {
+          margin-top: 14px;
+        }
+        .reference-links {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px 12px;
+        }
+        .reference-apply {
+          padding: 4px 10px;
+          font-size: 12px;
+        }
+        .design-profile-card a {
+          display: block;
         }
         .reference-tags {
           display: flex;
