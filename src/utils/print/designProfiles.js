@@ -136,3 +136,55 @@ export function profileUsesSans(profileKey) {
   const p = DESIGN_PROFILES[profileKey];
   return !!p && (p.headingFont === 'sans' || p.runningHead?.font === 'sans' || p.section?.font === 'sans');
 }
+
+// Accent (spot) ink for the interior. Default 'none' keeps the historic 1도(K) output byte-for-byte.
+// Each option names the curated reference it comes from (src/data/designReferences.js, essay-beauty).
+export const ACCENT_STYLES = [
+  { key: 'none', label: '1도 (먹)', summary: '본문 전체 K100', targets: [] },
+  {
+    key: 'folio',
+    label: '쪽번호만 별색',
+    summary: '쪽번호 한 가지에만 별색 — 조용한 고급감',
+    targets: ['folio'],
+    reference: 'adce-essay-series-between-you-and-me'
+  },
+  {
+    key: 'two-color',
+    label: '2도 리듬',
+    summary: '장 번호·장 시작 선·소제목·쪽번호를 별색으로, 본문은 먹',
+    targets: ['folio', 'chapterLabel', 'chapterRule', 'section', 'tocNumber'],
+    reference: 'zmysly-zmysly-essays'
+  }
+];
+
+// Spot inks are written as PDF Separation colour spaces with a CMYK alternate,
+// so a printer can run them as a true second plate (2도) or convert to process.
+export const ACCENT_COLORS = [
+  { key: 'red', label: '빨강', spotName: 'ooOS Red', cmyk: [0, 0.9, 0.85, 0], reference: 'zmysly-zmysly-essays' },
+  { key: 'mint', label: '민트', spotName: 'ooOS Mint', cmyk: [0.55, 0, 0.32, 0], reference: 'unintentional-but-korean-essay' },
+  { key: 'orange', label: '주황', spotName: 'ooOS Orange', cmyk: [0, 0.6, 0.9, 0], reference: 'adce-essay-series-between-you-and-me' }
+];
+
+/** Resolve accent options into a concrete ink plan. Returns null when the book stays 1도. */
+export function resolveAccent(styleKey = 'none', colorKey = 'red') {
+  const style = ACCENT_STYLES.find((s) => s.key === styleKey);
+  if (!style || style.key === 'none') return null;
+  const color = ACCENT_COLORS.find((c) => c.key === colorKey) || ACCENT_COLORS[0];
+  return {
+    style: style.key,
+    styleLabel: style.label,
+    color: color.key,
+    colorLabel: color.label,
+    spotName: color.spotName,
+    cmyk: color.cmyk.slice(),
+    targets: new Set(style.targets),
+    references: [style.reference, color.reference].filter(Boolean)
+  };
+}
+
+/** Accent presets that reproduce a curated reference's ink logic (reference id -> print options). */
+export const REFERENCE_ACCENT_PRESETS = {
+  'zmysly-zmysly-essays': { accentStyle: 'two-color', accentColor: 'red' },
+  'adce-essay-series-between-you-and-me': { accentStyle: 'folio', accentColor: 'orange' },
+  'unintentional-but-korean-essay': { accentStyle: 'two-color', accentColor: 'mint' }
+};

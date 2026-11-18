@@ -13,6 +13,11 @@ function boxOf(page, name) {
   return { x: toMm(box.x), y: toMm(box.y), widthMm: toMm(box.width), heightMm: toMm(box.height) };
 }
 
+function decodeName(name) {
+  const raw = String(name || '').replace(/^\//, '');
+  return raw.replace(/#([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
+
 function streamText(stream) {
   try {
     const bytes = stream instanceof PDFRawStream ? decodePDFRawStream(stream).decode() : stream.getContents?.();
@@ -73,14 +78,45 @@ export async function inspectGeneratedPdf(bytes, { trimWidthMm, trimHeightMm, bl
     }
   });
 
+  // Separation (spot) colour spaces with a DeviceCMYK alternate are print-safe 2도 inks.
+  const spotColors = new Set();
+  const separationKeys = (page) => {
+    const allowed = new Set();
+    const resources = page.node.Resources();
+    const csDict = resources && doc.context.lookup(resources.get(PDFName.of('ColorSpace')));
+    if (!(csDict instanceof PDFDict)) return allowed;
+    csDict.entries().forEach(([key, value]) => {
+      const arr = doc.context.lookup(value);
+      if (!(arr instanceof PDFArray)) return;
+      const items = arr.asArray().map((x) => doc.context.lookup(x) || x);
+      if (items[0] === PDFName.of('Separation') && items[2] === PDFName.of('DeviceCMYK')) {
+        allowed.add(String(key).replace(/^\//, ''));
+        spotColors.add(decodeName(items[1]));
+      }
+    });
+    return allowed;
+  };
+
   pages.forEach((page) => {
+    const allowed = separationKeys(page);
     const contents = page.node.Contents();
     const list = contents instanceof PDFArray ? contents.asArray().map((ref) => doc.context.lookup(ref)) : [contents];
     list.forEach((stream) => {
       if (!stream) return;
       const text = streamText(stream);
-      const matches = text.match(/(?:^|\s)(rg|RG|sc|SC|scn|SCN|cs|CS|g|G)(?=\s|$)/g);
+      const matches = text.match(/(?:^|\s)(rg|RG|g|G)(?=\s|$)/g);
       if (matches) rgbOperators += matches.length;
+      let spotActive = false;
+      const csOps = text.matchAll(/(?:^|\s)(?:\/(\S+)\s+)?(cs|CS|sc|SC|scn|SCN)(?=\s|$)/g);
+      for (const m of csOps) {
+        const op = m[2];
+        if (op === 'cs' || op === 'CS') {
+          spotActive = !!m[1] && allowed.has(m[1]);
+          if (!spotActive) rgbOperators += 1;
+        } else if (!spotActive) {
+          rgbOperators += 1;
+        }
+      }
     });
   });
 
@@ -96,6 +132,7 @@ export async function inspectGeneratedPdf(bytes, { trimWidthMm, trimHeightMm, bl
     fonts,
     allFontsEmbedded: fonts.length > 0 && fonts.every((font) => font.embedded),
     nonCmykColorOperators: rgbOperators,
+    spotColors: Array.from(spotColors),
     transparencyObjects: transparency,
     imageColorSpaces: Array.from(imageColorSpaces),
     bytes: bytes.length
@@ -122,8 +159,11 @@ export function evaluatePrintPackage({ interior, interiorCheck, cover, coverChec
     `${interiorCheck.pageCount}쪽 · ${pageMultiple}의 배수${interiorCheck.pageCount % pageMultiple === 0 ? '' : ' 아님'}`);
   add('fonts-embedded', '서체 임베딩', interiorCheck.allFontsEmbedded && coverCheck.allFontsEmbedded,
     `${[...new Set(interiorCheck.fonts.map((f) => f.name.replace(/^[A-Z]{6}\+/, '').replace(/-\d+$/, '')))].join(', ')} · ${interiorCheck.allFontsEmbedded && coverCheck.allFontsEmbedded ? '전부 임베딩' : '미임베딩 서체 있음'}`);
-  add('color', '1도(K) 색상', interiorCheck.nonCmykColorOperators === 0,
-    interiorCheck.nonCmykColorOperators === 0 ? '내지 텍스트 K100 · RGB 색상 없음' : `CMYK 외 색상 지정 ${interiorCheck.nonCmykColorOperators}건`);
+  const spots = interiorCheck.spotColors || [];
+  add('color', spots.length ? '2도(K + 별색) 색상' : '1도(K) 색상', interiorCheck.nonCmykColorOperators === 0,
+    interiorCheck.nonCmykColorOperators === 0
+      ? (spots.length ? `내지 K100 + 별색 ${spots.join(', ')} · RGB 색상 없음` : '내지 텍스트 K100 · RGB 색상 없음')
+      : `CMYK·별색 외 색상 지정 ${interiorCheck.nonCmykColorOperators}건`);
   add('transparency', '투명도', interiorCheck.transparencyObjects === 0 && coverCheck.transparencyObjects === 0,
     interiorCheck.transparencyObjects + coverCheck.transparencyObjects === 0 ? '투명 효과 없음' : '투명 효과 포함 — 인쇄소 평활화 확인', 'warning');
   add('overflow', '판면 넘침', interior.stats.overflowLines === 0,

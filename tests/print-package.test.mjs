@@ -253,3 +253,34 @@ test('print package: invalid press specifications fail before rendering PDFs', a
     /인쇄할 원고/
   );
 });
+
+test('accent ink: default stays 1도 K100; 2도 리듬 writes a CMYK-alternate Separation plate', async () => {
+  const base = {
+    title: '에세이 시험', author: '저자', manuscript: sampleManuscript(3, 8), fonts: FONTS,
+    printSpec: { trimWidthMm: 130, trimHeightMm: 200, bleedMm: 3 },
+    generatedAt: '2026-11-18T00:00:00.000Z'
+  };
+  const plain = await buildPrintPackage({ ...base, options: { designProfile: 'essay' } });
+  assert.equal(plain.report.status, 'PRINT_CANDIDATE', plain.report.blockers.join('\n'));
+  assert.equal(plain.report.design.accent, null);
+  assert.equal(plain.report.interior.layout.color, '1도 (K100), DeviceCMYK');
+  assert.deepEqual(plain.report.interior.pdfCheck.spotColors, []);
+
+  // Same manuscript, default options explicitly passed: byte-identical interior.
+  const plainAgain = await buildPrintPackage({ ...base, options: { designProfile: 'essay', accentStyle: 'none' } });
+  assert.equal(Buffer.compare(Buffer.from(plain.interiorBytes), Buffer.from(plainAgain.interiorBytes)), 0);
+
+  for (const [style, color, spot] of [['two-color', 'red', 'ooOS Red'], ['folio', 'mint', 'ooOS Mint']]) {
+    const r = await buildPrintPackage({ ...base, options: { designProfile: 'essay', accentStyle: style, accentColor: color } });
+    const rep = r.report;
+    assert.equal(rep.status, 'PRINT_CANDIDATE', `${style}: ${rep.blockers.join(' / ')}`);
+    assert.equal(rep.design.accent.style, style);
+    assert.equal(rep.interior.completeness.match, true, `${style} text loss`);
+    assert.equal(rep.interior.pdfCheck.nonCmykColorOperators, 0);
+    assert.deepEqual(rep.interior.pdfCheck.spotColors, [spot]);
+    assert.match(rep.interior.layout.color, /^2도 \(K100 \+ 별색/);
+    // Same page count as 1도: colour never changes the layout.
+    assert.equal(rep.interior.pageCount, plain.report.interior.pageCount);
+    assert.ok(rep.design.accent.references.length >= 1);
+  }
+});

@@ -10,12 +10,16 @@ import {
   setCharacterSpacing,
   setFillingCmykColor,
   rectangle,
-  fill
+  fill,
+  PDFName,
+  PDFNumber,
+  PDFOperator,
+  PDFOperatorNames
 } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { breakLine, justifyLine } from './koreanLineBreak';
 import { parseBookStructure, structureCanonicalText, canonicalChars, nfc } from './bookStructure';
-import { resolveDesign } from './designProfiles';
+import { resolveDesign, resolveAccent } from './designProfiles';
 
 export { TRIM_PRESETS } from './presets';
 
@@ -150,6 +154,9 @@ export function layoutInterior(ctx, input, design) {
     section: roleKey(design.section?.font || 'serif', 'bold')
   };
 
+  // Spot-ink targets ('folio', 'chapterLabel', 'chapterRule', 'section', 'tocNumber'); undefined = K100.
+  const inkFor = (target) => (design.accent && design.accent.targets.has(target) ? 'accent' : undefined);
+
   const measureBody = measureFor(F.body, size);
   const spaceW = size * design.spaceEm;
   const indentW = size * design.indentEm;
@@ -182,10 +189,10 @@ export function layoutInterior(ctx, input, design) {
     });
   };
   const textWidth = (fontKey, value, fontSize, tc = 0) => widthOf(fontKey, value, fontSize) + tc * Math.max(0, charCount(value) - 1);
-  const put = (pg, value, fontKey, fontSize, y, align = 'left', { tc = 0, x = 0 } = {}) => {
+  const put = (pg, value, fontKey, fontSize, y, align = 'left', { tc = 0, x = 0, ink } = {}) => {
     const w = textWidth(fontKey, value, fontSize, tc);
     const px = align === 'center' ? (textW - w) / 2 : align === 'right' ? textW - w : x;
-    addItem(pg, { font: fontKey, size: fontSize, x: px, y, text: value, tc });
+    addItem(pg, { font: fontKey, size: fontSize, x: px, y, text: value, tc, ...(ink ? { ink } : {}) });
   };
   const breakFor = (value, fontKey, fontSize, width) => {
     const run = (w) => breakLine(value, { width: w, indent: 0, measure: measureFor(fontKey, fontSize), spaceWidth: fontSize * design.spaceEm, looseRatio: 2 });
@@ -250,12 +257,12 @@ export function layoutInterior(ctx, input, design) {
     cursor = 0;
   };
 
-  const placeTypesetLine = (line, lineIndex, { fontKey = F.body, fontSize = size, align = design.align } = {}) => {
+  const placeTypesetLine = (line, lineIndex, { fontKey = F.body, fontSize = size, align = design.align, ink } = {}) => {
     const measure = fontKey === F.body && fontSize === size ? measureBody : measureFor(fontKey, fontSize);
     const gapBase = fontSize * design.spaceEm;
     const y = baselineAt(lineIndex);
     if (align === 'center') {
-      put(page, line.words.join(' '), fontKey, fontSize, y, 'center');
+      put(page, line.words.join(' '), fontKey, fontSize, y, 'center', { ink });
       placed.push(line.words.join(''));
       return;
     }
@@ -270,7 +277,7 @@ export function layoutInterior(ctx, input, design) {
     if (line.split) stats.splitWords += 1;
     let x = line.indent;
     line.words.forEach((word) => {
-      addItem(page, { font: fontKey, size: fontSize, x, y, text: word, tc: just.letterSpacing });
+      addItem(page, { font: fontKey, size: fontSize, x, y, text: word, tc: just.letterSpacing, ...(ink ? { ink } : {}) });
       x += measure(word) + just.letterSpacing * charCount(word) + just.gap;
     });
     placed.push(line.words.join(''));
@@ -308,7 +315,7 @@ export function layoutInterior(ctx, input, design) {
     }
   };
 
-  const rule = (pg, x, y, w, thicknessPt) => pg.rules.push({ x, y, w, h: thicknessPt });
+  const rule = (pg, x, y, w, thicknessPt, ink) => pg.rules.push({ x, y, w, h: thicknessPt, ...(ink ? { ink } : {}) });
 
   const openChapter = (chapter) => {
     const style = design.opener.style;
@@ -323,7 +330,7 @@ export function layoutInterior(ctx, input, design) {
         const numeric = /^\d{1,3}$/.test(label);
         const s = numeric ? size * 3 : size * 1.6;
         li = sink + (numeric ? 2 : 1);
-        put(page, label, numeric ? 'extraBold' : F.head, s, baselineAt(li), 'center', { tc: numeric ? 0 : size * 0.06 });
+        put(page, label, numeric ? 'extraBold' : F.head, s, baselineAt(li), 'center', { tc: numeric ? 0 : size * 0.06, ink: inkFor('chapterLabel') });
         record(label);
         li += numeric ? 3 : 2;
       }
@@ -338,7 +345,7 @@ export function layoutInterior(ctx, input, design) {
     }
     if (style === 'left-title') {
       if (label) {
-        put(page, label, F.head, size * 0.9, baselineAt(li), 'left', { tc: size * 0.05 });
+        put(page, label, F.head, size * 0.9, baselineAt(li), 'left', { tc: size * 0.05, ink: inkFor('chapterLabel') });
         record(label);
         li += 2;
       }
@@ -349,14 +356,14 @@ export function layoutInterior(ctx, input, design) {
         record(t);
         li += 2;
       });
-      rule(page, 0, baselineAt(li - 1) + size * 0.2, mm(18), 0.45);
+      rule(page, 0, baselineAt(li - 1) + size * 0.2, mm(18), 0.45, inkFor('chapterRule'));
       cursor = li + 1;
       return;
     }
     if (style === 'sans-block') {
       if (label) {
         li = sink + 1;
-        put(page, label, F.headBlack, size * 2.1, baselineAt(li), 'left');
+        put(page, label, F.headBlack, size * 2.1, baselineAt(li), 'left', { ink: inkFor('chapterLabel') });
         record(label);
         li += 2;
       }
@@ -367,13 +374,13 @@ export function layoutInterior(ctx, input, design) {
         record(t);
         li += 2;
       });
-      rule(page, 0, baselineAt(li - 1) + size * 0.25, textW, 0.6);
+      rule(page, 0, baselineAt(li - 1) + size * 0.25, textW, 0.6, inkFor('chapterRule'));
       cursor = li + 1;
       return;
     }
     if (style === 'poem') {
       const hs = size * 1.15;
-      if (label) { put(page, label, F.head, size * 0.9, baselineAt(li), 'left'); record(label); li += 1; }
+      if (label) { put(page, label, F.head, size * 0.9, baselineAt(li), 'left', { ink: inkFor('chapterLabel') }); record(label); li += 1; }
       breakFor(titleText, F.head, hs, textW).forEach((t) => {
         if (!t) return;
         put(page, t, F.head, hs, baselineAt(li), 'left');
@@ -385,7 +392,7 @@ export function layoutInterior(ctx, input, design) {
     }
     // 'label-title' (default)
     if (label) {
-      put(page, label, F.head, size * 0.95, baselineAt(li), 'center', { tc: size * 0.08 });
+      put(page, label, F.head, size * 0.95, baselineAt(li), 'center', { tc: size * 0.08, ink: inkFor('chapterLabel') });
       record(label);
       li += 2;
     }
@@ -452,7 +459,7 @@ export function layoutInterior(ctx, input, design) {
         if (!page || cursor + before + lines.length + 1 + 2 > LPP) startBodyPage();
         if (cursor > 0) cursor += 1;
         lines.forEach((line) => {
-          placeTypesetLine({ ...line, last: true }, cursor, { fontKey: secFont, fontSize: secSize, align: design.section?.style === 'center' ? 'center' : 'left' });
+          placeTypesetLine({ ...line, last: true }, cursor, { fontKey: secFont, fontSize: secSize, align: design.section?.style === 'center' ? 'center' : 'left', ink: inkFor('section') });
           cursor += 1;
         });
         cursor += 1;
@@ -521,7 +528,7 @@ export function layoutInterior(ctx, input, design) {
         addItem(tocPage, { font: 'regular', size, x: entry.labelCol, y: baselineAt(entry.line + idx), text: value, tc: 0 });
       });
       const num = String(start ? start.pageNumber : '');
-      addItem(tocPage, { font: 'regular', size, x: textW - widthOf('regular', num, size), y: baselineAt(entry.line + entry.lines.length - 1), text: num, tc: 0 });
+      addItem(tocPage, { font: 'regular', size, x: textW - widthOf('regular', num, size), y: baselineAt(entry.line + entry.lines.length - 1), text: num, tc: 0, ...(inkFor('tocNumber') ? { ink: 'accent' } : {}) });
     });
   }
 
@@ -540,7 +547,7 @@ export function layoutInterior(ctx, input, design) {
     if (pg.folio) {
       const num = String(number);
       const align = design.folio === 'center' ? 'center' : recto ? 'right' : 'left';
-      put(pg, num, F.run, folioSize, bottom * 0.5, align);
+      put(pg, num, F.run, folioSize, bottom * 0.5, align, { ink: inkFor('folio') });
     }
   });
 
@@ -552,8 +559,23 @@ export function layoutInterior(ctx, input, design) {
 }
 
 // ---------------------------------------------------------------- render
-export async function renderInterior(ctx, layout, { title = '', author = '', bleedMm = 3, generatedAt = new Date().toISOString() } = {}) {
+export async function renderInterior(ctx, layout, { title = '', author = '', bleedMm = 3, generatedAt = new Date().toISOString(), accent = null } = {}) {
   const { doc, pdfFonts } = ctx;
+  // One Separation colour space (spot plate with CMYK alternate) shared by every page that uses it.
+  let spotRef = null;
+  if (accent) {
+    const tint = doc.context.obj({ FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: accent.cmyk, N: 1 });
+    spotRef = doc.context.register(doc.context.obj([
+      PDFName.of('Separation'),
+      PDFName.of(accent.spotName),
+      PDFName.of('DeviceCMYK'),
+      doc.context.register(tint)
+    ]));
+  }
+  const SPOT_KEY = 'ooOSSpot';
+  const inkOps = (ink) => (ink === 'accent'
+    ? [PDFOperator.of(PDFOperatorNames.NonStrokingColorspace, [PDFName.of(SPOT_KEY)]), PDFOperator.of(PDFOperatorNames.NonStrokingColorN, [PDFNumber.of(1)])]
+    : [setFillingCmykColor(0, 0, 0, 1)]);
   const { W, H, inner, outer } = layout.geometry;
   const B = mm(bleedMm);
   const bookTitle = nfc(title || '제목 없음').trim();
@@ -576,8 +598,21 @@ export async function renderInterior(ctx, layout, { title = '', author = '', ble
     pdfPage.setTrimBox(B, B, W, H);
     if (!logical.items.length && !logical.rules.length) return;
 
+    const usesSpot = !!spotRef && (logical.items.some((i) => i.ink === 'accent') || logical.rules.some((r) => r.ink === 'accent'));
+    if (usesSpot) {
+      const resources = pdfPage.node.Resources();
+      resources.set(PDFName.of('ColorSpace'), doc.context.obj({ [SPOT_KEY]: spotRef }));
+    }
     const ops = [setFillingCmykColor(0, 0, 0, 1)];
-    logical.rules.forEach((r) => ops.push(rectangle(B + left + r.x, B + r.y, r.w, r.h), fill()));
+    let currentInk = 'k';
+    const switchInk = (ink) => {
+      const next = ink === 'accent' && usesSpot ? 'accent' : 'k';
+      if (next === currentInk) return;
+      ops.push(...inkOps(next));
+      currentInk = next;
+    };
+    logical.rules.forEach((r) => { switchInk(r.ink); ops.push(rectangle(B + left + r.x, B + r.y, r.w, r.h), fill()); });
+    switchInk(undefined);
     if (logical.items.length) {
       const keys = {};
       const keyFor = (fontKey) => {
@@ -587,6 +622,7 @@ export async function renderInterior(ctx, layout, { title = '', author = '', ble
       ops.push(beginText());
       let currentTc = 0;
       logical.items.forEach((item) => {
+        switchInk(item.ink);
         ops.push(setFontAndSize(keyFor(item.font), item.size));
         if (item.tc !== currentTc) { ops.push(setCharacterSpacing(item.tc)); currentTc = item.tc; }
         ops.push(setTextMatrix(1, 0, 0, 1, B + left + item.x, B + item.y));
@@ -630,6 +666,8 @@ export async function buildInteriorPdf({
   designProfile = 'humanities',
   density = 'standard',
   optimize = true,
+  accentStyle = 'none',
+  accentColor = 'red',
   fonts,
   generatedAt = new Date().toISOString()
 } = {}) {
@@ -641,15 +679,16 @@ export async function buildInteriorPdf({
   const ctx = await createFontContext(fonts, { text: `${manuscript}${title}${author}${publisher}`, needSans });
 
   const input = { title, author, publisher, isbn, price, firstEdition, registration, contact, trimWidthMm, trimHeightMm, bleedMm, pageMultiple, includeToc, includeCopyright, structure };
+  const accent = resolveAccent(accentStyle, accentColor);
   const deltas = optimize ? [0, -0.04, 0.04] : [0];
   const candidates = deltas.map((leadingDelta) => {
-    const design = resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density, leadingDelta });
+    const design = { ...resolveDesign(designProfile, trimWidthMm, trimHeightMm, { density, leadingDelta }), accent };
     const layout = layoutInterior(ctx, input, design);
     return { leadingDelta, design, layout, score: scoreLayout(layout, { leadingDelta }) };
   });
   const best = candidates.slice().sort((a, b) => a.score - b.score)[0];
   const { layout, design } = best;
-  const bytes = await renderInterior(ctx, layout, { title, author, bleedMm, generatedAt });
+  const bytes = await renderInterior(ctx, layout, { title, author, bleedMm, generatedAt, accent });
 
   // glyph coverage
   const missingGlyphs = [];
@@ -689,6 +728,9 @@ export async function buildInteriorPdf({
       opener: design.opener.style,
       runningHead: design.runningHead ? `${design.runningHead.verso}/${design.runningHead.recto}` : 'none',
       folio: design.folio,
+      accent: accent
+        ? { style: accent.style, styleLabel: accent.styleLabel, color: accent.color, colorLabel: accent.colorLabel, spotName: accent.spotName, cmyk: accent.cmyk, references: accent.references }
+        : null,
       headingFont: ctx.sansAvailable && design.headingFont === 'sans' ? '나눔고딕' : '나눔명조',
       candidates: candidates.map((c) => ({
         leadingRatio: c.design.leadingRatio,
@@ -728,7 +770,9 @@ export async function buildInteriorPdf({
           ')'
         ].join('')
       },
-      color: '1도 (K100), DeviceCMYK'
+      color: accent
+        ? `2도 (K100 + 별색 ${accent.spotName}), DeviceCMYK + Separation`
+        : '1도 (K100), DeviceCMYK'
     },
     pages: {
       total: layout.pages.length,

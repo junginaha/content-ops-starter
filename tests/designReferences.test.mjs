@@ -54,3 +54,17 @@ test('recommendDesignProfiles accepts a genre option without changing module cho
   const classic = recommendDesignProfiles(analysis, { genre: 'essay' }).find((p) => p.id === 'CLASSIC_READING');
   assert.equal(classic.references[0].collections?.includes('essay-beauty'), true);
 });
+
+test('reference accent presets point at real curated references and valid inks', async () => {
+  const { REFERENCE_ACCENT_PRESETS, ACCENT_STYLES, ACCENT_COLORS, resolveAccent } = await import('../src/utils/print/designProfiles.js');
+  const ids = new Set(designReferences.map((r) => r.id));
+  for (const [id, preset] of Object.entries(REFERENCE_ACCENT_PRESETS)) {
+    assert.ok(ids.has(id), id);
+    assert.ok(ACCENT_STYLES.some((s) => s.key === preset.accentStyle), id);
+    assert.ok(ACCENT_COLORS.some((c) => c.key === preset.accentColor), id);
+    assert.ok(resolveAccent(preset.accentStyle, preset.accentColor));
+  }
+  for (const style of ACCENT_STYLES) if (style.reference) assert.ok(ids.has(style.reference), style.key);
+  for (const color of ACCENT_COLORS) assert.ok(ids.has(color.reference), color.key);
+  assert.equal(resolveAccent('none'), null);
+});
